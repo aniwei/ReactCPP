@@ -290,10 +290,11 @@ bool performWorkOnRoot(ReactRuntime& runtime, FiberRoot& root, Lanes lanes) {
   const Lanes previousPendingLanes = root.pendingLanes;
 
   RootExitStatus status;
+  facebook::jsi::Runtime* jsRuntime = nullptr;
   if (includesBlockingLane(lanes) || includesSyncLane(lanes)) {
-    status = renderRootSync(runtime, root, lanes, false);
+    status = renderRootSync(runtime, jsRuntime, root, lanes, false);
   } else {
-    status = renderRootConcurrent(runtime, root, lanes);
+    status = renderRootConcurrent(runtime, jsRuntime, root, lanes);
   }
 
   switch (status) {
@@ -499,7 +500,7 @@ Lane requestTransitionLane(ReactRuntime& runtime, const Transition* transition) 
   (void)transition;
   RootSchedulerState& state = getState(runtime);
   if (state.currentEventTransitionLane == NoLane) {
-  const Lane actionScopeLane = peekEntangledActionLane(runtime);
+    const Lane actionScopeLane = peekEntangledActionLane(runtime);
     state.currentEventTransitionLane =
         actionScopeLane != NoLane ? actionScopeLane : claimNextTransitionLane();
   }

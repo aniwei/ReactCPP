@@ -1,17 +1,20 @@
 #include "ReactRuntime/ReactJSXRuntime.h"
 
 #include <algorithm>
-#include <array>
 #include <cmath>
+#include <cstddef>
 #include <cstring>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
+#include <string_view>
 #include <unordered_map>
+#include <vector>
 
 namespace react::jsx {
 
 namespace {
+
 class ReactElementHostObject : public jsi::HostObject {
  public:
   explicit ReactElementHostObject(ReactElementPtr element)
@@ -33,9 +36,15 @@ class ReactElementHostObject : public jsi::HostObject {
   ReactElementPtr element_;
 };
 
-jsi::Value makeHostValue(jsi::Runtime& runtime, const ReactElementPtr& element) {
-  auto host = std::make_shared<ReactElementHostObject>(element);
-  return jsi::Value(runtime, jsi::Object::createFromHostObject(runtime, host));
+jsi::Value cloneValue(jsi::Runtime& runtime, const jsi::Value& value) {
+  return jsi::Value(runtime, value);
+}
+
+std::optional<jsi::Value> cloneOptionalValue(jsi::Runtime& runtime, const std::optional<jsi::Value>& value) {
+  if (!value) {
+    return std::nullopt;
+  }
+  return std::optional<jsi::Value>(cloneValue(runtime, *value));
 }
 
 ReactElementPtr hostValueToElement(jsi::Runtime& runtime, const jsi::Value& value) {
@@ -57,13 +66,13 @@ ReactElementPtr hostValueToElement(jsi::Runtime& runtime, const jsi::Value& valu
   return typed->element();
 }
 
-std::string numberToString(double number) {
-  if (!std::isfinite(number)) {
+std::string numberToString(double value) {
+  if (!std::isfinite(value)) {
     throw std::invalid_argument("Cannot convert non-finite number to string");
   }
   std::ostringstream out;
   out.setf(std::ios::fmtflags(0), std::ios::floatfield);
-  out << number;
+  out << value;
   return out.str();
 }
 
@@ -74,125 +83,81 @@ std::string coerceToString(jsi::Runtime& runtime, const jsi::Value& value) {
   if (value.isNumber()) {
     return numberToString(value.getNumber());
   }
+  if (value.isBool()) {
+    return value.getBool() ? "true" : "false";
+  }
   throw std::invalid_argument("Value cannot be converted to string");
 }
 
-std::optional<jsi::Value> takeProp(PropList& props, const std::string& name) {
-  for (auto it = props.begin(); it != props.end(); ++it) {
-    if (it->first == name) {
-      auto value = it->second;
-      props.erase(it);
-      return value;
-    }
-  }
-  return std::nullopt;
+bool isReservedDevProp(std::string_view name) {
+  return name == "__self" || name == "__source";
 }
 
-void removeReservedProps(PropList& props) {
-  static constexpr std::array kReserved{"__self", "__source"};
-  props.erase(
-      std::remove_if(
-          props.begin(),
-          props.end(),
-          [](const PropEntry& entry) {
-            return std::find(kReserved.begin(), kReserved.end(), entry.first) != kReserved.end();
-          }),
-      props.end());
-}
+struct NormalizedProps {
+  jsi::Object props;
+  std::optional<jsi::Value> key;
+  std::optional<jsi::Value> ref;
+};
 
-Value convertPropValue(jsi::Runtime& runtime, const jsi::Value& value) {
-  if (value.isNull()) {
-    return Value::null();
-  }
-  if (value.isUndefined()) {
-    return Value::undefined();
-  }
-  if (value.isBool()) {
-    return Value::boolean(value.getBool());
-  }
-  if (value.isNumber()) {
-    return Value::number(value.getNumber());
-  }
-  if (value.isString()) {
-    return Value::string(value.getString(runtime).utf8(runtime));
-  }
-  throw std::invalid_argument("Unsupported prop value type; expected string, number, or boolean");
-}
+NormalizedProps normalizeProps(
+    jsi::Runtime& runtime,
+    const jsi::Value& rawProps,
+    const std::optional<jsi::Value>& providedKey,
+    const std::optional<jsi::Value>& providedRef) {
+  NormalizedProps result{jsi::Object(runtime), cloneOptionalValue(runtime, providedKey), cloneOptionalValue(runtime, providedRef)};
 
-void collectChildrenRecursive(jsi::Runtime& runtime, const jsi::Value& value, std::vector<Value>& out) {
-  if (value.isUndefined() || value.isNull()) {
-    return;
-  }
-  if (value.isBool()) {
-    return;
-  }
-  if (value.isNumber()) {
-    out.push_back(Value::number(value.getNumber()));
-    return;
-  }
-  if (value.isString()) {
-    out.push_back(Value::string(value.getString(runtime).utf8(runtime)));
-    return;
-  }
-  if (value.isObject()) {
-    if (auto element = hostValueToElement(runtime, value)) {
-      out.push_back(Value::element(element));
-      return;
+  jsi::Object sourceProps = rawProps.isObject() ? rawProps.getObject(runtime) : jsi::Object(runtime);
+  jsi::Array names = sourceProps.getPropertyNames(runtime);
+  const size_t length = names.size(runtime);
+
+  for (size_t index = 0; index < length; ++index) {
+    jsi::Value nameValue = names.getValueAtIndex(runtime, index);
+    if (!nameValue.isString()) {
+      continue;
     }
 
-    auto object = value.getObject(runtime);
-    if (object.isArray(runtime)) {
-      auto array = object.getArray(runtime);
-      const auto length = array.size(runtime);
-      for (size_t index = 0; index < length; ++index) {
-        collectChildrenRecursive(runtime, array.getValueAtIndex(runtime, index), out);
+    const std::string propName = nameValue.getString(runtime).utf8(runtime);
+    jsi::Value propValue = sourceProps.getProperty(runtime, propName.c_str());
+
+    if (propName == "key") {
+      if (!result.key) {
+        result.key = cloneValue(runtime, propValue);
       }
-      return;
+      continue;
     }
+
+    if (propName == "ref") {
+      if (!result.ref) {
+        result.ref = cloneValue(runtime, propValue);
+      }
+      continue;
+    }
+
+    if (isReservedDevProp(propName)) {
+      continue;
+    }
+
+    result.props.setProperty(runtime, propName.c_str(), cloneValue(runtime, propValue));
   }
 
-  throw std::invalid_argument("Unsupported child node in JSX runtime");
-}
-
-std::vector<Value> extractChildren(jsi::Runtime& runtime, PropList& props) {
-  std::vector<Value> children;
-  for (auto it = props.begin(); it != props.end();) {
-    if (it->first == "children") {
-      collectChildrenRecursive(runtime, it->second, children);
-      it = props.erase(it);
-    } else {
-      ++it;
-    }
-  }
-  return children;
+  return result;
 }
 
 ReactElementPtr createElement(
-  jsi::Runtime& runtime,
-  const jsi::Value& type,
-  const jsi::Value& props,
-  std::optional<jsi::Value> key,
-  std::optional<jsi::Value> ref,
-  std::optional<SourceLocation> source) {
-
+    jsi::Runtime& runtime,
+    const jsi::Value& type,
+    jsi::Object props,
+    std::optional<jsi::Value> key,
+    std::optional<jsi::Value> ref,
+    std::optional<SourceLocation> source,
+    bool hasStaticChildren) {
   auto element = std::make_shared<ReactElement>();
-  element->type = jsi::Value(runtime, type);
-
-  if (type.isString()) {
-    element->debugType = type.getString(runtime).utf8(runtime);
-  }
-  
-  if (key) {
-    coerceToString(runtime, *key);
-    element->key = *key;
-  }
-  if (ref) {
-    element->ref = *ref;
-  }
-  element->children = extractChildren(runtime, props);
-  removeReservedProps(props);
-  element->props = std::move(props);
+  element->type = cloneValue(runtime, type);
+  element->props = jsi::Value(runtime, props);
+  element->key = std::move(key);
+  element->ref = std::move(ref);
   element->source = std::move(source);
+  element->hasStaticChildren = hasStaticChildren;
   return element;
 }
 
@@ -209,20 +174,6 @@ struct WasmMemoryBuilder {
     return offset;
   }
 
-  uint32_t appendProps(const std::vector<WasmReactProp>& props) {
-    if (props.empty()) {
-      return 0;
-    }
-    uint32_t firstOffset = 0;
-    for (size_t index = 0; index < props.size(); ++index) {
-      const auto offset = appendStruct(props[index]);
-      if (index == 0) {
-        firstOffset = offset;
-      }
-    }
-    return firstOffset;
-  }
-
   uint32_t appendValues(const std::vector<WasmReactValue>& values) {
     if (values.empty()) {
       return 0;
@@ -230,6 +181,20 @@ struct WasmMemoryBuilder {
     uint32_t firstOffset = 0;
     for (size_t index = 0; index < values.size(); ++index) {
       const auto offset = appendStruct(values[index]);
+      if (index == 0) {
+        firstOffset = offset;
+      }
+    }
+    return firstOffset;
+  }
+
+  uint32_t appendProps(const std::vector<WasmReactProp>& props) {
+    if (props.empty()) {
+      return 0;
+    }
+    uint32_t firstOffset = 0;
+    for (size_t index = 0; index < props.size(); ++index) {
+      const auto offset = appendStruct(props[index]);
       if (index == 0) {
         firstOffset = offset;
       }
@@ -257,95 +222,205 @@ struct WasmMemoryBuilder {
   std::unordered_map<std::string, uint32_t> stringOffsets;
 };
 
-WasmReactValue encodeValue(jsi::Runtime& runtime, const Value& value, WasmMemoryBuilder& builder);
+void collectChildrenRecursive(jsi::Runtime& runtime, const jsi::Value& value, std::vector<jsi::Value>& out) {
+  if (value.isUndefined() || value.isNull()) {
+    return;
+  }
+
+  if (value.isBool()) {
+    return;
+  }
+
+  if (value.isNumber() || value.isString()) {
+    out.emplace_back(cloneValue(runtime, value));
+    return;
+  }
+
+  if (!value.isObject()) {
+    throw std::invalid_argument("Unsupported child node in JSX runtime");
+  }
+
+  if (hostValueToElement(runtime, value)) {
+    out.emplace_back(cloneValue(runtime, value));
+    return;
+  }
+
+  auto object = value.getObject(runtime);
+  if (!object.isArray(runtime)) {
+    throw std::invalid_argument("Unsupported child node in JSX runtime");
+  }
+
+  const size_t length = object.size(runtime);
+  for (size_t index = 0; index < length; ++index) {
+    collectChildrenRecursive(runtime, object.getValueAtIndex(runtime, index), out);
+  }
+}
+
+std::vector<jsi::Value> collectChildren(jsi::Runtime& runtime, const jsi::Value& value) {
+  std::vector<jsi::Value> result;
+  collectChildrenRecursive(runtime, value, result);
+  return result;
+}
+
+WasmReactValue encodeValue(jsi::Runtime& runtime, const jsi::Value& value, WasmMemoryBuilder& builder);
 uint32_t encodeElement(jsi::Runtime& runtime, const ReactElement& element, WasmMemoryBuilder& builder);
 
-std::vector<WasmReactProp> encodeProps(jsi::Runtime& runtime, const PropList& props, WasmMemoryBuilder& builder) {
+WasmReactValue encodePropScalar(jsi::Runtime& runtime, const jsi::Value& value, WasmMemoryBuilder& builder) {
+  WasmReactValue encoded{};
+  if (value.isString()) {
+    encoded.type = WasmValueType::String;
+    encoded.data.ptrValue = builder.internString(value.getString(runtime).utf8(runtime));
+    return encoded;
+  }
+  if (value.isNumber()) {
+    encoded.type = WasmValueType::Number;
+    encoded.data.numberValue = value.getNumber();
+    return encoded;
+  }
+  if (value.isBool()) {
+    encoded.type = WasmValueType::Boolean;
+    encoded.data.boolValue = value.getBool();
+    return encoded;
+  }
+  throw std::invalid_argument("Unsupported prop value while encoding");
+}
+
+std::vector<WasmReactProp> encodeProps(
+    jsi::Runtime& runtime,
+    const ReactElement& element,
+    WasmMemoryBuilder& builder,
+    std::vector<jsi::Value>& outChildren) {
   std::vector<WasmReactProp> encoded;
-  encoded.reserve(props.size());
-  for (const auto& [name, jsValue] : props) {
-    auto converted = convertPropValue(runtime, jsValue);
-    if (converted.kind == ValueKind::Null || converted.kind == ValueKind::Undefined) {
+
+  if (!element.props.isObject()) {
+    return encoded;
+  }
+
+  auto propsObject = element.props.getObject(runtime);
+  auto names = propsObject.getPropertyNames(runtime);
+  const size_t length = names.size(runtime);
+
+  for (size_t index = 0; index < length; ++index) {
+    jsi::Value nameValue = names.getValueAtIndex(runtime, index);
+    if (!nameValue.isString()) {
       continue;
     }
-    if (converted.kind != ValueKind::String && converted.kind != ValueKind::Number && converted.kind != ValueKind::Boolean) {
-      throw std::invalid_argument("Unsupported prop value while encoding");
+    const std::string propName = nameValue.getString(runtime).utf8(runtime);
+    jsi::Value propValue = propsObject.getProperty(runtime, propName.c_str());
+
+    if (propName == "children") {
+      collectChildrenRecursive(runtime, propValue, outChildren);
+      continue;
+    }
+
+    if (propValue.isNull() || propValue.isUndefined()) {
+      continue;
     }
 
     WasmReactProp prop{};
-    prop.key_ptr = builder.internString(name);
-    prop.value = encodeValue(runtime, converted, builder);
+    prop.key_ptr = builder.internString(propName);
+    prop.value = encodePropScalar(runtime, propValue, builder);
     encoded.push_back(prop);
   }
+
   return encoded;
 }
 
-WasmReactValue encodeValue(jsi::Runtime& runtime, const Value& value, WasmMemoryBuilder& builder) {
-  WasmReactValue encoded{};
-  switch (value.kind) {
-    case ValueKind::Null:
-      encoded.type = WasmValueType::Null;
-      encoded.data.ptrValue = 0;
-      return encoded;
-    case ValueKind::Undefined:
-      encoded.type = WasmValueType::Undefined;
-      encoded.data.ptrValue = 0;
-      return encoded;
-    case ValueKind::Boolean:
-      encoded.type = WasmValueType::Boolean;
-      encoded.data.boolValue = std::get<bool>(value.payload);
-      return encoded;
-    case ValueKind::Number:
-      encoded.type = WasmValueType::Number;
-      encoded.data.numberValue = std::get<double>(value.payload);
-      return encoded;
-    case ValueKind::String:
-      encoded.type = WasmValueType::String;
-      encoded.data.ptrValue = builder.internString(std::get<std::string>(value.payload));
-      return encoded;
-    case ValueKind::Element: {
-      encoded.type = WasmValueType::Element;
-      encoded.data.ptrValue = encodeElement(runtime, *std::get<ReactElementPtr>(value.payload), builder);
-      return encoded;
-    }
-    case ValueKind::Array: {
-      const auto& nested = std::get<std::vector<Value>>(value.payload);
-      std::vector<WasmReactValue> items;
-      items.reserve(nested.size());
-      for (const auto& entry : nested) {
-        items.push_back(encodeValue(runtime, entry, builder));
-      }
-      WasmReactArray array{};
-      array.length = static_cast<uint32_t>(nested.size());
-      array.items_ptr = builder.appendValues(items);
-      encoded.type = WasmValueType::Array;
-      encoded.data.ptrValue = builder.appendStruct(array);
-      return encoded;
-    }
+WasmReactValue encodeArray(jsi::Runtime& runtime, const jsi::Object& array, WasmMemoryBuilder& builder) {
+  const size_t length = array.size(runtime);
+  std::vector<WasmReactValue> items;
+  items.reserve(length);
+  for (size_t index = 0; index < length; ++index) {
+    items.push_back(encodeValue(runtime, array.getValueAtIndex(runtime, index), builder));
   }
-  throw std::invalid_argument("Unhandled value kind during encoding");
+  WasmReactArray encodedArray{};
+  encodedArray.length = static_cast<uint32_t>(items.size());
+  encodedArray.items_ptr = builder.appendValues(items);
+
+  WasmReactValue encoded{};
+  encoded.type = WasmValueType::Array;
+  encoded.data.ptrValue = builder.appendStruct(encodedArray);
+  return encoded;
+}
+
+WasmReactValue encodeValue(jsi::Runtime& runtime, const jsi::Value& value, WasmMemoryBuilder& builder) {
+  WasmReactValue encoded{};
+  if (value.isNull()) {
+    encoded.type = WasmValueType::Null;
+    encoded.data.ptrValue = 0;
+    return encoded;
+  }
+  if (value.isUndefined()) {
+    encoded.type = WasmValueType::Undefined;
+    encoded.data.ptrValue = 0;
+    return encoded;
+  }
+  if (value.isBool()) {
+    encoded.type = WasmValueType::Boolean;
+    encoded.data.boolValue = value.getBool();
+    return encoded;
+  }
+  if (value.isNumber()) {
+    encoded.type = WasmValueType::Number;
+    encoded.data.numberValue = value.getNumber();
+    return encoded;
+  }
+  if (value.isString()) {
+    encoded.type = WasmValueType::String;
+    encoded.data.ptrValue = builder.internString(value.getString(runtime).utf8(runtime));
+    return encoded;
+  }
+  if (!value.isObject()) {
+    throw std::invalid_argument("Unsupported value while encoding");
+  }
+
+  if (auto element = hostValueToElement(runtime, value)) {
+    encoded.type = WasmValueType::Element;
+    encoded.data.ptrValue = encodeElement(runtime, *element, builder);
+    return encoded;
+  }
+
+  auto object = value.getObject(runtime);
+  if (object.isArray(runtime)) {
+    return encodeArray(runtime, object, builder);
+  }
+
+  throw std::invalid_argument("Unsupported value while encoding");
+}
+
+std::optional<std::string> extractKeyString(jsi::Runtime& runtime, const std::optional<jsi::Value>& key) {
+  if (!key) {
+    return std::nullopt;
+  }
+  if (key->isUndefined() || key->isNull()) {
+    return std::nullopt;
+  }
+  return coerceToString(runtime, *key);
 }
 
 uint32_t encodeElement(jsi::Runtime& runtime, const ReactElement& element, WasmMemoryBuilder& builder) {
-  if (!element.hostType) {
+  if (!element.type.isString()) {
     throw std::invalid_argument("JSX runtime can only serialize host elements identified by string type");
   }
-  const auto typeOffset = builder.internString(*element.hostType);
+
+  const auto typeOffset = builder.internString(element.type.getString(runtime).utf8(runtime));
+
   uint32_t keyOffset = 0;
-  if (element.key) {
-    keyOffset = builder.internString(coerceToString(runtime, *element.key));
+  if (auto keyString = extractKeyString(runtime, element.key)) {
+    keyOffset = builder.internString(*keyString);
   }
 
-  const auto props = encodeProps(runtime, element.props, builder);
+  std::vector<jsi::Value> childValues;
+  const auto props = encodeProps(runtime, element, builder, childValues);
 
-  std::vector<WasmReactValue> childValues;
-  childValues.reserve(element.children.size());
-  for (const auto& child : element.children) {
-    childValues.push_back(encodeValue(runtime, child, builder));
+  std::vector<WasmReactValue> encodedChildren;
+  encodedChildren.reserve(childValues.size());
+  for (const auto& child : childValues) {
+    encodedChildren.push_back(encodeValue(runtime, child, builder));
   }
 
   const auto propsOffset = builder.appendProps(props);
-  const auto childrenOffset = builder.appendValues(childValues);
+  const auto childrenOffset = builder.appendValues(encodedChildren);
 
   WasmReactElement encoded{};
   encoded.type_name_ptr = typeOffset;
@@ -353,7 +428,7 @@ uint32_t encodeElement(jsi::Runtime& runtime, const ReactElement& element, WasmM
   encoded.ref_ptr = 0;
   encoded.props_count = static_cast<uint32_t>(props.size());
   encoded.props_ptr = propsOffset;
-  encoded.children_count = static_cast<uint32_t>(childValues.size());
+  encoded.children_count = static_cast<uint32_t>(encodedChildren.size());
   encoded.children_ptr = childrenOffset;
 
   return builder.appendStruct(encoded);
@@ -361,127 +436,41 @@ uint32_t encodeElement(jsi::Runtime& runtime, const ReactElement& element, WasmM
 
 } // namespace
 
-Value Value::null() {
-  Value result;
-  result.kind = ValueKind::Null;
-  result.payload = std::monostate{};
-  return result;
-}
-
-Value Value::undefined() {
-  Value result;
-  result.kind = ValueKind::Undefined;
-  result.payload = std::monostate{};
-  return result;
-}
-
-Value Value::boolean(bool value) {
-  Value result;
-  result.kind = ValueKind::Boolean;
-  result.payload = value;
-  return result;
-}
-
-Value Value::number(double value) {
-  Value result;
-  result.kind = ValueKind::Number;
-  result.payload = value;
-  return result;
-}
-
-Value Value::string(std::string value) {
-  Value result;
-  result.kind = ValueKind::String;
-  result.payload = std::move(value);
-  return result;
-}
-
-Value Value::element(const ReactElementPtr& value) {
-  Value result;
-  result.kind = ValueKind::Element;
-  result.payload = value;
-  return result;
-}
-
-Value Value::array(std::vector<Value> values) {
-  Value result;
-  result.kind = ValueKind::Array;
-  result.payload = std::move(values);
-  return result;
-}
-
-bool Value::isTruthyRenderable() const {
-  switch (kind) {
-    case ValueKind::Null:
-    case ValueKind::Undefined:
-    case ValueKind::Boolean:
-      return false;
-    case ValueKind::String:
-    case ValueKind::Number:
-    case ValueKind::Element:
-    case ValueKind::Array:
-      return true;
-  }
-  return false;
-}
-
 ReactElementPtr jsx(
     jsi::Runtime& runtime,
-  const jsi::Value& type,
-    PropList props,
+    const jsi::Value& type,
+    const jsi::Value& props,
     std::optional<jsi::Value> key,
     std::optional<jsi::Value> ref) {
-  return createElement(runtime, type, std::move(props), std::move(key), std::move(ref), std::nullopt);
+  auto normalized = normalizeProps(runtime, props, key, ref);
+  return createElement(runtime, type, std::move(normalized.props), std::move(normalized.key), std::move(normalized.ref), std::nullopt, false);
 }
 
 ReactElementPtr jsxs(
     jsi::Runtime& runtime,
-  const jsi::Value& type,
-    PropList props,
+    const jsi::Value& type,
+    const jsi::Value& props,
     std::optional<jsi::Value> key,
     std::optional<jsi::Value> ref) {
-  return createElement(runtime, type, std::move(props), std::move(key), std::move(ref), std::nullopt);
+  auto normalized = normalizeProps(runtime, props, key, ref);
+  return createElement(runtime, type, std::move(normalized.props), std::move(normalized.key), std::move(normalized.ref), std::nullopt, true);
 }
 
 ReactElementPtr jsxDEV(
     jsi::Runtime& runtime,
-  const jsi::Value& type,
-    PropList config,
+    const jsi::Value& type,
+    const jsi::Value& config,
     std::optional<jsi::Value> maybeKey,
     SourceLocation source,
     std::optional<jsi::Value> ref) {
-  auto cloneOptional = [&runtime](const std::optional<jsi::Value>& input) -> std::optional<jsi::Value> {
-    if (!input) {
-      return std::nullopt;
-    }
-    return std::optional<jsi::Value>(jsi::Value(runtime, *input));
-  };
-
-  auto keyValue = cloneOptional(maybeKey);
-  if (!keyValue) {
-    auto extracted = takeProp(config, "key");
-    keyValue = cloneOptional(extracted);
-  } else {
-    takeProp(config, "key");
-  }
-  if (keyValue) {
-    coerceToString(runtime, *keyValue);
-  }
-
-  auto refValue = cloneOptional(ref);
-  if (!refValue) {
-    auto extractedRef = takeProp(config, "ref");
-    refValue = cloneOptional(extractedRef);
-  } else {
-    takeProp(config, "ref");
-  }
+  auto normalized = normalizeProps(runtime, config, maybeKey, ref);
 
   std::optional<SourceLocation> location;
   if (source.isValid()) {
     location = source;
   }
 
-  return createElement(runtime, type, std::move(config), std::move(keyValue), std::move(refValue), std::move(location));
+  return createElement(runtime, type, std::move(normalized.props), std::move(normalized.key), std::move(normalized.ref), std::move(location), false);
 }
 
 WasmSerializedLayout serializeToWasm(jsi::Runtime& runtime, const ReactElement& element) {
@@ -494,7 +483,8 @@ WasmSerializedLayout serializeToWasm(jsi::Runtime& runtime, const ReactElement& 
 }
 
 jsi::Value createJsxHostValue(jsi::Runtime& runtime, const ReactElementPtr& element) {
-  return makeHostValue(runtime, element);
+  auto host = std::make_shared<ReactElementHostObject>(element);
+  return jsi::Value(runtime, jsi::Object::createFromHostObject(runtime, host));
 }
 
 ReactElementPtr getReactElementFromValue(jsi::Runtime& runtime, const jsi::Value& value) {

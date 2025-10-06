@@ -86,6 +86,7 @@ struct WorkLoopState {
   std::vector<void*> recoverableErrors{};
   bool didIncludeRecursiveRenderUpdate{false};
   bool didIncludeCommitPhaseUpdate{false};
+  bool didReceiveUpdate{false};
   double globalMostRecentFallbackTime{0.0};
   double workInProgressRootRenderTargetTime{std::numeric_limits<double>::infinity()};
   std::vector<const Transition*> workInProgressTransitions{};

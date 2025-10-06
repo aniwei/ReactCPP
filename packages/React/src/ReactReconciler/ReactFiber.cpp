@@ -78,6 +78,8 @@ FiberNode* createFiber(
 
   fiber->alternate = nullptr;
 
+  fiber->updatePayload.reset();
+
   initializeProfilerDurations(*fiber);
 
   return fiber;
@@ -126,6 +128,8 @@ FiberNode* createWorkInProgress(FiberNode* current, void* pendingProps) {
   workInProgress->ref = current->ref;
   workInProgress->refCleanup = current->refCleanup;
 
+    workInProgress->updatePayload.reset();
+
   if (enableProfilerTimer) {
     workInProgress->selfBaseDuration = current->selfBaseDuration;
     workInProgress->treeBaseDuration = current->treeBaseDuration;
@@ -154,6 +158,7 @@ FiberNode* resetWorkInProgress(FiberNode* workInProgress, Lanes renderLanes) {
     workInProgress->updateQueue = nullptr;
     workInProgress->dependencies.reset();
     workInProgress->stateNode = nullptr;
+    workInProgress->updatePayload.reset();
 
     if (enableProfilerTimer) {
       workInProgress->selfBaseDuration = 0.0;
@@ -171,6 +176,7 @@ FiberNode* resetWorkInProgress(FiberNode* workInProgress, Lanes renderLanes) {
     workInProgress->updateQueue = current->updateQueue;
     workInProgress->type = current->type;
     workInProgress->dependencies = cloneDependencies(current->dependencies.get());
+    workInProgress->updatePayload.reset();
 
     if (enableProfilerTimer) {
       workInProgress->selfBaseDuration = current->selfBaseDuration;

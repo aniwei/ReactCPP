@@ -7,15 +7,17 @@
 
 #include "jsi/jsi.h"
 
+#include <atomic>
 #include <cassert>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <vector>
 #include <utility>
+#include <vector>
 
 using namespace facebook::jsi;
 
@@ -284,11 +286,11 @@ bool testHostComponentPayload(TestContext& ctx) {
   nextProps.setProperty(rt, "title", String::createFromUtf8(rt, "hello"));
 
   Value payload;
-  bool hasUpdate = ReactRuntimeTestHelper::computeHostComponentUpdatePayload(
-    rt,
-    Value(rt, prevProps),
-    Value(rt, nextProps),
-    payload);
+    bool hasUpdate = ReactRuntimeTestHelper::computeHostComponentUpdatePayload(
+      ctx.reactRuntime,
+      Value(rt, prevProps),
+      Value(rt, nextProps),
+      payload);
   if (!hasUpdate) {
     std::cerr << "Expected payload to be generated for host component" << std::endl;
     return false;
@@ -341,7 +343,7 @@ bool testHostTextPayload(TestContext& ctx) {
 
   Value payload;
   bool hasUpdate = ReactRuntimeTestHelper::computeHostTextUpdatePayload(
-    rt,
+    ctx.reactRuntime,
     Value(String::createFromUtf8(rt, "old")),
     Value(String::createFromUtf8(rt, "new")),
     payload);
@@ -607,6 +609,7 @@ bool testCommitAppliesHostComponentUpdate(TestContext& ctx) {
 
   Value payload;
   bool hasPayload = ReactRuntimeTestHelper::computeHostComponentUpdatePayload(
+    ctx.reactRuntime,
     rt,
     currentFiber->memoizedProps,
     updatedFiber->memoizedProps,
@@ -649,6 +652,62 @@ bool testCommitAppliesHostComponentUpdate(TestContext& ctx) {
     std::cerr << "Expected commit to clear update flag" << std::endl;
     return false;
   }
+
+  return true;
+}
+
+bool testCommitPlacementFinalizesInitialChildren(TestContext& ctx) {
+  auto& rt = ctx.runtime;
+  auto& runtime = ctx.reactRuntime;
+
+  auto host = std::make_shared<RecordingHostInterface>();
+  runtime.setHostInterface(host);
+  runtime.bindHostInterface(rt);
+
+  Object rootProps(rt);
+  auto rootContainer = std::make_shared<ReactDOMComponent>(rt, "root", rootProps);
+
+  auto rootFiber = std::make_shared<FiberNode>(
+    WorkTag::HostRoot,
+    Value::undefined(),
+    Value::undefined());
+  rootFiber->stateNode = rootContainer;
+
+  Object childProps(rt);
+  childProps.setProperty(rt, "children", String::createFromUtf8(rt, "hello"));
+
+  auto childFiber = std::make_shared<FiberNode>(
+    WorkTag::HostComponent,
+    Value(rt, childProps),
+    Value::undefined());
+  childFiber->memoizedProps = Value(rt, childProps);
+  childFiber->type = Value(rt, String::createFromUtf8(rt, "span"));
+  childFiber->elementType = childFiber->type;
+  childFiber->flags = FiberFlags::Placement;
+  childFiber->returnFiber = rootFiber;
+  rootFiber->child = childFiber;
+
+  ReactRuntimeTestHelper::commitMutationEffects(runtime, rt, rootFiber);
+
+  auto instance = std::dynamic_pointer_cast<ReactDOMComponent>(childFiber->stateNode);
+  if (!instance) {
+    std::cerr << "Expected placement to create host instance" << std::endl;
+    return false;
+  }
+
+  if (instance->getTextContent() != "hello") {
+    std::cerr << "Expected finalizeInitialChildren to apply text content" << std::endl;
+    return false;
+  }
+
+  if (rootContainer->children.size() != 1 || rootContainer->children[0].get() != instance.get()) {
+    std::cerr << "Expected placed instance to be appended to root container" << std::endl;
+    return false;
+  }
+
+  runtime.setHostInterface(std::make_shared<HostInterface>());
+  runtime.bindHostInterface(rt);
+  runtime.reset();
 
   return true;
 }
@@ -1365,6 +1424,8 @@ bool testSchedulerPriorityApi(TestContext&) {
     observedPriority = runtime.getCurrentPriorityLevel();
   });
 
+  runtime.flushAllTasksForTest();
+
   if (observedPriority != SchedulerPriority::ImmediatePriority) {
     std::cerr << "Expected scheduleTask to run with ImmediatePriority" << std::endl;
     return false;
@@ -1396,6 +1457,79 @@ bool testSchedulerPriorityApi(TestContext&) {
   return true;
 }
 
+bool testRuntimeSchedulerRespectsPriority(TestContext&) {
+  ReactRuntime runtime;
+  std::mutex mutex;
+  std::vector<int> order;
+
+  auto record = [&](int id) {
+    std::lock_guard<std::mutex> lock(mutex);
+    order.push_back(id);
+  };
+
+  runtime.scheduleTask(
+      SchedulerPriority::NormalPriority,
+      [&]() {
+        record(1);
+      },
+      TaskOptions{20.0, 0.0});
+
+  runtime.scheduleTask(SchedulerPriority::ImmediatePriority, [&]() {
+    record(2);
+  });
+
+  runtime.scheduleTask(SchedulerPriority::UserBlockingPriority, [&]() {
+    record(3);
+  });
+
+  runtime.flushAllTasksForTest();
+
+  const std::vector<int> expected{2, 3, 1};
+  if (order != expected) {
+    std::cerr << "Expected scheduler to respect priority order 2,3,1 but observed:";
+    for (int value : order) {
+      std::cerr << ' ' << value;
+    }
+    std::cerr << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
+bool testRuntimeSchedulerCancellation(TestContext&) {
+  ReactRuntime runtime;
+  std::atomic<int> callCount{0};
+
+  TaskHandle handle = runtime.scheduleTask(
+      SchedulerPriority::NormalPriority,
+      [&]() {
+        callCount.fetch_add(1, std::memory_order_relaxed);
+      },
+      TaskOptions{50.0, 0.0});
+
+  runtime.cancelTask(handle);
+  runtime.flushAllTasksForTest();
+
+  if (callCount.load(std::memory_order_relaxed) != 0) {
+    std::cerr << "Expected cancelled task not to run" << std::endl;
+    return false;
+  }
+
+  runtime.scheduleTask(SchedulerPriority::ImmediatePriority, [&]() {
+    callCount.fetch_add(1, std::memory_order_relaxed);
+  });
+
+  runtime.flushAllTasksForTest();
+
+  if (callCount.load(std::memory_order_relaxed) != 1) {
+    std::cerr << "Expected follow-up task to execute after cancellation" << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
 } // namespace react
 
 int main() {
@@ -1408,6 +1542,7 @@ int main() {
   ok &= react::testReactDOMComponentApplyUpdate(ctx);
   ok &= react::testReactDOMComponentDomApi(ctx);
   ok &= react::testCommitAppliesHostComponentUpdate(ctx);
+  ok &= react::testCommitPlacementFinalizesInitialChildren(ctx);
   ok &= react::testSimpleHostTextUpdate(ctx);
   ok &= react::testRenderConvertsWasmLayout(ctx);
   ok &= react::testBridgeRenderRegistersRoot(ctx);
@@ -1417,6 +1552,8 @@ int main() {
   ok &= react::testReconcileArrayHandlesDeletionAndPlacement(ctx);
   ok &= react::testHostInterfaceDomBridge(ctx);
   ok &= react::testSchedulerPriorityApi(ctx);
+  ok &= react::testRuntimeSchedulerRespectsPriority(ctx);
+  ok &= react::testRuntimeSchedulerCancellation(ctx);
 
   if (!ok) {
     std::cerr << "ReactRuntime tests failed" << std::endl;

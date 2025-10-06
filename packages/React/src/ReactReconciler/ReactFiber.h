@@ -14,6 +14,12 @@
 #include <string>
 #include <vector>
 
+namespace facebook {
+namespace jsi {
+class Value;
+} // namespace jsi
+} // namespace facebook
+
 namespace react {
 
 struct FiberNode {
@@ -52,6 +58,8 @@ struct FiberNode {
   Lanes childLanes{NoLanes};
 
   FiberNode* alternate{nullptr};
+
+  std::unique_ptr<facebook::jsi::Value> updatePayload{};
 
   double actualDuration{0.0};
   double actualStartTime{0.0};

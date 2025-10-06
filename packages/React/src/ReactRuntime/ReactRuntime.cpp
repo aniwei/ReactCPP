@@ -1,6 +1,7 @@
 #include "jsi/jsi.h"
 #include "ReactRuntime.h"
 #include "ReactDOM/client/ReactDOMComponent.h"
+#include "ReactReconciler/ReactHostConfig.h"
 #include "ReactRuntime/ReactHostInterface.h"
 #include "ReactRuntime/ReactWasmBridge.h"
 #include "ReactRuntime/ReactWasmLayout.h"
@@ -8,6 +9,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <limits>
 #include <sstream>
 #include <unordered_map>
 #include <utility>
@@ -19,6 +21,25 @@ using facebook::jsi::Array;
 using facebook::jsi::Object;
 using facebook::jsi::Runtime;
 using facebook::jsi::Value;
+
+int priorityOrder(react::SchedulerPriority priority) {
+  using react::SchedulerPriority;
+  switch (priority) {
+    case SchedulerPriority::ImmediatePriority:
+      return 0;
+    case SchedulerPriority::UserBlockingPriority:
+      return 1;
+    case SchedulerPriority::NormalPriority:
+      return 2;
+    case SchedulerPriority::LowPriority:
+      return 3;
+    case SchedulerPriority::IdlePriority:
+      return 4;
+    case SchedulerPriority::NoPriority:
+    default:
+      return 5;
+  }
+}
 
 std::string numberToString(double value) {
   if (std::isnan(value) || !std::isfinite(value)) {
@@ -76,6 +97,31 @@ void collectChildValues(Runtime& rt, const Value& value, std::vector<Value>& out
   if (obj.hasProperty(rt, "type")) {
     out.emplace_back(rt, value);
   }
+}
+
+std::unordered_map<std::string, Value> extractPropsMap(Runtime& rt, const Value& value) {
+  std::unordered_map<std::string, Value> result;
+  if (!value.isObject()) {
+    return result;
+  }
+
+  Object source = value.getObject(rt);
+  facebook::jsi::Array names = source.getPropertyNames(rt);
+  const size_t length = names.size(rt);
+  result.reserve(length);
+
+  for (size_t index = 0; index < length; ++index) {
+    Value nameValue = names.getValueAtIndex(rt, index);
+    if (!nameValue.isString()) {
+      continue;
+    }
+
+    const std::string key = nameValue.getString(rt).utf8(rt);
+    Value propValue = source.getProperty(rt, key.c_str());
+    result.emplace(key, Value(rt, propValue));
+  }
+
+  return result;
 }
 
 struct ElementExtraction {
@@ -446,8 +492,9 @@ void ReactRuntime::setHostInterface(std::shared_ptr<HostInterface> hostInterface
 }
 
 void ReactRuntime::bindHostInterface(facebook::jsi::Runtime& runtime) {
+  auto hostInterface = ensureHostInterface();
+  (void)hostInterface;
   (void)runtime;
-  // TODO: hook host interface bindings once available.
 }
 
 void ReactRuntime::reset() {
@@ -476,6 +523,7 @@ void ReactRuntime::renderRootSync(
     return;
   }
 
+  bindHostInterface(runtime);
   registerRootContainer(rootContainer);
   if (rootElementOffset == 0 || __wasm_memory_buffer == nullptr) {
     removeAllChildren(*this, rootContainer);
@@ -501,19 +549,36 @@ TaskHandle ReactRuntime::scheduleTask(
   SchedulerPriority priority,
   Task task,
   const TaskOptions& options) {
-  (void)options;
-  const auto previous = currentPriority_;
-  currentPriority_ = priority;
-  if (task) {
-    task();
+  SchedulerPriority effectivePriority = priority == SchedulerPriority::NoPriority ? SchedulerPriority::NormalPriority : priority;
+  TaskHandle handle{nextTaskId_++};
+  const double currentTime = now();
+  const double readyTime = currentTime + std::max(0.0, options.delayMs);
+  double timeoutTime = std::numeric_limits<double>::infinity();
+  if (options.timeoutMs > 0.0 && std::isfinite(options.timeoutMs)) {
+    timeoutTime = readyTime + options.timeoutMs;
   }
-  currentPriority_ = previous;
-  return TaskHandle{nextTaskId_++};
+
+  ScheduledTask scheduled{
+      handle,
+      effectivePriority,
+      std::move(task),
+      readyTime,
+      timeoutTime,
+      false};
+
+  taskQueue_.push_back(std::move(scheduled));
+
+  return handle;
 }
 
 void ReactRuntime::cancelTask(TaskHandle handle) {
-  (void)handle;
-  // TODO: integrate host scheduler cancellation semantics.
+  for (auto& entry : taskQueue_) {
+    if (entry.handle == handle) {
+      entry.cancelled = true;
+      entry.task = nullptr;
+      break;
+    }
+  }
 }
 
 SchedulerPriority ReactRuntime::getCurrentPriorityLevel() const {
@@ -581,11 +646,12 @@ void ReactRuntime::insertBefore(
 }
 
 void ReactRuntime::commitUpdate(
+    facebook::jsi::Runtime& runtime,
     std::shared_ptr<ReactDOMInstance> instance,
     const facebook::jsi::Object& oldProps,
     const facebook::jsi::Object& newProps,
     const facebook::jsi::Object& payload) {
-  ensureHostInterface()->commitHostUpdate(std::move(instance), oldProps, newProps, payload);
+  ensureHostInterface()->commitHostUpdate(runtime, std::move(instance), oldProps, newProps, payload);
 }
 
 void ReactRuntime::commitTextUpdate(
@@ -593,6 +659,54 @@ void ReactRuntime::commitTextUpdate(
     const std::string& oldText,
     const std::string& newText) {
   ensureHostInterface()->commitHostTextUpdate(std::move(instance), oldText, newText);
+}
+
+void ReactRuntime::flushAllTasksForTest() {
+  double currentTime = now();
+
+  while (true) {
+    auto bestIt = taskQueue_.end();
+    for (auto it = taskQueue_.begin(); it != taskQueue_.end(); ++it) {
+      if (it->cancelled || !it->task) {
+        continue;
+      }
+
+      if (bestIt == taskQueue_.end() ||
+          it->readyTime < bestIt->readyTime ||
+          (it->readyTime == bestIt->readyTime && priorityOrder(it->priority) < priorityOrder(bestIt->priority)) ||
+          (it->readyTime == bestIt->readyTime &&
+           priorityOrder(it->priority) == priorityOrder(bestIt->priority) &&
+           it->handle.id < bestIt->handle.id)) {
+        bestIt = it;
+      }
+    }
+
+    if (bestIt == taskQueue_.end()) {
+      taskQueue_.erase(
+          std::remove_if(
+              taskQueue_.begin(),
+              taskQueue_.end(),
+              [](const ScheduledTask& entry) {
+                return entry.cancelled || !entry.task;
+              }),
+          taskQueue_.end());
+      break;
+    }
+
+    ScheduledTask task = std::move(*bestIt);
+    taskQueue_.erase(bestIt);
+
+    if (task.readyTime > currentTime) {
+      currentTime = task.readyTime;
+    }
+
+    const auto previousPriority = currentPriority_;
+    currentPriority_ = task.priority;
+    if (task.task) {
+      task.task();
+    }
+    currentPriority_ = previousPriority;
+  }
 }
 
 void ReactRuntime::unregisterRootContainer(const ReactDOMInstance* rootContainer) {
@@ -625,6 +739,38 @@ namespace react::ReactRuntimeTestHelper {
 
 std::size_t getRegisteredRootCount(const ReactRuntime& runtime) {
   return runtime.getRegisteredRootCount();
+}
+
+bool computeHostComponentUpdatePayload(
+    ReactRuntime& runtime,
+    facebook::jsi::Runtime& jsRuntime,
+    const facebook::jsi::Value& prevProps,
+    const facebook::jsi::Value& nextProps,
+    facebook::jsi::Value& outPayload) {
+  auto payload = hostconfig::prepareUpdate(runtime, jsRuntime, prevProps, nextProps, false);
+  if (payload.isUndefined()) {
+    outPayload = facebook::jsi::Value::undefined();
+    return false;
+  }
+
+  outPayload = std::move(payload);
+  return true;
+}
+
+bool computeHostTextUpdatePayload(
+    ReactRuntime& runtime,
+    facebook::jsi::Runtime& jsRuntime,
+    const facebook::jsi::Value& prevText,
+    const facebook::jsi::Value& nextText,
+    facebook::jsi::Value& outPayload) {
+  auto payload = hostconfig::prepareUpdate(runtime, jsRuntime, prevText, nextText, true);
+  if (payload.isUndefined()) {
+    outPayload = facebook::jsi::Value::undefined();
+    return false;
+  }
+
+  outPayload = std::move(payload);
+  return true;
 }
 
 } // namespace react::ReactRuntimeTestHelper

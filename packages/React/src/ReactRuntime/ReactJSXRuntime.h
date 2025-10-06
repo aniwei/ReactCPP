@@ -6,8 +6,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <utility>
-#include <variant>
 #include <vector>
 
 namespace react::jsx {
@@ -28,44 +26,13 @@ struct SourceLocation {
   }
 };
 
-enum class ValueKind : uint8_t {
-  Null,
-  Undefined,
-  Boolean,
-  Number,
-  String,
-  Element,
-  Array,
-};
-
-struct Value {
-  ValueKind kind{ValueKind::Undefined};
-  std::variant<std::monostate, bool, double, std::string, ReactElementPtr, std::vector<Value>> payload{};
-
-  Value() = default;
-
-  static Value null();
-  static Value undefined();
-  static Value boolean(bool value);
-  static Value number(double value);
-  static Value string(std::string value);
-  static Value element(const ReactElementPtr& value);
-  static Value array(std::vector<Value> values);
-
-  [[nodiscard]] bool isTruthyRenderable() const;
-};
-
-
 struct ReactElement {
   jsi::Value type;
   jsi::Value props;
-  jsi::Value children;
   std::optional<jsi::Value> key;
   std::optional<jsi::Value> ref;
-  std::optional<jsi::Value> source;
   std::optional<SourceLocation> source;
-  std::optional<std::string> debugType;
-  std::optional<std::string> debugKey;
+  bool hasStaticChildren{false};
 };
 
 ReactElementPtr jsx(

@@ -10,11 +10,13 @@
 #include <memory>
 #include <typeinfo>
 #include <unordered_map>
+#include <vector>
 
 namespace facebook {
 namespace jsi {
 class Runtime;
 class Object;
+class Value;
 } // namespace jsi
 } // namespace facebook
 
@@ -23,6 +25,7 @@ namespace react {
 class HostInterface;
 class ReactDOMInstance;
 struct FiberRoot;
+struct FiberNode;
 
 enum class IsomorphicIndicatorRegistrationState : std::uint8_t {
   Uninitialized = 0,
@@ -117,6 +120,7 @@ public:
     std::shared_ptr<ReactDOMInstance> beforeChild);
 
   void commitUpdate(
+    facebook::jsi::Runtime& runtime,
     std::shared_ptr<ReactDOMInstance> instance,
     const facebook::jsi::Object& oldProps,
     const facebook::jsi::Object& newProps,
@@ -127,9 +131,20 @@ public:
     const std::string& oldText,
     const std::string& newText);
 
+  void flushAllTasksForTest();
+
 private:
   std::shared_ptr<HostInterface> ensureHostInterface();
   void registerRootContainer(const std::shared_ptr<ReactDOMInstance>& rootContainer);
+
+  struct ScheduledTask {
+    TaskHandle handle;
+    SchedulerPriority priority;
+    Task task;
+    double readyTime{0.0};
+    double timeoutTime{0.0};
+    bool cancelled{false};
+  };
 
   std::shared_ptr<HostInterface> hostInterface_{};
   WorkLoopState workLoopState_{};
@@ -139,10 +154,39 @@ private:
   std::uint64_t nextTaskId_{1};
   std::function<bool()> shouldAttemptEagerTransitionCallback_{};
   std::unordered_map<const ReactDOMInstance*, std::weak_ptr<ReactDOMInstance>> registeredRoots_{};
+  std::vector<ScheduledTask> taskQueue_{};
 };
 
 namespace ReactRuntimeTestHelper {
 std::size_t getRegisteredRootCount(const ReactRuntime& runtime);
+bool computeHostComponentUpdatePayload(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  const facebook::jsi::Value& prevProps,
+  const facebook::jsi::Value& nextProps,
+  facebook::jsi::Value& outPayload);
+bool computeHostTextUpdatePayload(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  const facebook::jsi::Value& prevText,
+  const facebook::jsi::Value& nextText,
+  facebook::jsi::Value& outPayload);
+std::shared_ptr<FiberNode> cloneFiberForReuse(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  const std::shared_ptr<FiberNode>& current,
+  const facebook::jsi::Value& nextProps,
+  const facebook::jsi::Value& nextState);
+void commitMutationEffects(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  const std::shared_ptr<FiberNode>& root);
+void reconcileChildren(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  const std::shared_ptr<FiberNode>& parent,
+  const std::shared_ptr<FiberNode>& currentFirstChild,
+  const facebook::jsi::Value& newChildren);
 }
 
 } // namespace react

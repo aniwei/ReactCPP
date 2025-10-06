@@ -17,42 +17,45 @@ bool runReactJSXRuntimeTests() {
     return jsi::Value(runtime, jsi::String::createFromUtf8(runtime, text));
   };
 
-  PropList childProps{
-      {"className", makeStringValue("chip")},
-      {"children", makeStringValue("Alpha")}};
+  jsi::Object childProps(runtime);
+  childProps.setProperty(runtime, "className", makeStringValue("chip"));
+  childProps.setProperty(runtime, "children", makeStringValue("Alpha"));
 
   auto child = jsx(
       runtime,
       makeStringValue("span"),
-      childProps,
+      jsi::Value(runtime, childProps),
       std::optional<jsi::Value>(makeStringValue("alpha")));
   assert(child != nullptr);
   assert(child->type.isString());
   assert(child->type.getString(runtime).utf8(runtime) == "span");
-  assert(child->hostType.has_value());
-  assert(*child->hostType == "span");
   assert(child->key.has_value());
   assert(child->key->isString());
   assert(child->key->getString(runtime).utf8(runtime) == "alpha");
-  assert(child->props.size() == 1);
-  assert(child->props[0].first == "className");
-  assert(child->props[0].second.isString());
-  assert(child->props[0].second.getString(runtime).utf8(runtime) == "chip");
-  assert(child->children.size() == 1);
-  assert(child->children[0].kind == ValueKind::String);
-  assert(std::get<std::string>(child->children[0].payload) == "Alpha");
+  assert(!child->hasStaticChildren);
+  assert(child->props.isObject());
+  auto childPropsView = child->props.getObject(runtime);
+  auto classNameValue = childPropsView.getProperty(runtime, "className");
+  assert(classNameValue.isString());
+  assert(classNameValue.getString(runtime).utf8(runtime) == "chip");
 
-  PropList rootProps{
-      {"id", makeStringValue("root")}};
+  jsi::Object rootProps(runtime);
+  rootProps.setProperty(runtime, "id", makeStringValue("root"));
+  rootProps.setProperty(runtime, "__source", makeStringValue("ignored"));
+  rootProps.setProperty(runtime, "__self", makeStringValue("ignoredSelf"));
 
-  auto childrenArray = runtime.createArray(1);
+  auto childrenArray = runtime.makeArray(1);
   childrenArray.setValueAtIndex(runtime, 0, createJsxHostValue(runtime, child));
-  rootProps.emplace_back("children", jsi::Value(runtime, childrenArray));
+  rootProps.setProperty(runtime, "children", jsi::Value(runtime, childrenArray));
 
-  auto root = jsxs(runtime, makeStringValue("div"), rootProps);
+  auto root = jsxs(runtime, makeStringValue("div"), jsi::Value(runtime, rootProps));
   assert(root != nullptr);
-  assert(root->props.size() == 1);
-  assert(root->children.size() == 1);
+  assert(root->hasStaticChildren);
+  assert(root->props.isObject());
+  auto rootPropsView = root->props.getObject(runtime);
+  assert(rootPropsView.hasProperty(runtime, "id"));
+  assert(!rootPropsView.hasProperty(runtime, "__source"));
+  assert(!rootPropsView.hasProperty(runtime, "__self"));
 
   auto layout = serializeToWasm(runtime, *root);
   assert(layout.rootOffset != 0);
@@ -88,16 +91,17 @@ bool runReactJSXRuntimeTests() {
   const auto* textValue = reinterpret_cast<const char*>(base + textChild->data.ptrValue);
   assert(std::strcmp(textValue, "Alpha") == 0);
 
-  PropList devConfig{
-      {"className", makeStringValue("chip")},
-      {"children", makeStringValue("Beta")},
-      {"key", makeStringValue("beta")}};
+  jsi::Object devConfig(runtime);
+  devConfig.setProperty(runtime, "className", makeStringValue("chip"));
+  devConfig.setProperty(runtime, "children", makeStringValue("Beta"));
+  devConfig.setProperty(runtime, "key", makeStringValue("beta"));
+  devConfig.setProperty(runtime, "ref", makeStringValue("shouldBeReplaced"));
 
   SourceLocation location{"App.jsx", 42, 7};
   auto devElement = jsxDEV(
       runtime,
-    makeStringValue("span"),
-      devConfig,
+      makeStringValue("span"),
+      jsi::Value(runtime, devConfig),
       std::nullopt,
       location,
       std::optional<jsi::Value>(makeStringValue("ref")));
@@ -108,12 +112,12 @@ bool runReactJSXRuntimeTests() {
   assert(devElement->ref->getString(runtime).utf8(runtime) == "ref");
   assert(devElement->source.has_value());
   assert(devElement->source->fileName == "App.jsx");
-  assert(devElement->props.size() == 1);
-  assert(devElement->props[0].first == "className");
-  assert(devElement->props[0].second.isString());
-  assert(devElement->props[0].second.getString(runtime).utf8(runtime) == "chip");
+  assert(!devElement->hasStaticChildren);
+  auto devPropsView = devElement->props.getObject(runtime);
+  assert(devPropsView.hasProperty(runtime, "className"));
+  assert(!devPropsView.hasProperty(runtime, "key"));
+  assert(!devPropsView.hasProperty(runtime, "ref"));
 
   return true;
 }
-
 } // namespace react::test

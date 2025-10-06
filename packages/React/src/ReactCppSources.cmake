@@ -16,6 +16,7 @@ set(REACT_CPP_SOURCE_FILES
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberThenable.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberThrow.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberRootScheduler.cpp
+    ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactHostConfig.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactWakeable.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactUpdateQueue.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberWorkLoop.cpp

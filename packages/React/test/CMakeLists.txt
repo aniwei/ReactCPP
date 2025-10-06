@@ -8,7 +8,9 @@ add_executable(react_cpp_runtime_tests
     ReactFiberAsyncActionTests.cpp
     ReactSharedConstantsTests.cpp
     ReactJSXRuntimeTests.cpp
+    ReactRuntimeHostInterfaceTests.cpp
     UpdateQueueTests.cpp
+    ReactRuntimeTestHelper.cpp
 )
 
 set_target_properties(react_cpp_runtime_tests PROPERTIES

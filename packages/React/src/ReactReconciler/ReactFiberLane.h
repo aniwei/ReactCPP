@@ -569,6 +569,12 @@ struct FiberRoot {
 	std::unordered_map<const Wakeable*, std::unordered_set<Lanes>> pingCache{};
 	std::function<std::function<void()>()> onDefaultTransitionIndicator{};
 	std::function<void()> pendingIndicator{};
+	void* containerInfo{nullptr};
+	void* pendingContext{nullptr};
+	void* context{nullptr};
+	struct HostRootState {
+		bool isDehydrated{false};
+	} hostRootState{};
 };
 
 [[nodiscard]] inline int computeExpirationTime(Lane lane, int currentTime) {
