@@ -26,6 +26,8 @@ struct FiberNode {
   struct Dependencies {
     Lanes lanes{NoLanes};
     void* firstContext{nullptr};
+
+    ~Dependencies();
   };
 
   WorkTag tag{WorkTag::IndeterminateComponent};

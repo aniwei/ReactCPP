@@ -2,12 +2,19 @@
 
 #include "ReactReconciler/ReactFiber.h"
 #include "ReactReconciler/ReactFiberAsyncAction.h"
+#include "ReactReconciler/ReactEventPriorities.h"
 #include "ReactReconciler/ReactFiberLane.h"
 #include "ReactReconciler/ReactFiberWorkLoop.h"
 #include "ReactRuntime/ReactRuntime.h"
 #include "shared/ReactFeatureFlags.h"
+#include "shared/ReactSharedInternals.h"
+#include "jsi/jsi.h"
 #include <exception>
 #include <iostream>
+#include <memory>
+#include <limits>
+#include <utility>
+#include <utility>
 
 namespace react {
 namespace {
@@ -20,14 +27,322 @@ const RootSchedulerState& getState(const ReactRuntime& runtime) {
   return runtime.rootSchedulerState();
 }
 
-void ensureScheduleProcessing(ReactRuntime& runtime);
-void ensureScheduleIsScheduledInternal(ReactRuntime& runtime);
-void scheduleImmediateRootScheduleTask(ReactRuntime& runtime);
-bool performWorkOnRoot(ReactRuntime& runtime, FiberRoot& root, Lanes lanes);
-void flushSyncWorkAcrossRoots(ReactRuntime& runtime, Lanes syncTransitionLanes, bool onlyLegacy);
-Lanes scheduleTaskForRootDuringMicrotask(ReactRuntime& runtime, FiberRoot& root, int currentTime);
-void startDefaultTransitionIndicatorIfNeeded(ReactRuntime& runtime);
-void cleanupDefaultTransitionIndicatorIfNeeded(ReactRuntime& runtime, FiberRoot& root);
+using MicrotaskCallback = std::function<void(facebook::jsi::Runtime&)>;
+using SchedulerCallback = std::function<void(facebook::jsi::Runtime&, bool)>;
+
+constexpr std::uint64_t kActCallbackBit = 1ull << 63;
+
+std::uint64_t toActCallbackKey(const TaskHandle& handle) {
+  return handle.id & ~kActCallbackBit;
+}
+
+TaskHandle makeActCallbackHandle(RootSchedulerState& state) {
+  const std::uint64_t key = state.nextActCallbackId++;
+  return TaskHandle{kActCallbackBit | key};
+}
+
+bool isActCallbackHandle(const TaskHandle& handle) {
+  return (handle.id & kActCallbackBit) != 0;
+}
+
+bool pushActQueueCallback(facebook::jsi::Runtime& jsRuntime, facebook::jsi::Function&& callback) {
+  try {
+    facebook::jsi::Object internals = getReactSharedInternals(jsRuntime);
+    if (!hasReactSharedInternalsProperty(jsRuntime, internals, ReactSharedInternalsKeys::kActQueue)) {
+      return false;
+    }
+
+    facebook::jsi::Value queueValue = getReactSharedInternalsProperty(
+        jsRuntime, internals, ReactSharedInternalsKeys::kActQueue);
+    if (queueValue.isNull() || queueValue.isUndefined() || !queueValue.isObject()) {
+      return false;
+    }
+
+    facebook::jsi::Object queueObject = queueValue.getObject(jsRuntime);
+    if (!queueObject.isArray(jsRuntime)) {
+      return false;
+    }
+
+    facebook::jsi::Array queueArray = queueObject.asArray(jsRuntime);
+    const size_t length = queueArray.size(jsRuntime);
+    queueArray.setValueAtIndex(jsRuntime, length, std::move(callback));
+    return true;
+  } catch (const std::exception&) {
+    return false;
+  }
+}
+
+bool hasActiveActQueue(facebook::jsi::Runtime& jsRuntime) {
+  try {
+    facebook::jsi::Object internals = getReactSharedInternals(jsRuntime);
+    if (!hasReactSharedInternalsProperty(jsRuntime, internals, ReactSharedInternalsKeys::kActQueue)) {
+      return false;
+    }
+
+    facebook::jsi::Value queueValue = getReactSharedInternalsProperty(
+        jsRuntime, internals, ReactSharedInternalsKeys::kActQueue);
+    if (queueValue.isNull() || queueValue.isUndefined()) {
+      return false;
+    }
+
+    return queueValue.isObject();
+  } catch (const std::exception&) {
+    return false;
+  }
+}
+
+bool removeActQueueCallback(facebook::jsi::Runtime& jsRuntime, const facebook::jsi::Function& callback) {
+  try {
+    facebook::jsi::Object internals = getReactSharedInternals(jsRuntime);
+    if (!hasReactSharedInternalsProperty(jsRuntime, internals, ReactSharedInternalsKeys::kActQueue)) {
+      return false;
+    }
+
+    facebook::jsi::Value queueValue = getReactSharedInternalsProperty(
+        jsRuntime, internals, ReactSharedInternalsKeys::kActQueue);
+    if (!queueValue.isObject()) {
+      return false;
+    }
+
+    facebook::jsi::Object queueObject = queueValue.getObject(jsRuntime);
+    if (!queueObject.isArray(jsRuntime)) {
+      return false;
+    }
+
+    facebook::jsi::Array queueArray = queueObject.asArray(jsRuntime);
+    const size_t length = queueArray.size(jsRuntime);
+    if (length == 0) {
+      return false;
+    }
+
+    facebook::jsi::Value callbackValue(jsRuntime, callback);
+    for (size_t index = 0; index < length; ++index) {
+      facebook::jsi::Value entry = queueArray.getValueAtIndex(jsRuntime, index);
+      if (!entry.isObject()) {
+        continue;
+      }
+
+      if (entry.strictEquals(jsRuntime, callbackValue)) {
+        if (index + 1 < length) {
+          facebook::jsi::Value last = queueArray.getValueAtIndex(jsRuntime, length - 1);
+          queueArray.setValueAtIndex(jsRuntime, index, last);
+        }
+
+        queueArray.setValueAtIndex(jsRuntime, length - 1, facebook::jsi::Value::undefined());
+        queueObject.setProperty(jsRuntime, "length", facebook::jsi::Value(static_cast<double>(length - 1)));
+        return true;
+      }
+    }
+  } catch (const std::exception&) {
+    return false;
+  }
+
+  return false;
+}
+
+void processRootSchedule(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime);
+void processRootScheduleInMicrotask(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime);
+void processRootScheduleInImmediateTask(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime);
+
+bool detectMicrotaskSupport(facebook::jsi::Runtime& jsRuntime) {
+  try {
+    facebook::jsi::Object global = jsRuntime.global();
+    if (!global.hasProperty(jsRuntime, "queueMicrotask")) {
+      return false;
+    }
+
+    facebook::jsi::Value queueValue = global.getProperty(jsRuntime, "queueMicrotask");
+    if (!queueValue.isObject()) {
+      return false;
+    }
+
+    facebook::jsi::Object queueObject = queueValue.getObject(jsRuntime);
+    if (!queueObject.isFunction(jsRuntime)) {
+      return false;
+    }
+
+    return true;
+  } catch (const std::exception&) {
+    return false;
+  }
+}
+
+bool tryQueueMicrotask(facebook::jsi::Runtime& jsRuntime, MicrotaskCallback callback) {
+  try {
+    facebook::jsi::Object global = jsRuntime.global();
+    if (!global.hasProperty(jsRuntime, "queueMicrotask")) {
+      return false;
+    }
+
+    facebook::jsi::Value queueValue = global.getProperty(jsRuntime, "queueMicrotask");
+    if (!queueValue.isObject()) {
+      return false;
+    }
+
+    facebook::jsi::Object queueObject = queueValue.getObject(jsRuntime);
+    if (!queueObject.isFunction(jsRuntime)) {
+      return false;
+    }
+
+    facebook::jsi::Function queueFunction = queueObject.asFunction(jsRuntime);
+    auto callbackPtr = std::make_shared<MicrotaskCallback>(std::move(callback));
+    facebook::jsi::Function hostFunction = facebook::jsi::Function::createFromHostFunction(
+        jsRuntime,
+        facebook::jsi::PropNameID::forAscii(jsRuntime, "__reactScheduleRootMicrotask"),
+        0,
+        [callbackPtr](facebook::jsi::Runtime& runtime,
+                      const facebook::jsi::Value&,
+                      const facebook::jsi::Value*,
+                      size_t) -> facebook::jsi::Value {
+          if (callbackPtr && *callbackPtr) {
+            (*callbackPtr)(runtime);
+          }
+          return facebook::jsi::Value::undefined();
+        });
+
+    queueFunction.call(jsRuntime, hostFunction);
+    return true;
+  } catch (const std::exception&) {
+    return false;
+  }
+}
+
+void enqueueActMicrotask(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime) {
+  auto runtimePtr = &runtime;
+  auto callbackPtr = std::make_shared<MicrotaskCallback>(
+      [runtimePtr](facebook::jsi::Runtime& taskRuntime) {
+        processRootScheduleInMicrotask(*runtimePtr, taskRuntime);
+      });
+  facebook::jsi::Function hostFunction = facebook::jsi::Function::createFromHostFunction(
+      jsRuntime,
+      facebook::jsi::PropNameID::forAscii(jsRuntime, "__reactActMicrotask"),
+      0,
+      [callbackPtr](facebook::jsi::Runtime& runtime,
+                    const facebook::jsi::Value&,
+                    const facebook::jsi::Value*,
+                    size_t) -> facebook::jsi::Value {
+        if (callbackPtr && *callbackPtr) {
+          (*callbackPtr)(runtime);
+        }
+        return facebook::jsi::Value::null();
+      });
+
+  pushActQueueCallback(jsRuntime, std::move(hostFunction));
+}
+
+TaskHandle scheduleCallback(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  SchedulerPriority priority,
+  SchedulerCallback callback) {
+  RootSchedulerState& state = getState(runtime);
+  auto callbackPtr = std::make_shared<SchedulerCallback>(std::move(callback));
+
+  const std::uint64_t actKey = state.nextActCallbackId;
+  facebook::jsi::Function hostFunction = facebook::jsi::Function::createFromHostFunction(
+      jsRuntime,
+      facebook::jsi::PropNameID::forAscii(jsRuntime, "__reactActSchedulerTask"),
+      1,
+      [callbackPtr, &state, actKey](facebook::jsi::Runtime& runtime,
+                                    const facebook::jsi::Value& thisValue,
+                                    const facebook::jsi::Value* arguments,
+                                    size_t count) -> facebook::jsi::Value {
+        (void)thisValue;
+        bool didTimeout = false;
+        if (count > 0 && arguments[0].isBool()) {
+          didTimeout = arguments[0].getBool();
+        }
+        state.actCallbacks.erase(actKey);
+        if (callbackPtr && *callbackPtr) {
+          (*callbackPtr)(runtime, didTimeout);
+        }
+        return facebook::jsi::Value::null();
+      });
+
+  facebook::jsi::Function queueFunction(hostFunction);
+  if (pushActQueueCallback(jsRuntime, std::move(queueFunction))) {
+    state.actCallbacks.emplace(actKey, hostFunction);
+    return makeActCallbackHandle(state);
+  }
+
+  facebook::jsi::Runtime* capturedRuntime = &jsRuntime;
+  return runtime.scheduleTask(priority, [callbackPtr, capturedRuntime]() {
+    if (callbackPtr && *callbackPtr) {
+      (*callbackPtr)(*capturedRuntime, false);
+    }
+  });
+}
+
+void cancelCallback(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, TaskHandle handle) {
+  if (!handle) {
+    return;
+  }
+
+  if (isActCallbackHandle(handle)) {
+    RootSchedulerState& state = getState(runtime);
+    const std::uint64_t key = toActCallbackKey(handle);
+    auto it = state.actCallbacks.find(key);
+    if (it != state.actCallbacks.end()) {
+      removeActQueueCallback(jsRuntime, it->second);
+      state.actCallbacks.erase(it);
+    }
+    return;
+  }
+
+  runtime.cancelTask(handle);
+}
+
+void scheduleImmediateTaskFallback(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime) {
+  ReactRuntime* runtimePtr = &runtime;
+  facebook::jsi::Runtime* capturedRuntime = &jsRuntime;
+  runtime.scheduleTask(SchedulerPriority::ImmediatePriority, [runtimePtr, capturedRuntime]() {
+    processRootScheduleInImmediateTask(*runtimePtr, *capturedRuntime);
+  });
+}
+
+bool tryScheduleRootMicrotask(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime) {
+  RootSchedulerState& state = getState(runtime);
+  if (!state.supportsMicrotasksCache.has_value()) {
+    state.supportsMicrotasksCache = detectMicrotaskSupport(jsRuntime);
+  }
+
+  if (!state.supportsMicrotasksCache.value()) {
+    return false;
+  }
+
+  ReactRuntime* runtimePtr = &runtime;
+  const bool scheduled = tryQueueMicrotask(jsRuntime, [runtimePtr](facebook::jsi::Runtime& taskRuntime) {
+    const ExecutionContext executionContext = getExecutionContext(*runtimePtr);
+    if ((executionContext & (RenderContext | CommitContext)) != NoContext) {
+      scheduleImmediateTaskFallback(*runtimePtr, taskRuntime);
+      return;
+    }
+
+    processRootScheduleInMicrotask(*runtimePtr, taskRuntime);
+  });
+
+  if (!scheduled) {
+    state.supportsMicrotasksCache = false;
+  }
+
+  return scheduled;
+}
+
+void ensureScheduleProcessing(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime);
+void ensureScheduleIsScheduledInternal(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime);
+void scheduleImmediateRootScheduleTask(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime);
+bool performWorkOnRoot(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, FiberRoot& root, Lanes lanes, bool forceSync);
+bool performSyncWorkOnRoot(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, FiberRoot& root, Lanes lanes);
+void performWorkOnRootViaSchedulerTask(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  FiberRoot& root,
+  TaskHandle originalCallbackHandle,
+  bool didTimeout);
+void flushSyncWorkAcrossRoots(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, Lanes syncTransitionLanes, bool onlyLegacy);
+Lanes scheduleTaskForRootDuringMicrotask(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, FiberRoot& root, int currentTime);
+void startDefaultTransitionIndicatorIfNeeded(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime);
+void cleanupDefaultTransitionIndicatorIfNeeded(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, FiberRoot& root);
 
 void reportDefaultIndicatorError(const std::exception& ex) {
   std::cerr << "React default transition indicator threw: " << ex.what() << std::endl;
@@ -37,7 +352,8 @@ void reportDefaultIndicatorUnknownError() {
   std::cerr << "React default transition indicator threw an unknown exception" << std::endl;
 }
 
-void startDefaultTransitionIndicatorIfNeeded(ReactRuntime& runtime) {
+void startDefaultTransitionIndicatorIfNeeded(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime) {
+  (void)jsRuntime;
   if (!enableDefaultTransitionIndicator) {
     return;
   }
@@ -78,7 +394,8 @@ void startDefaultTransitionIndicatorIfNeeded(ReactRuntime& runtime) {
   }
 }
 
-void cleanupDefaultTransitionIndicatorIfNeeded(ReactRuntime& runtime, FiberRoot& root) {
+void cleanupDefaultTransitionIndicatorIfNeeded(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, FiberRoot& root) {
+  (void)jsRuntime;
   if (!enableDefaultTransitionIndicator) {
     return;
   }
@@ -141,26 +458,27 @@ void removeRootFromSchedule(ReactRuntime& runtime, FiberRoot& root) {
 }
 
 SchedulerPriority toSchedulerPriority(Lane lane) {
-  switch (lanePriorityForLane(lane)) {
-    case LanePriority::SyncLanePriority:
-      return SchedulerPriority::ImmediatePriority;
-    case LanePriority::InputContinuousLanePriority:
+  if (lane == NoLane) {
+    return SchedulerPriority::NormalPriority;
+  }
+
+  const EventPriority eventPriority = lanesToEventPriority(laneToLanes(lane));
+  switch (eventPriority) {
+    case DiscreteEventPriority:
+    case ContinuousEventPriority:
       return SchedulerPriority::UserBlockingPriority;
-    case LanePriority::DefaultLanePriority:
-    case LanePriority::TransitionLanePriority:
-    case LanePriority::RetryLanePriority:
+    case DefaultEventPriority:
       return SchedulerPriority::NormalPriority;
-    case LanePriority::IdleLanePriority:
+    case IdleEventPriority:
       return SchedulerPriority::IdlePriority;
-    case LanePriority::OffscreenLanePriority:
-      return SchedulerPriority::LowPriority;
-    case LanePriority::NoLanePriority:
     default:
       return SchedulerPriority::NormalPriority;
   }
 }
 
-void commitRoot(FiberRoot& root, FiberNode& finishedWork) {
+void commitRoot(
+  FiberRoot& root, 
+  FiberNode& finishedWork) {
   FiberNode* const previousCurrent = root.current;
 
   if (previousCurrent == &finishedWork) {
@@ -175,8 +493,52 @@ void commitRoot(FiberRoot& root, FiberNode& finishedWork) {
   }
 }
 
-void performScheduledWorkOnRoot(ReactRuntime& runtime, FiberRoot& root, Lane scheduledLane) {
-  (void)scheduledLane;
+void scheduleRootTask(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  FiberRoot& root, 
+  Lane lane) {
+  const SchedulerPriority priority = toSchedulerPriority(lane);
+  ReactRuntime* runtimePtr = &runtime;
+  FiberRoot* rootPtr = &root;
+  auto callbackHandleBox = std::make_shared<TaskHandle>();
+  const TaskHandle handle = scheduleCallback(runtime, jsRuntime, priority, [runtimePtr, rootPtr, callbackHandleBox](facebook::jsi::Runtime& taskRuntime, bool didTimeout) {
+    if (!callbackHandleBox) {
+      return;
+    }
+    performWorkOnRootViaSchedulerTask(*runtimePtr, taskRuntime, *rootPtr, *callbackHandleBox, didTimeout);
+  });
+  *callbackHandleBox = handle;
+
+  root.callbackNode = handle;
+  root.callbackPriority = lane;
+}
+
+void performWorkOnRootViaSchedulerTask(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  FiberRoot& root,
+  TaskHandle originalCallbackHandle,
+  bool didTimeout) {
+  if (root.callbackNode != originalCallbackHandle) {
+    return;
+  }
+
+  if (hasPendingCommitEffects(runtime)) {
+    root.callbackNode = {};
+    root.callbackPriority = NoLane;
+    ensureScheduleProcessing(runtime, jsRuntime);
+    return;
+  }
+
+  if (flushPendingEffects(runtime, jsRuntime, true)) {
+    if (root.callbackNode == originalCallbackHandle) {
+      root.callbackNode = {};
+      root.callbackPriority = NoLane;
+      ensureScheduleProcessing(runtime, jsRuntime);
+    }
+    return;
+  }
 
   const int currentTime = static_cast<int>(runtime.now());
   markStarvedLanesAsExpired(root, currentTime);
@@ -193,24 +555,16 @@ void performScheduledWorkOnRoot(ReactRuntime& runtime, FiberRoot& root, Lane sch
     removeRootFromSchedule(runtime, root);
     return;
   }
-  const bool hasRemainingWork = performWorkOnRoot(runtime, root, lanes);
+
+  const bool forceSync = !disableSchedulerTimeoutInWorkLoop && didTimeout;
+  const bool hasRemainingWork = performWorkOnRoot(runtime, jsRuntime, root, lanes, forceSync);
 
   if (hasRemainingWork) {
-    ensureScheduleProcessing(runtime);
+    ensureScheduleProcessing(runtime, jsRuntime);
   }
 }
 
-void scheduleRootTask(ReactRuntime& runtime, FiberRoot& root, Lane lane) {
-  const SchedulerPriority priority = toSchedulerPriority(lane);
-  const TaskHandle handle = runtime.scheduleTask(priority, [&runtime, rootPtr = &root, lane]() {
-    performScheduledWorkOnRoot(runtime, *rootPtr, lane);
-  });
-
-  root.callbackNode = handle;
-  root.callbackPriority = lane;
-}
-
-void processRootSchedule(ReactRuntime& runtime) {
+void processRootSchedule(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime) {
   RootSchedulerState& state = getState(runtime);
   if (state.isProcessingRootSchedule) {
     return;
@@ -237,7 +591,7 @@ void processRootSchedule(ReactRuntime& runtime) {
 
     while (root != nullptr) {
       FiberRoot* const next = root->next;
-      const Lanes scheduledLanes = scheduleTaskForRootDuringMicrotask(runtime, *root, currentTime);
+      const Lanes scheduledLanes = scheduleTaskForRootDuringMicrotask(runtime, jsRuntime, *root, currentTime);
 
       if (scheduledLanes == NoLanes) {
         root->next = nullptr;
@@ -264,38 +618,65 @@ void processRootSchedule(ReactRuntime& runtime) {
     state.lastScheduledRoot = prev;
 
     if (!hasPendingCommitEffects(runtime)) {
-      flushSyncWorkAcrossRoots(runtime, syncTransitionLanes, false);
+      flushSyncWorkAcrossRoots(runtime, jsRuntime, syncTransitionLanes, false);
     }
   }
 
   if (state.currentEventTransitionLane != NoLane) {
     state.currentEventTransitionLane = NoLane;
-    startDefaultTransitionIndicatorIfNeeded(runtime);
+    startDefaultTransitionIndicatorIfNeeded(runtime, jsRuntime);
   }
 
   state.isProcessingRootSchedule = false;
 }
 
-void ensureScheduleProcessing(ReactRuntime& runtime) {
+void processRootScheduleInMicrotask(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime) {
+  RootSchedulerState& state = getState(runtime);
+  state.didScheduleMicrotask = false;
+  state.didScheduleMicrotaskAct = false;
+  processRootSchedule(runtime, jsRuntime);
+}
+
+void processRootScheduleInImmediateTask(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime) {
+  processRootScheduleInMicrotask(runtime, jsRuntime);
+}
+
+void ensureScheduleProcessing(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime) {
   RootSchedulerState& state = getState(runtime);
   if (state.didScheduleRootProcessing) {
     return;
   }
 
   state.didScheduleRootProcessing = true;
-  ensureScheduleIsScheduledInternal(runtime);
+  ensureScheduleIsScheduled(runtime, jsRuntime);
 }
 
-bool performWorkOnRoot(ReactRuntime& runtime, FiberRoot& root, Lanes lanes) {
+bool performSyncWorkOnRoot(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  FiberRoot& root,
+  Lanes lanes) {
+  if (flushPendingEffects(runtime, jsRuntime, false)) {
+    return true;
+  }
+
+  return performWorkOnRoot(runtime, jsRuntime, root, lanes, true);
+}
+
+bool performWorkOnRoot(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  FiberRoot& root,
+  Lanes lanes,
+  bool forceSync) {
   const Lanes previousPendingLanes = root.pendingLanes;
 
-  RootExitStatus status;
-  facebook::jsi::Runtime* jsRuntime = nullptr;
-  if (includesBlockingLane(lanes) || includesSyncLane(lanes)) {
-    status = renderRootSync(runtime, jsRuntime, root, lanes, false);
-  } else {
-    status = renderRootConcurrent(runtime, jsRuntime, root, lanes);
-  }
+  const bool shouldRenderSync =
+      forceSync || includesBlockingLane(lanes) || includesSyncLane(lanes);
+
+  RootExitStatus status = shouldRenderSync
+      ? renderRootSync(runtime, jsRuntime, root, lanes, false)
+      : renderRootConcurrent(runtime, jsRuntime, root, lanes);
 
   switch (status) {
     case RootExitStatus::Completed: {
@@ -307,11 +688,11 @@ bool performWorkOnRoot(ReactRuntime& runtime, FiberRoot& root, Lanes lanes) {
         commitRoot(root, *finishedWork);
 
         if (enableDefaultTransitionIndicator && includesLoadingIndicatorLanes(lanes)) {
-          markIndicatorHandled(runtime, root);
+          markIndicatorHandled(runtime, jsRuntime, root);
         }
       }
 
-      cleanupDefaultTransitionIndicatorIfNeeded(runtime, root);
+      cleanupDefaultTransitionIndicatorIfNeeded(runtime, jsRuntime, root);
       break;
     }
     case RootExitStatus::Suspended:
@@ -342,7 +723,11 @@ bool performWorkOnRoot(ReactRuntime& runtime, FiberRoot& root, Lanes lanes) {
   return hasRemainingWork;
 }
 
-void flushSyncWorkAcrossRoots(ReactRuntime& runtime, Lanes syncTransitionLanes, bool onlyLegacy) {
+void flushSyncWorkAcrossRoots(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  Lanes syncTransitionLanes,
+  bool onlyLegacy) {
   RootSchedulerState& state = getState(runtime);
   if (state.isFlushingWork) {
     return;
@@ -381,13 +766,14 @@ void flushSyncWorkAcrossRoots(ReactRuntime& runtime, Lanes syncTransitionLanes, 
 
       if (nextLanes != NoLanes) {
         const bool shouldFlushSync =
-            syncTransitionLanes != NoLanes ||
-            ((!checkIfRootIsPrerendering(*root, nextLanes)) &&
-             (includesSyncLane(nextLanes) || (enableGestureTransition && isGestureRender(nextLanes))));
+          syncTransitionLanes != NoLanes ||
+          ((!checkIfRootIsPrerendering(*root, nextLanes)) &&
+            (includesSyncLane(nextLanes) || (enableGestureTransition && isGestureRender(nextLanes))));
 
         if (shouldFlushSync) {
           didPerformSomeWork = true;
-          const bool hasRemainingWork = performWorkOnRoot(runtime, *root, nextLanes);
+          facebook::jsi::Runtime& runtimeForTask = jsRuntime;
+          const bool hasRemainingWork = performSyncWorkOnRoot(runtime, runtimeForTask, *root, nextLanes);
           if (hasRemainingWork) {
             shouldProcessSchedule = true;
           }
@@ -402,11 +788,15 @@ void flushSyncWorkAcrossRoots(ReactRuntime& runtime, Lanes syncTransitionLanes, 
   state.mightHavePendingSyncWork = false;
 
   if (shouldProcessSchedule) {
-    ensureScheduleProcessing(runtime);
+    ensureScheduleProcessing(runtime, jsRuntime);
   }
 }
 
-Lanes scheduleTaskForRootDuringMicrotask(ReactRuntime& runtime, FiberRoot& root, int currentTime) {
+Lanes scheduleTaskForRootDuringMicrotask(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  FiberRoot& root,
+  int currentTime) {
   markStarvedLanesAsExpired(root, currentTime);
 
   const FiberRoot* const rootWithPendingPassiveEffects = getRootWithPendingPassiveEffects(runtime);
@@ -430,7 +820,7 @@ Lanes scheduleTaskForRootDuringMicrotask(ReactRuntime& runtime, FiberRoot& root,
       (workInProgressRoot == &root && isWorkLoopSuspendedOnData(runtime)) ||
       root.cancelPendingCommit != nullptr) {
     if (existingCallbackNode) {
-      runtime.cancelTask(existingCallbackNode);
+      cancelCallback(runtime, jsRuntime, existingCallbackNode);
     }
     root.callbackNode = {};
     root.callbackPriority = NoLane;
@@ -439,7 +829,7 @@ Lanes scheduleTaskForRootDuringMicrotask(ReactRuntime& runtime, FiberRoot& root,
 
   if (includesSyncLane(nextLanes) && !checkIfRootIsPrerendering(root, nextLanes)) {
     if (existingCallbackNode) {
-      runtime.cancelTask(existingCallbackNode);
+      cancelCallback(runtime, jsRuntime, existingCallbackNode);
     }
     root.callbackNode = {};
     root.callbackPriority = SyncLane;
@@ -447,56 +837,92 @@ Lanes scheduleTaskForRootDuringMicrotask(ReactRuntime& runtime, FiberRoot& root,
   }
 
   const Lane newCallbackPriority = getHighestPriorityLane(nextLanes);
+  const bool actQueueActive = hasActiveActQueue(jsRuntime);
   if (existingCallbackNode && existingCallbackPriority == newCallbackPriority) {
-    return nextLanes;
+    const bool shouldRescheduleOnActQueue = actQueueActive && !isActCallbackHandle(existingCallbackNode);
+    if (!shouldRescheduleOnActQueue) {
+      return nextLanes;
+    }
+    cancelCallback(runtime, jsRuntime, existingCallbackNode);
+  } else if (existingCallbackNode) {
+    cancelCallback(runtime, jsRuntime, existingCallbackNode);
   }
 
-  if (existingCallbackNode) {
-    runtime.cancelTask(existingCallbackNode);
-  }
-
-  scheduleRootTask(runtime, root, newCallbackPriority);
+  scheduleRootTask(runtime, jsRuntime, root, newCallbackPriority);
   return nextLanes;
 }
 
-void ensureScheduleIsScheduledInternal(ReactRuntime& runtime) {
+void ensureScheduleIsScheduledInternal(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime) {
   RootSchedulerState& state = getState(runtime);
   if (state.didScheduleMicrotask) {
     return;
   }
 
   state.didScheduleMicrotask = true;
-  scheduleImmediateRootScheduleTask(runtime);
+  scheduleImmediateRootScheduleTask(runtime, jsRuntime);
 }
 
-void scheduleImmediateRootScheduleTask(ReactRuntime& runtime) {
-  runtime.scheduleTask(SchedulerPriority::ImmediatePriority, [&runtime]() {
-    RootSchedulerState& state = getState(runtime);
-    state.didScheduleMicrotask = false;
-    state.didScheduleMicrotaskAct = false;
-    processRootSchedule(runtime);
-  });
+void scheduleImmediateRootScheduleTask(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime) {
+  enqueueActMicrotask(runtime, jsRuntime);
+
+  if (tryScheduleRootMicrotask(runtime, jsRuntime)) {
+    return;
+  }
+
+  scheduleImmediateTaskFallback(runtime, jsRuntime);
 }
 
 } // namespace
 
-void ensureRootIsScheduled(ReactRuntime& runtime, FiberRoot& root) {
+void ensureRootIsScheduled(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  FiberRoot& root) {
   addRootToSchedule(runtime, root);
   getState(runtime).mightHavePendingSyncWork = true;
-  ensureScheduleProcessing(runtime);
-}
+  ensureScheduleProcessing(runtime, jsRuntime);
 
-void flushSyncWorkOnAllRoots(ReactRuntime& runtime, Lanes syncTransitionLanes) {
-  flushSyncWorkAcrossRoots(runtime, syncTransitionLanes, false);
-}
-
-void flushSyncWorkOnLegacyRootsOnly(ReactRuntime& runtime) {
-  if (!disableLegacyMode) {
-    flushSyncWorkAcrossRoots(runtime, NoLanes, true);
+  if (!disableLegacyMode && root.tag == RootTag::LegacyRoot) {
+    try {
+      facebook::jsi::Object internals = getReactSharedInternals(jsRuntime);
+      if (hasReactSharedInternalsProperty(jsRuntime, internals, ReactSharedInternalsKeys::kIsBatchingLegacy)) {
+        const facebook::jsi::Value batching = getReactSharedInternalsProperty(
+          jsRuntime,
+          internals,
+          ReactSharedInternalsKeys::kIsBatchingLegacy);
+        if (batching.isBool() && batching.getBool()) {
+          facebook::jsi::Value flagValue(true);
+          setReactSharedInternalsProperty(
+            jsRuntime,
+            internals,
+            ReactSharedInternalsKeys::kDidScheduleLegacyUpdate,
+            std::move(flagValue));
+        }
+      }
+    } catch (const std::exception&) {
+      // Ignore if ReactSharedInternals are not available in the runtime.
+    }
   }
 }
 
-Lane requestTransitionLane(ReactRuntime& runtime, const Transition* transition) {
+void flushSyncWorkOnAllRoots(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  Lanes syncTransitionLanes) {
+  flushSyncWorkAcrossRoots(runtime, jsRuntime, syncTransitionLanes, false);
+}
+
+void flushSyncWorkOnLegacyRootsOnly(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime) {
+  if (!disableLegacyMode) {
+    flushSyncWorkAcrossRoots(runtime, jsRuntime, NoLanes, true);
+  }
+}
+
+Lane requestTransitionLane(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  const Transition* transition) {
+  (void)jsRuntime;
   (void)transition;
   RootSchedulerState& state = getState(runtime);
   if (state.currentEventTransitionLane == NoLane) {
@@ -507,11 +933,16 @@ Lane requestTransitionLane(ReactRuntime& runtime, const Transition* transition) 
   return state.currentEventTransitionLane;
 }
 
-bool didCurrentEventScheduleTransition(ReactRuntime& runtime) {
+bool didCurrentEventScheduleTransition(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime) {
+  (void)jsRuntime;
   return getState(runtime).currentEventTransitionLane != NoLane;
 }
 
-void markIndicatorHandled(ReactRuntime& runtime, FiberRoot& root) {
+void markIndicatorHandled(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  FiberRoot& root) {
+  (void)jsRuntime;
   if (!enableDefaultTransitionIndicator) {
     return;
   }
@@ -523,14 +954,40 @@ void markIndicatorHandled(ReactRuntime& runtime, FiberRoot& root) {
   markIsomorphicIndicatorHandled(runtime);
 }
 
-void ensureScheduleIsScheduled(ReactRuntime& runtime) {
-  ensureScheduleIsScheduledInternal(runtime);
+void ensureScheduleIsScheduled(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime) {
+  RootSchedulerState& state = getState(runtime);
+
+  bool handledByActQueue = false;
+  try {
+    const facebook::jsi::Object internals = getReactSharedInternals(jsRuntime);
+    if (hasReactSharedInternalsProperty(jsRuntime, internals, ReactSharedInternalsKeys::kActQueue)) {
+      const facebook::jsi::Value queue = getReactSharedInternalsProperty(
+        jsRuntime,
+        internals,
+        ReactSharedInternalsKeys::kActQueue);
+      if (!queue.isNull() && !queue.isUndefined()) {
+        handledByActQueue = true;
+        if (!state.didScheduleMicrotaskAct) {
+          state.didScheduleMicrotaskAct = true;
+          scheduleImmediateRootScheduleTask(runtime, jsRuntime);
+        }
+      }
+    }
+  } catch (const std::exception&) {
+    handledByActQueue = false;
+  }
+
+  if (!handledByActQueue) {
+    ensureScheduleIsScheduledInternal(runtime, jsRuntime);
+  }
 }
 
 void registerRootDefaultIndicator(
   ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
   FiberRoot& root,
   std::function<std::function<void()>()> onDefaultTransitionIndicator) {
+  (void)jsRuntime;
   if (!enableDefaultTransitionIndicator) {
     root.onDefaultTransitionIndicator = {};
     return;

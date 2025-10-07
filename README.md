@@ -2,8 +2,28 @@
 [![Tests](https://github.com/Roblox/roact-alignment/workflows/ci/badge.svg?branch=master)](https://github.com/Roblox/roact-alignment/actions?query=workflow%3ACI+branch%3Amaster)
 [![Coverage Status](https://coveralls.io/repos/github/Roblox/roact-alignment/badge.svg?branch=master&t=TvTSze)](https://coveralls.io/github/Roblox/roact-alignment?branch=master)
 [![Docs](https://img.shields.io/badge/docs-website-green.svg)](https://roblox.github.io/roact-alignment/)
+[![Translation Progress](https://img.shields.io/badge/translation-63%25%20complete-blue.svg)](#translation-progress)
 
 A comprehensive, but not exhaustive, translation of upstream ReactJS 17.x into Roblox Lua.
+
+## Translation Progress
+
+🚀 **ReactCPP** is an active C++ port of React's core functionality, currently **63% complete** with ongoing development.
+
+| Module | Progress | Status | Next Steps |
+|--------|----------|--------|------------|
+| **Shared** | ✅ 100% | Complete | Feature flag automation |
+| **Reconciler** | 🔄 63% | In Progress | Missing performSyncWorkOnRoot, performWorkOnRootViaSchedulerTask |
+| **React DOM** | 🔄 17% | In Progress | Host config, property diffing |
+| **React Core** | ⛔ 0% | Not Started | Hooks, Context APIs |
+| **Scheduler** | ⛔ 0% | Not Started | Task queue, priority management |
+| **Experimental** | ⛔ 0% | Not Started | Flight, Server Components |
+
+📊 **Overall**: 8/27 files complete, 9/27 in progress, 10/27 not started  
+📋 **Detailed tracking**: See [`docs/matrix/react-translation-todo.md`](docs/matrix/react-translation-todo.md)  
+🛠️ **Check progress**: Run `node scripts/check-translation-progress.js`
+
+---
 
 ## TL;DR
 

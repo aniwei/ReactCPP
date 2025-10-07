@@ -3,6 +3,7 @@
 #include "ReactReconciler/ReactFiberFlags.h"
 #include "ReactReconciler/ReactFiberLane.h"
 #include "ReactReconciler/ReactRootTags.h"
+#include "ReactReconciler/ReactFiberNewContext.h"
 #include "shared/ReactFeatureFlags.h"
 
 #include <utility>
@@ -35,11 +36,16 @@ std::unique_ptr<FiberNode::Dependencies> cloneDependencies(
 
   auto clone = std::make_unique<FiberNode::Dependencies>();
   clone->lanes = source->lanes;
-  clone->firstContext = source->firstContext;
+  clone->firstContext = cloneContextDependencies(source->firstContext);
   return clone;
 }
 
 } // namespace
+
+FiberNode::Dependencies::~Dependencies() {
+  deleteContextDependencies(firstContext);
+  firstContext = nullptr;
+}
 
 FiberNode* createFiber(
     WorkTag tag,

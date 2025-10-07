@@ -103,6 +103,7 @@ void setIsRunningInsertionEffect(ReactRuntime& runtime, bool value);
 bool hasPendingCommitEffects(ReactRuntime& runtime);
 FiberRoot* getRootWithPendingPassiveEffects(ReactRuntime& runtime);
 Lanes getPendingPassiveEffectsLanes(ReactRuntime& runtime);
+bool flushPendingEffects(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, bool includeRenderPhaseUpdates = false);
 bool isWorkLoopSuspendedOnData(ReactRuntime& runtime);
 double getCurrentTime(ReactRuntime& runtime);
 
@@ -162,29 +163,29 @@ bool getWorkInProgressRootDidIncludeRecursiveRenderUpdate(ReactRuntime& runtime)
 void setWorkInProgressRootDidIncludeRecursiveRenderUpdate(ReactRuntime& runtime, bool value);
 
 void panicOnRootError(ReactRuntime& runtime, FiberRoot& root, void* error);
-void completeUnitOfWork(ReactRuntime& runtime, facebook::jsi::Runtime*& jsRuntime, FiberNode& unitOfWork);
+void completeUnitOfWork(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, FiberNode& unitOfWork);
 void unwindUnitOfWork(ReactRuntime& runtime, FiberNode& unitOfWork, bool skipSiblings);
 void throwAndUnwindWorkLoop(
 	ReactRuntime& runtime,
-	facebook::jsi::Runtime*& jsRuntime,
+	facebook::jsi::Runtime& jsRuntime,
 	FiberRoot& root,
 	FiberNode& unitOfWork,
 	void* thrownValue,
 	SuspendedReason reason);
-void performUnitOfWork(ReactRuntime& runtime, facebook::jsi::Runtime*& jsRuntime, FiberNode& unitOfWork);
-void workLoopSync(ReactRuntime& runtime, facebook::jsi::Runtime*& jsRuntime);
-void workLoopConcurrent(ReactRuntime& runtime, facebook::jsi::Runtime*& jsRuntime, bool nonIdle);
-void workLoopConcurrentByScheduler(ReactRuntime& runtime, facebook::jsi::Runtime*& jsRuntime);
-void attachPingListener(ReactRuntime& runtime, FiberRoot& root, Wakeable& wakeable, Lanes lanes);
+void performUnitOfWork(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, FiberNode& unitOfWork);
+void workLoopSync(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime);
+void workLoopConcurrent(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, bool nonIdle);
+void workLoopConcurrentByScheduler(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime);
+void attachPingListener(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, FiberRoot& root, Wakeable& wakeable, Lanes lanes);
 RootExitStatus renderRootSync(
 	ReactRuntime& runtime,
-	facebook::jsi::Runtime*& jsRuntime,
+	facebook::jsi::Runtime& jsRuntime,
 	FiberRoot& root,
 	Lanes lanes,
 	bool shouldYieldForPrerendering);
 RootExitStatus renderRootConcurrent(
 	ReactRuntime& runtime,
-	facebook::jsi::Runtime*& jsRuntime,
+	facebook::jsi::Runtime& jsRuntime,
 	FiberRoot& root,
 	Lanes lanes);
 

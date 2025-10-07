@@ -114,12 +114,13 @@ FiberNode* markSuspenseBoundaryShouldCapture(
 } // namespace
 
 bool throwException(
-    ReactRuntime& runtime,
-    FiberRoot& root,
-    FiberNode* returnFiber,
-    FiberNode& unitOfWork,
-    void* thrownValue,
-    Lanes renderLanes) {
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  FiberRoot& root,
+  FiberNode* returnFiber,
+  FiberNode& unitOfWork,
+  void* thrownValue,
+  Lanes renderLanes) {
   unitOfWork.flags = static_cast<FiberFlags>(unitOfWork.flags | Incomplete);
   setWorkInProgressThrownValue(runtime, thrownValue);
 
@@ -150,7 +151,7 @@ bool throwException(
             retryQueue.insert(wakeable);
             if ((disableLegacyMode || (boundary->mode & ConcurrentMode) != NoMode) &&
                 !isSuspenseyResource) {
-              attachPingListener(runtime, root, *wakeable, renderLanes);
+              attachPingListener(runtime, jsRuntime, root, *wakeable, renderLanes);
             }
           }
           if (disableLegacyMode || (unitOfWork.mode & ConcurrentMode) != NoMode) {
@@ -169,7 +170,7 @@ bool throwException(
               OffscreenQueue& offscreenQueue = ensureOffscreenQueue(*boundary);
               RetryQueue& retryQueue = ensureOffscreenRetryQueue(offscreenQueue);
               retryQueue.insert(wakeable);
-              attachPingListener(runtime, root, *wakeable, renderLanes);
+              attachPingListener(runtime, jsRuntime, root, *wakeable, renderLanes);
             }
             return false;
           }
@@ -183,7 +184,7 @@ bool throwException(
     if (disableLegacyMode || root.tag == RootTag::ConcurrentRoot) {
       setWorkInProgressSuspendedReason(runtime, SuspendedReason::SuspendedOnData);
       if (!isSuspenseyResource) {
-        attachPingListener(runtime, root, *wakeable, renderLanes);
+  attachPingListener(runtime, jsRuntime, root, *wakeable, renderLanes);
       }
       renderDidSuspendDelayIfPossible(runtime);
       return false;

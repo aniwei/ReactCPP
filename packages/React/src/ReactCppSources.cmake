@@ -10,12 +10,15 @@ set(REACT_CPP_SOURCE_FILES
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberAsyncAction.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberErrorLogger.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberHiddenContext.cpp
+    ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberCallUserSpace.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberClassUpdateQueue.cpp
+    ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberNewContext.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberStack.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberSuspenseContext.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberThenable.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberThrow.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberRootScheduler.cpp
+    ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberChild.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactHostConfig.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactWakeable.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactUpdateQueue.cpp
