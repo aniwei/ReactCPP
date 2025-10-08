@@ -1,17 +1,20 @@
 #include "ReactReconciler/ReactFiberWorkLoop.h"
 
 #include "ReactReconciler/ReactCapturedValue.h"
-#include "ReactReconciler/ReactFiberConcurrentUpdates.h"
 #include "ReactReconciler/ReactFiberChild.h"
+#include "ReactReconciler/ReactFiberConcurrentUpdates.h"
 #include "ReactReconciler/ReactFiberErrorLogger.h"
+#include "ReactReconciler/ReactFiberHiddenContext.h"
+#include "ReactReconciler/ReactFiberOffscreenComponent.h"
 #include "ReactReconciler/ReactFiberNewContext.h"
-#include "ReactReconciler/ReactUpdateQueue.h"
-#include "ReactReconciler/ReactWakeable.h"
+#include "ReactReconciler/ReactFiberStack.h"
+#include "ReactReconciler/ReactFiberSuspenseComponent.h"
 #include "ReactReconciler/ReactFiberSuspenseContext.h"
 #include "ReactReconciler/ReactFiberThrow.h"
 #include "ReactReconciler/ReactFiberSuspenseContext.h"
 #include "ReactReconciler/ReactFiberRootScheduler.h"
 #include "ReactReconciler/ReactHostConfig.h"
+#include "ReactReconciler/ReactTypeOfMode.h"
 #include "ReactRuntime/ReactRuntime.h"
 #include "shared/ReactFeatureFlags.h"
 
@@ -34,11 +37,22 @@ using facebook::jsi::Runtime;
 using facebook::jsi::String;
 using facebook::jsi::Value;
 
+inline WorkLoopState& getState(ReactRuntime& runtime);
+
 struct HostRootMemoizedState {
   void* element{nullptr};
   bool isDehydrated{false};
   void* cache{nullptr};
 };
+
+struct ProfilerStateNode {
+  double effectDuration{-0.0};
+  double passiveEffectDuration{-0.0};
+};
+
+constexpr const char* kChildrenPropName = "children";
+constexpr const char* kContextPropName = "_context";
+constexpr const char* kValuePropName = "value";
 
 const Value* asJsiValue(const void* storage) {
   return static_cast<const Value*>(storage);
@@ -109,6 +123,68 @@ void setHostInstance(FiberNode& fiber, hostconfig::HostInstance instance) {
   }
 }
 
+using CachePoolPtr = std::shared_ptr<SpawnedCachePool>;
+
+CachePoolPtr acquireDeferredCache() {
+  // Cache support has not been translated yet; return an empty pool placeholder.
+  return CachePoolPtr{};
+}
+
+ProfilerStateNode* ensureProfilerStateNode(FiberNode& fiber) {
+  auto* state = static_cast<ProfilerStateNode*>(fiber.stateNode);
+  if (state == nullptr) {
+    state = new ProfilerStateNode();
+    fiber.stateNode = state;
+  }
+  return state;
+}
+
+void pushTransition(
+    ReactRuntime& runtime,
+    FiberNode& fiber,
+    const CachePoolPtr& cachePool,
+    const std::vector<const Transition*>* transitions) {
+  (void)runtime;
+  (void)fiber;
+  (void)cachePool;
+  (void)transitions;
+  // TODO: Port transition stack management once ReactFiberTransition is translated.
+}
+
+bool isHiddenMode(OffscreenMode mode) {
+  return mode == OffscreenMode::Hidden || (enableLegacyHidden && mode == OffscreenMode::UnstableDeferWithoutHiding);
+}
+
+OffscreenInstance* ensureOffscreenInstance(FiberNode& fiber) {
+  auto* instance = static_cast<OffscreenInstance*>(fiber.stateNode);
+  if (instance == nullptr) {
+    instance = new OffscreenInstance();
+    instance->_visibility = OffscreenVisible;
+    instance->_pendingMarkers = nullptr;
+    instance->_retryCache = nullptr;
+    instance->_transitions = nullptr;
+    fiber.stateNode = instance;
+  }
+  return instance;
+}
+
+OffscreenState* ensureOffscreenState(FiberNode& fiber) {
+  auto* state = static_cast<OffscreenState*>(fiber.memoizedState);
+  if (state == nullptr) {
+    state = new OffscreenState();
+    state->baseLanes = NoLanes;
+    state->cachePool.reset();
+    fiber.memoizedState = state;
+  }
+  return state;
+}
+
+HiddenContext makeHiddenContextFromState(const OffscreenState& state) {
+  HiddenContext context;
+  context.baseLanes = state.baseLanes;
+  return context;
+}
+
 void appendHostChildrenRecursive(
     ReactRuntime& runtime,
     FiberNode* node,
@@ -151,17 +227,17 @@ void clearHostUpdatePayload(FiberNode& fiber) {
   fiber.updatePayload.reset();
 }
 
-void markRef(const FiberNode* current, FiberNode& workInProgress) {
-  void* const ref = workInProgress.ref;
-  if (ref == nullptr) {
+void markRef(FiberNode* current, FiberNode& workInProgress) {
+  void* const newRef = workInProgress.ref;
+  if (newRef == nullptr) {
     if (current != nullptr && current->ref != nullptr) {
-      workInProgress.flags |= (Ref | RefStatic);
+      workInProgress.flags = static_cast<FiberFlags>(workInProgress.flags | Ref);
     }
     return;
   }
 
-  if (current == nullptr || current->ref != ref) {
-    workInProgress.flags |= (Ref | RefStatic);
+  if (current == nullptr || current->ref != newRef) {
+    workInProgress.flags = static_cast<FiberFlags>(workInProgress.flags | Ref);
   }
 }
 
@@ -178,7 +254,7 @@ std::unique_ptr<FiberNode::Dependencies> cloneDependencies(
 
   auto clone = std::make_unique<FiberNode::Dependencies>();
   clone->lanes = source->lanes;
-  clone->firstContext = cloneContextDependencies(source->firstContext);
+  clone->firstContext = source->firstContext;
   return clone;
 }
 
@@ -199,17 +275,22 @@ void pushRootTransition(FiberNode& workInProgress, FiberRoot& root, Lanes render
   // TODO: translate ReactFiberTransition stack push logic.
 }
 
-void pushHostContainer(FiberNode& workInProgress, void* container) {
-  (void)workInProgress;
-  (void)container;
-  // TODO: integrate host context stack push once HostConfig is available.
+void pushHostContainer(ReactRuntime& runtime, FiberNode& workInProgress, void* container) {
+  auto& state = getState(runtime);
+  push(state.rootHostContainerCursor, container, &workInProgress);
+  push(state.hostContextFiberCursor, &workInProgress, &workInProgress);
+  // Host context derivation is not yet available; reuse the container pointer as a placeholder.
+  push(state.hostContextCursor, container, &workInProgress);
 }
 
-void pushTopLevelLegacyContextObject(FiberNode& workInProgress, void* context, bool didChange) {
-  (void)workInProgress;
-  (void)context;
-  (void)didChange;
-  // TODO: translate legacy context stack push.
+void pushTopLevelLegacyContextObject(
+    ReactRuntime& runtime,
+    FiberNode& workInProgress,
+    void* context,
+    bool didChange) {
+  LegacyContextEntry entry{context, didChange};
+  auto& state = getState(runtime);
+  push(state.legacyContextCursor, entry, &workInProgress);
 }
 
 void pushCacheProvider(FiberNode& workInProgress, void* cache) {
@@ -218,7 +299,7 @@ void pushCacheProvider(FiberNode& workInProgress, void* cache) {
   // TODO: track cache provider stack when cache component is ported.
 }
 
-void pushHostRootContext(FiberNode& workInProgress) {
+void pushHostRootContext(ReactRuntime& runtime, FiberNode& workInProgress) {
   auto* const fiberRoot = static_cast<FiberRoot*>(workInProgress.stateNode);
   if (fiberRoot == nullptr) {
     return;
@@ -226,12 +307,12 @@ void pushHostRootContext(FiberNode& workInProgress) {
 
   if (fiberRoot->pendingContext != nullptr) {
     const bool didChange = fiberRoot->pendingContext != fiberRoot->context;
-    pushTopLevelLegacyContextObject(workInProgress, fiberRoot->pendingContext, didChange);
+    pushTopLevelLegacyContextObject(runtime, workInProgress, fiberRoot->pendingContext, didChange);
   } else if (fiberRoot->context != nullptr) {
-    pushTopLevelLegacyContextObject(workInProgress, fiberRoot->context, false);
+    pushTopLevelLegacyContextObject(runtime, workInProgress, fiberRoot->context, false);
   }
 
-  pushHostContainer(workInProgress, fiberRoot->containerInfo);
+  pushHostContainer(runtime, workInProgress, fiberRoot->containerInfo);
 }
 
 void popTreeContext(FiberNode& workInProgress) {
@@ -244,9 +325,8 @@ void popRootMarkerInstance(FiberNode& workInProgress) {
   // TODO: integrate tracing marker stack when transition tracing is enabled.
 }
 
-bool hasLegacyContextChanged() {
-  // TODO: consult legacy context tracking once translated.
-  return false;
+bool hasLegacyContextChanged(ReactRuntime& runtime) {
+  return getState(runtime).legacyContextCursor.current.didChange;
 }
 
 bool checkScheduledUpdateOrContext(FiberNode& current, Lanes renderLanes) {
@@ -279,8 +359,8 @@ FiberNode* attemptEarlyBailoutIfNoScheduledUpdate(
     return nullptr;
   }
 
-  // TODO: push relevant context stacks for bailout cases once those stacks are ported.
-  return cloneChildFibers(current, workInProgress);
+  // TODO: push relevant context stacks for bailout cases and clone child fibers.
+  return workInProgress.child;
 }
 
 bool isForkedChild(const FiberNode& workInProgress) {
@@ -309,62 +389,52 @@ FiberNode* mountLazyComponent(
   return nullptr;
 }
 
-FiberNode* updateFunctionComponent(
-    ReactRuntime& runtime,
-    FiberNode* current,
-    FiberNode& workInProgress,
-    void* component,
-    void* pendingProps,
-    Lanes renderLanes) {
-  (void)runtime;
-  (void)current;
-  (void)workInProgress;
-  (void)component;
-  (void)pendingProps;
-  (void)renderLanes;
-  // TODO: translate updateFunctionComponent.
-  return workInProgress.child;
-}
-
-FiberNode* updateClassComponent(
-    ReactRuntime& runtime,
-    FiberNode* current,
-    FiberNode& workInProgress,
-    void* component,
-    void* resolvedProps,
-    Lanes renderLanes) {
-  (void)runtime;
-  (void)current;
-  (void)workInProgress;
-  (void)component;
-  (void)resolvedProps;
-  (void)renderLanes;
-  // TODO: translate updateClassComponent.
-  return workInProgress.child;
-}
-
 FiberNode* updateHostComponent(
-  ReactRuntime& runtime,
-  Runtime& jsRuntime,
+    ReactRuntime& runtime,
+    Runtime& jsRuntime,
     FiberNode* current,
     FiberNode& workInProgress,
     Lanes renderLanes) {
-  (void)renderLanes;
+  (void)runtime;
 
   const std::string type = getFiberType(jsRuntime, workInProgress);
-  Value nextProps = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
+  Value nextPropsValue = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
+  Object nextPropsObject = ensureObject(jsRuntime, nextPropsValue);
+
   bool isDirectTextChild = false;
-  if (!type.empty() && nextProps.isObject()) {
-    Object nextPropsObject = nextProps.getObject(jsRuntime);
+  if (!type.empty()) {
     isDirectTextChild = hostconfig::shouldSetTextContent(jsRuntime, type, nextPropsObject);
-    if (isDirectTextChild) {
-      workInProgress.child = nullptr;
+  }
+
+  Value nextChildren = Value::undefined();
+  if (isDirectTextChild) {
+    nextChildren = Value::null();
+  } else if (nextPropsObject.hasProperty(jsRuntime, kChildrenPropName)) {
+    nextChildren = nextPropsObject.getProperty(jsRuntime, kChildrenPropName);
+  }
+
+  if (!isDirectTextChild && current != nullptr && !type.empty()) {
+    Value prevPropsValue = cloneJsiValue(jsRuntime, current->memoizedProps);
+    if (prevPropsValue.isObject()) {
+      Object prevPropsObject = prevPropsValue.getObject(jsRuntime);
+      if (hostconfig::shouldSetTextContent(jsRuntime, type, prevPropsObject)) {
+        workInProgress.flags = static_cast<FiberFlags>(workInProgress.flags | ContentReset);
+      }
     }
   }
 
+  // TODO: translate host context stack operations (pushHostContext, hydration) and
+  // transition-aware host component hooks when those subsystems are available.
+
+  markRef(current, workInProgress);
   clearHostUpdatePayload(workInProgress);
 
-  return workInProgress.child;
+  if (current == nullptr) {
+    return mountChildFibers(jsRuntime, workInProgress, nextChildren, renderLanes);
+  }
+
+  FiberNode* currentFirstChild = current->child;
+  return reconcileChildFibers(jsRuntime, currentFirstChild, workInProgress, nextChildren, renderLanes);
 }
 
 FiberNode* updateHostHoistable(
@@ -382,15 +452,34 @@ FiberNode* updateHostHoistable(
 
 FiberNode* updateHostSingleton(
     ReactRuntime& runtime,
+    Runtime& jsRuntime,
     FiberNode* current,
     FiberNode& workInProgress,
     Lanes renderLanes) {
   (void)runtime;
-  (void)current;
-  (void)workInProgress;
-  (void)renderLanes;
-  // TODO: translate updateHostSingleton.
-  return workInProgress.child;
+
+  // TODO: pushHostContext once host context stack is available.
+
+  Value nextChildren = Value::undefined();
+  Value nextPropsValue = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
+  if (nextPropsValue.isObject()) {
+    Object nextPropsObject = nextPropsValue.getObject(jsRuntime);
+    if (nextPropsObject.hasProperty(jsRuntime, kChildrenPropName)) {
+      nextChildren = nextPropsObject.getProperty(jsRuntime, kChildrenPropName);
+    }
+  }
+
+  markRef(current, workInProgress);
+
+  if (current == nullptr) {
+    workInProgress.flags = static_cast<FiberFlags>(workInProgress.flags | LayoutStatic);
+    // Hydration for singletons is not yet supported; defer `claimHydratableSingleton` until the
+    // hydration stack is translated.
+    return mountChildFibers(jsRuntime, workInProgress, nextChildren, renderLanes);
+  }
+
+  FiberNode* currentFirstChild = current->child;
+  return reconcileChildFibers(jsRuntime, currentFirstChild, workInProgress, nextChildren, renderLanes);
 }
 
 FiberNode* updateHostText(FiberNode* current, FiberNode& workInProgress) {
@@ -418,36 +507,29 @@ FiberNode* updatePortalComponent(
     FiberNode* current,
     FiberNode& workInProgress,
     Lanes renderLanes) {
-  (void)runtime;
-
   void* containerInfo = getPortalContainerInfo(workInProgress);
-  pushHostContainer(workInProgress, containerInfo);
+  pushHostContainer(runtime, workInProgress, containerInfo);
 
   Value nextChildren = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
 
   if (current == nullptr) {
-    FiberNode* child = reconcileChildFibers(
-        jsRuntime,
-        nullptr,
-        workInProgress,
-        nextChildren,
-        renderLanes);
-    workInProgress.child = child;
-  } else {
-    reconcileChildren(runtime, jsRuntime, current, workInProgress, nextChildren, renderLanes);
+    return reconcileChildFibers(jsRuntime, nullptr, workInProgress, nextChildren, renderLanes);
   }
 
-  return workInProgress.child;
+  FiberNode* currentFirstChild = current->child;
+  return reconcileChildFibers(jsRuntime, currentFirstChild, workInProgress, nextChildren, renderLanes);
 }
 
 FiberNode* updateForwardRef(
     ReactRuntime& runtime,
+    Runtime& jsRuntime,
     FiberNode* current,
     FiberNode& workInProgress,
     void* elementType,
     void* pendingProps,
     Lanes renderLanes) {
   (void)runtime;
+  (void)jsRuntime;
   (void)current;
   (void)workInProgress;
   (void)elementType;
@@ -457,56 +539,46 @@ FiberNode* updateForwardRef(
   return workInProgress.child;
 }
 
-FiberNode* reconcileChildren(
-    ReactRuntime& runtime,
+FiberNode* updateFragment(
     Runtime& jsRuntime,
     FiberNode* current,
     FiberNode& workInProgress,
-    const Value& nextChildren,
     Lanes renderLanes) {
-  (void)runtime;
+  Value nextChildren = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
+
+  if (enableFragmentRefs) {
+    markRef(current, workInProgress);
+  }
 
   if (current == nullptr) {
     return mountChildFibers(jsRuntime, workInProgress, nextChildren, renderLanes);
   }
 
-  return reconcileChildFibers(jsRuntime, current->child, workInProgress, nextChildren, renderLanes);
-}
-
-FiberNode* updateFragment(
-    ReactRuntime& runtime,
-    Runtime& jsRuntime,
-    FiberNode* current,
-    FiberNode& workInProgress,
-    Lanes renderLanes) {
-  if (enableFragmentRefs) {
-    markRef(current, workInProgress);
-  }
-
-  Value nextChildren = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
-  FiberNode* nextChild = reconcileChildren(runtime, jsRuntime, current, workInProgress, nextChildren, renderLanes);
-  workInProgress.memoizedProps = workInProgress.pendingProps;
-  return nextChild;
+  FiberNode* currentFirstChild = current->child;
+  return reconcileChildFibers(jsRuntime, currentFirstChild, workInProgress, nextChildren, renderLanes);
 }
 
 FiberNode* updateMode(
-    ReactRuntime& runtime,
     Runtime& jsRuntime,
     FiberNode* current,
     FiberNode& workInProgress,
     Lanes renderLanes) {
-  Value nextProps = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
   Value nextChildren = Value::undefined();
-  if (nextProps.isObject()) {
-    Object propsObject = nextProps.getObject(jsRuntime);
-    if (propsObject.hasProperty(jsRuntime, "children")) {
-      nextChildren = propsObject.getProperty(jsRuntime, "children");
+
+  Value pendingPropsValue = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
+  if (pendingPropsValue.isObject()) {
+    Object propsObject = pendingPropsValue.getObject(jsRuntime);
+    if (propsObject.hasProperty(jsRuntime, kChildrenPropName)) {
+      nextChildren = propsObject.getProperty(jsRuntime, kChildrenPropName);
     }
   }
 
-  FiberNode* nextChild = reconcileChildren(runtime, jsRuntime, current, workInProgress, nextChildren, renderLanes);
-  workInProgress.memoizedProps = workInProgress.pendingProps;
-  return nextChild;
+  if (current == nullptr) {
+    return mountChildFibers(jsRuntime, workInProgress, nextChildren, renderLanes);
+  }
+
+  FiberNode* currentFirstChild = current->child;
+  return reconcileChildFibers(jsRuntime, currentFirstChild, workInProgress, nextChildren, renderLanes);
 }
 
 FiberNode* updateProfiler(
@@ -515,29 +587,34 @@ FiberNode* updateProfiler(
     FiberNode* current,
     FiberNode& workInProgress,
     Lanes renderLanes) {
-  (void)current;
+  (void)runtime;
 
   if (enableProfilerTimer) {
-    workInProgress.flags |= Update;
+    workInProgress.flags = static_cast<FiberFlags>(workInProgress.flags | Update);
 
     if (enableProfilerCommitHooks) {
-      workInProgress.flags |= Passive;
-      // TODO: set effectDuration/passiveEffectDuration on profiler state node once available.
+      workInProgress.flags = static_cast<FiberFlags>(workInProgress.flags | Passive);
+      ProfilerStateNode* state = ensureProfilerStateNode(workInProgress);
+      state->effectDuration = -0.0;
+      state->passiveEffectDuration = -0.0;
     }
   }
 
-  Value nextProps = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
   Value nextChildren = Value::undefined();
-  if (nextProps.isObject()) {
-    Object propsObject = nextProps.getObject(jsRuntime);
-    if (propsObject.hasProperty(jsRuntime, "children")) {
-      nextChildren = propsObject.getProperty(jsRuntime, "children");
+  Value nextPropsValue = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
+  if (nextPropsValue.isObject()) {
+    Object nextPropsObject = nextPropsValue.getObject(jsRuntime);
+    if (nextPropsObject.hasProperty(jsRuntime, kChildrenPropName)) {
+      nextChildren = nextPropsObject.getProperty(jsRuntime, kChildrenPropName);
     }
   }
 
-  FiberNode* nextChild = reconcileChildren(runtime, jsRuntime, current, workInProgress, nextChildren, renderLanes);
-  workInProgress.memoizedProps = workInProgress.pendingProps;
-  return nextChild;
+  if (current == nullptr) {
+    return mountChildFibers(jsRuntime, workInProgress, nextChildren, renderLanes);
+  }
+
+  FiberNode* currentFirstChild = current->child;
+  return reconcileChildFibers(jsRuntime, currentFirstChild, workInProgress, nextChildren, renderLanes);
 }
 
 FiberNode* updateContextProvider(
@@ -549,24 +626,27 @@ FiberNode* updateContextProvider(
   (void)runtime;
 
   Value contextValue = cloneJsiValue(jsRuntime, workInProgress.type);
+  Value newPropsValue = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
+  Object newPropsObject = ensureObject(jsRuntime, newPropsValue);
 
-  Value newProps = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
-  Value newValue = Value::undefined();
-  Value newChildren = Value::undefined();
-
-  if (newProps.isObject()) {
-    Object propsObject = newProps.getObject(jsRuntime);
-    if (propsObject.hasProperty(jsRuntime, "value")) {
-      newValue = propsObject.getProperty(jsRuntime, "value");
-    }
-    if (propsObject.hasProperty(jsRuntime, "children")) {
-      newChildren = propsObject.getProperty(jsRuntime, "children");
-    }
+  Value nextValue = Value::undefined();
+  if (newPropsObject.hasProperty(jsRuntime, kValuePropName)) {
+    nextValue = newPropsObject.getProperty(jsRuntime, kValuePropName);
   }
 
-  pushProvider(jsRuntime, workInProgress, contextValue, newValue);
+  pushProvider(jsRuntime, workInProgress, contextValue, nextValue);
 
-  return reconcileChildren(runtime, jsRuntime, current, workInProgress, newChildren, renderLanes);
+  Value nextChildren = Value::undefined();
+  if (newPropsObject.hasProperty(jsRuntime, kChildrenPropName)) {
+    nextChildren = newPropsObject.getProperty(jsRuntime, kChildrenPropName);
+  }
+
+  if (current == nullptr) {
+    return mountChildFibers(jsRuntime, workInProgress, nextChildren, renderLanes);
+  }
+
+  FiberNode* currentFirstChild = current->child;
+  return reconcileChildFibers(jsRuntime, currentFirstChild, workInProgress, nextChildren, renderLanes);
 }
 
 FiberNode* updateContextConsumer(
@@ -577,41 +657,43 @@ FiberNode* updateContextConsumer(
     Lanes renderLanes) {
   (void)runtime;
 
-  Value consumerType = cloneJsiValue(jsRuntime, workInProgress.type);
+  Value consumerTypeValue = cloneJsiValue(jsRuntime, workInProgress.type);
+  Object consumerTypeObject = ensureObject(jsRuntime, consumerTypeValue);
+
   Value contextValue = Value::undefined();
-  if (consumerType.isObject()) {
-    Object typeObject = consumerType.getObject(jsRuntime);
-    if (typeObject.hasProperty(jsRuntime, "_context")) {
-      contextValue = typeObject.getProperty(jsRuntime, "_context");
-    }
+  if (consumerTypeObject.hasProperty(jsRuntime, kContextPropName)) {
+    contextValue = consumerTypeObject.getProperty(jsRuntime, kContextPropName);
   }
 
-  Value newProps = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
+  Value nextPropsValue = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
+  Object nextPropsObject = ensureObject(jsRuntime, nextPropsValue);
+
   Value renderValue = Value::undefined();
-  if (newProps.isObject()) {
-    Object propsObject = newProps.getObject(jsRuntime);
-    if (propsObject.hasProperty(jsRuntime, "children")) {
-      renderValue = propsObject.getProperty(jsRuntime, "children");
-    }
+  if (nextPropsObject.hasProperty(jsRuntime, kChildrenPropName)) {
+    renderValue = nextPropsObject.getProperty(jsRuntime, kChildrenPropName);
   }
 
   prepareToReadContext(workInProgress, renderLanes);
+  Value newValue = readContext(jsRuntime, workInProgress, contextValue);
 
-  const Value nextValue = readContext(jsRuntime, workInProgress, contextValue);
-
-  Value newChildren = Value::undefined();
+  Value nextChildren = Value::undefined();
   if (renderValue.isObject()) {
     Object renderObject = renderValue.getObject(jsRuntime);
     if (renderObject.isFunction(jsRuntime)) {
       Function renderFunction = renderObject.asFunction(jsRuntime);
-      const Value* args = &nextValue;
-      newChildren = renderFunction.call(jsRuntime, Value::undefined(), args, 1);
+      const Value* args = &newValue;
+      nextChildren = renderFunction.call(jsRuntime, args, 1);
     }
   }
 
   workInProgress.flags = static_cast<FiberFlags>(workInProgress.flags | PerformedWork);
 
-  return reconcileChildren(runtime, jsRuntime, current, workInProgress, newChildren, renderLanes);
+  if (current == nullptr) {
+    return mountChildFibers(jsRuntime, workInProgress, nextChildren, renderLanes);
+  }
+
+  FiberNode* currentFirstChild = current->child;
+  return reconcileChildFibers(jsRuntime, currentFirstChild, workInProgress, nextChildren, renderLanes);
 }
 
 FiberNode* updateMemoComponent(
@@ -701,24 +783,25 @@ FiberNode* updateScopeComponent(
     FiberNode* current,
     FiberNode& workInProgress,
     Lanes renderLanes) {
-  Value nextProps = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
+  (void)runtime;
+
   Value nextChildren = Value::undefined();
-  if (nextProps.isObject()) {
-    Object propsObject = nextProps.getObject(jsRuntime);
-    if (propsObject.hasProperty(jsRuntime, "children")) {
-      nextChildren = propsObject.getProperty(jsRuntime, "children");
+  Value nextPropsValue = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
+  if (nextPropsValue.isObject()) {
+    Object nextPropsObject = nextPropsValue.getObject(jsRuntime);
+    if (nextPropsObject.hasProperty(jsRuntime, kChildrenPropName)) {
+      nextChildren = nextPropsObject.getProperty(jsRuntime, kChildrenPropName);
     }
   }
 
   markRef(current, workInProgress);
 
-  return reconcileChildren(
-      runtime,
-      jsRuntime,
-      current,
-      workInProgress,
-      nextChildren,
-      renderLanes);
+  if (current == nullptr) {
+    return mountChildFibers(jsRuntime, workInProgress, nextChildren, renderLanes);
+  }
+
+  FiberNode* currentFirstChild = current->child;
+  return reconcileChildFibers(jsRuntime, currentFirstChild, workInProgress, nextChildren, renderLanes);
 }
 
 FiberNode* updateActivityComponent(
@@ -734,32 +817,153 @@ FiberNode* updateActivityComponent(
   return workInProgress.child;
 }
 
-FiberNode* updateOffscreenComponent(
+FiberNode* deferHiddenOffscreenComponent(
     ReactRuntime& runtime,
+    Runtime& jsRuntime,
     FiberNode* current,
     FiberNode& workInProgress,
-    Lanes renderLanes,
-    void* pendingProps) {
-  (void)runtime;
-  (void)current;
-  (void)workInProgress;
-  (void)renderLanes;
-  (void)pendingProps;
-  // TODO: translate updateOffscreenComponent.
-  return workInProgress.child;
+    Lanes nextBaseLanes,
+    Lanes renderLanes) {
+  (void)jsRuntime;
+  OffscreenState* state = ensureOffscreenState(workInProgress);
+  state->baseLanes = nextBaseLanes;
+  state->cachePool = acquireDeferredCache();
+
+  if (current != nullptr) {
+    pushTransition(runtime, workInProgress, CachePoolPtr{}, nullptr);
+  }
+
+  reuseHiddenContextOnStack(runtime, workInProgress);
+  pushOffscreenSuspenseHandler(workInProgress);
+
+  if (current != nullptr) {
+    (void)renderLanes;
+    // TODO: propagate parent context changes once the context stack translation is available.
+  }
+
+  return nullptr;
+}
+
+FiberNode* updateOffscreenComponent(
+  ReactRuntime& runtime,
+  Runtime& jsRuntime,
+  FiberNode* current,
+  FiberNode& workInProgress,
+  Lanes renderLanes,
+  void* pendingProps) {
+  auto* nextProps = static_cast<OffscreenProps*>(pendingProps);
+  const OffscreenMode nextMode = nextProps != nullptr ? nextProps->mode : OffscreenMode::Visible;
+  facebook::jsi::Value* nextChildrenPointer = nextProps != nullptr ? nextProps->children : nullptr;
+
+  ensureOffscreenInstance(workInProgress);
+
+  OffscreenState* prevState = current != nullptr ? static_cast<OffscreenState*>(current->memoizedState) : nullptr;
+
+  const bool hiddenMode = isHiddenMode(nextMode);
+  const bool didSuspend = (workInProgress.flags & DidCapture) != 0;
+
+  if (hiddenMode) {
+    if (didSuspend) {
+      const Lanes nextBaseLanes = prevState != nullptr ? mergeLanes(prevState->baseLanes, renderLanes) : renderLanes;
+
+      if (current != nullptr) {
+        workInProgress.child = current->child;
+        Lanes currentChildLanes = NoLanes;
+        for (FiberNode* child = workInProgress.child; child != nullptr; child = child->sibling) {
+          currentChildLanes = mergeLanes(currentChildLanes, child->lanes);
+          currentChildLanes = mergeLanes(currentChildLanes, child->childLanes);
+        }
+        const Lanes remainingChildLanes = removeLanes(currentChildLanes, nextBaseLanes);
+        workInProgress.childLanes = remainingChildLanes;
+      } else {
+        workInProgress.child = nullptr;
+        workInProgress.childLanes = NoLanes;
+      }
+
+      return deferHiddenOffscreenComponent(runtime, jsRuntime, current, workInProgress, nextBaseLanes, renderLanes);
+    }
+
+    if (!disableLegacyMode && (workInProgress.mode & ConcurrentMode) == NoMode) {
+      OffscreenState* nextState = ensureOffscreenState(workInProgress);
+      nextState->baseLanes = NoLanes;
+      nextState->cachePool.reset();
+
+      if (current != nullptr) {
+        pushTransition(runtime, workInProgress, CachePoolPtr{}, nullptr);
+      }
+
+      reuseHiddenContextOnStack(runtime, workInProgress);
+      pushOffscreenSuspenseHandler(workInProgress);
+    } else if (!includesSomeLane(renderLanes, OffscreenLane)) {
+      const Lanes offscreenLanes = laneToLanes(OffscreenLane);
+      workInProgress.lanes = offscreenLanes;
+      workInProgress.childLanes = offscreenLanes;
+
+      const Lanes nextBaseLanes = prevState != nullptr ? mergeLanes(prevState->baseLanes, renderLanes) : renderLanes;
+    return deferHiddenOffscreenComponent(runtime, jsRuntime, current, workInProgress, nextBaseLanes, renderLanes);
+    } else {
+      OffscreenState* nextState = ensureOffscreenState(workInProgress);
+      nextState->baseLanes = NoLanes;
+      nextState->cachePool = prevState != nullptr ? prevState->cachePool : CachePoolPtr{};
+
+      if (current != nullptr) {
+        CachePoolPtr cachePool = prevState != nullptr ? prevState->cachePool : CachePoolPtr{};
+        pushTransition(runtime, workInProgress, cachePool, nullptr);
+      }
+
+      if (prevState != nullptr) {
+        pushHiddenContext(runtime, workInProgress, makeHiddenContextFromState(*prevState));
+      } else {
+        reuseHiddenContextOnStack(runtime, workInProgress);
+      }
+      pushOffscreenSuspenseHandler(workInProgress);
+    }
+  } else {
+    if (prevState != nullptr) {
+      CachePoolPtr cachePool = prevState->cachePool;
+      std::vector<const Transition*>* transitions = nullptr;
+      if (enableTransitionTracing) {
+        auto* instance = static_cast<OffscreenInstance*>(workInProgress.stateNode);
+        if (instance != nullptr) {
+          transitions = instance->_transitions;
+        }
+      }
+      pushTransition(runtime, workInProgress, cachePool, transitions);
+
+      pushHiddenContext(runtime, workInProgress, makeHiddenContextFromState(*prevState));
+      reuseSuspenseHandlerOnStack(workInProgress);
+
+      workInProgress.memoizedState = nullptr;
+    } else {
+      if (current != nullptr) {
+        pushTransition(runtime, workInProgress, CachePoolPtr{}, nullptr);
+      }
+
+      reuseHiddenContextOnStack(runtime, workInProgress);
+      reuseSuspenseHandlerOnStack(workInProgress);
+    }
+  }
+
+  Value nextChildren;
+  if (nextChildrenPointer != nullptr) {
+    nextChildren = Value(jsRuntime, *nextChildrenPointer);
+  }
+
+  if (current == nullptr) {
+    return mountChildFibers(jsRuntime, workInProgress, nextChildren, renderLanes);
+  }
+
+  FiberNode* currentFirstChild = current->child;
+  return reconcileChildFibers(jsRuntime, currentFirstChild, workInProgress, nextChildren, renderLanes);
 }
 
 FiberNode* updateLegacyHiddenComponent(
     ReactRuntime& runtime,
+    Runtime& jsRuntime,
     FiberNode* current,
     FiberNode& workInProgress,
     Lanes renderLanes) {
-  (void)runtime;
-  (void)current;
-  (void)workInProgress;
-  (void)renderLanes;
-  // TODO: translate updateLegacyHiddenComponent.
-  return workInProgress.child;
+  return updateOffscreenComponent(runtime, jsRuntime, current, workInProgress, renderLanes, workInProgress.pendingProps);
 }
 
 FiberNode* updateCacheComponent(
@@ -810,7 +1014,7 @@ FiberNode* updateHostRoot(
     return workInProgress.child;
   }
 
-  pushHostRootContext(workInProgress);
+  pushHostRootContext(runtime, workInProgress);
   pushRootTransition(workInProgress, *fiberRoot, renderLanes);
   if (enableTransitionTracing) {
     pushRootMarkerInstance(workInProgress);
@@ -848,14 +1052,16 @@ void popRootTransition(FiberNode& workInProgress, FiberRoot& root, Lanes renderL
   // TODO: integrate ReactFiberTransition stack once it lands.
 }
 
-void popHostContainer(FiberNode& workInProgress) {
-  (void)workInProgress;
-  // TODO: wire host context stack when HostConfig is available.
+void popHostContainer(ReactRuntime& runtime, FiberNode& workInProgress) {
+  auto& state = getState(runtime);
+  pop(state.hostContextCursor, &workInProgress);
+  pop(state.hostContextFiberCursor, &workInProgress);
+  pop(state.rootHostContainerCursor, &workInProgress);
 }
 
-void popTopLevelLegacyContextObject(FiberNode& workInProgress) {
-  (void)workInProgress;
-  // TODO: translate legacy context stack when legacy context is supported.
+void popTopLevelLegacyContextObject(ReactRuntime& runtime, FiberNode& workInProgress) {
+  auto& state = getState(runtime);
+  pop(state.legacyContextCursor, &workInProgress);
 }
 
 bool popHydrationState(FiberNode& workInProgress) {
@@ -898,11 +1104,10 @@ void updateHostContainer(FiberNode* current, FiberNode& workInProgress) {
 }
 
 void pingSuspendedRoot(
-  ReactRuntime& runtime,
-  Runtime& jsRuntime,
-  FiberRoot& root,
-  const Wakeable* wakeable,
-  Lanes pingedLanes) {
+    ReactRuntime& runtime,
+    FiberRoot& root,
+    const Wakeable* wakeable,
+    Lanes pingedLanes) {
   if (wakeable != nullptr) {
     root.pingCache.erase(wakeable);
   }
@@ -936,7 +1141,7 @@ void pingSuspendedRoot(
     }
   }
 
-  ensureRootIsScheduled(runtime, jsRuntime, root);
+  ensureRootIsScheduled(runtime, root);
 }
 
 inline WorkLoopState& getState(ReactRuntime& runtime) {
@@ -1007,8 +1212,8 @@ FiberNode* completeWork(
       popCacheProvider(*workInProgress, nullptr);
 
       popRootTransition(*workInProgress, *fiberRoot, entangledRenderLanes);
-      popHostContainer(*workInProgress);
-      popTopLevelLegacyContextObject(*workInProgress);
+  popHostContainer(runtime, *workInProgress);
+  popTopLevelLegacyContextObject(runtime, *workInProgress);
 
       if (fiberRoot->pendingContext != nullptr) {
         fiberRoot->context = fiberRoot->pendingContext;
@@ -1098,8 +1303,8 @@ FiberNode* completeWork(
       const std::string nextText = valueToString(jsRuntime, nextTextValue);
 
       if (current != nullptr && current->stateNode != nullptr) {
-  Value prevTextValue = cloneJsiValue(jsRuntime, current->memoizedProps);
-  const std::string prevText = valueToString(jsRuntime, prevTextValue);
+        Value prevTextValue = cloneJsiValue(jsRuntime, current->memoizedProps);
+        const std::string prevText = valueToString(jsRuntime, prevTextValue);
         if (nextText != prevText) {
           markUpdate(*workInProgress);
         }
@@ -1199,7 +1404,7 @@ FiberNode* beginWork(
     void* const oldProps = current->memoizedProps;
     void* const newProps = workInProgress->pendingProps;
 
-    if (oldProps != newProps || hasLegacyContextChanged()) {
+  if (oldProps != newProps || hasLegacyContextChanged(runtime)) {
       didReceiveUpdate = true;
     } else {
       const bool hasScheduledUpdateOrContext = checkScheduledUpdateOrContext(*current, renderLanes);
@@ -1242,7 +1447,7 @@ FiberNode* beginWork(
     case WorkTag::HostHoistable:
       return updateHostHoistable(runtime, current, *workInProgress, renderLanes);
     case WorkTag::HostSingleton:
-      return updateHostSingleton(runtime, current, *workInProgress, renderLanes);
+      return updateHostSingleton(runtime, jsRuntime, current, *workInProgress, renderLanes);
     case WorkTag::HostComponent:
       return updateHostComponent(runtime, jsRuntime, current, *workInProgress, renderLanes);
     case WorkTag::HostText:
@@ -1255,9 +1460,9 @@ FiberNode* beginWork(
       return updateForwardRef(
           runtime, current, *workInProgress, workInProgress->type, workInProgress->pendingProps, renderLanes);
     case WorkTag::Fragment:
-      return updateFragment(runtime, jsRuntime, current, *workInProgress, renderLanes);
+      return updateFragment(jsRuntime, current, *workInProgress, renderLanes);
     case WorkTag::Mode:
-      return updateMode(runtime, jsRuntime, current, *workInProgress, renderLanes);
+      return updateMode(jsRuntime, current, *workInProgress, renderLanes);
     case WorkTag::Profiler:
       return updateProfiler(runtime, jsRuntime, current, *workInProgress, renderLanes);
     case WorkTag::ContextProvider:
@@ -1288,17 +1493,17 @@ FiberNode* beginWork(
       return updateSuspenseListComponent(runtime, current, *workInProgress, renderLanes);
     case WorkTag::ScopeComponent: {
       if (enableScopeAPI) {
-        return updateScopeComponent(runtime, current, *workInProgress, renderLanes);
+        return updateScopeComponent(runtime, jsRuntime, current, *workInProgress, renderLanes);
       }
       break;
     }
     case WorkTag::ActivityComponent:
       return updateActivityComponent(runtime, current, *workInProgress, renderLanes);
     case WorkTag::OffscreenComponent:
-      return updateOffscreenComponent(runtime, current, *workInProgress, renderLanes, workInProgress->pendingProps);
+      return updateOffscreenComponent(runtime, jsRuntime, current, *workInProgress, renderLanes, workInProgress->pendingProps);
     case WorkTag::LegacyHiddenComponent: {
       if (enableLegacyHidden) {
-        return updateLegacyHiddenComponent(runtime, current, *workInProgress, renderLanes);
+        return updateLegacyHiddenComponent(runtime, jsRuntime, current, *workInProgress, renderLanes);
       }
       break;
     }
@@ -1357,11 +1562,12 @@ void markLegacyErrorBoundaryAsFailed(void* instance) {
 }
 
 void attachPingListener(
-  ReactRuntime& runtime,
-  Runtime& jsRuntime,
-  FiberRoot& root,
-  Wakeable& wakeable,
-  Lanes lanes) {
+    ReactRuntime& runtime,
+    Runtime& jsRuntime,
+    FiberRoot& root,
+    Wakeable& wakeable,
+    Lanes lanes) {
+  (void)jsRuntime;
   auto& threadIds = root.pingCache[&wakeable];
   if (!threadIds.insert(lanes).second) {
     return;
@@ -1369,8 +1575,8 @@ void attachPingListener(
 
   setWorkInProgressRootDidAttachPingListener(runtime, true);
 
-  auto ping = [&runtime, &jsRuntime, &root, wakeablePtr = &wakeable, lanes]() {
-    pingSuspendedRoot(runtime, jsRuntime, root, wakeablePtr, lanes);
+  auto ping = [&runtime, &root, wakeablePtr = &wakeable, lanes]() {
+    pingSuspendedRoot(runtime, root, wakeablePtr, lanes);
   };
 
   wakeable.then(ping, ping);
@@ -1939,8 +2145,8 @@ RootExitStatus renderRootConcurrent(
 void throwAndUnwindWorkLoop(
   ReactRuntime& runtime,
   Runtime& jsRuntime,
-    FiberRoot& root,
-    FiberNode& unitOfWork,
+  FiberRoot& root,
+  FiberNode& unitOfWork,
   void* thrownValue,
   SuspendedReason reason) {
   resetSuspendedWorkLoopOnUnwind(&unitOfWork);
@@ -1997,7 +2203,7 @@ void throwAndUnwindWorkLoop(
 
     unwindUnitOfWork(runtime, unitOfWork, skipSiblings);
   } else {
-    completeUnitOfWork(runtime, jsRuntime, unitOfWork);
+  completeUnitOfWork(runtime, jsRuntime, unitOfWork);
   }
 }
 

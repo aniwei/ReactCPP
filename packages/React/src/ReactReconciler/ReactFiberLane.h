@@ -569,6 +569,8 @@ struct FiberRoot {
 	std::unordered_map<const Wakeable*, std::unordered_set<Lanes>> pingCache{};
 	std::function<std::function<void()>()> onDefaultTransitionIndicator{};
 	std::function<void()> pendingIndicator{};
+	void* pooledCache{nullptr};
+	Lanes pooledCacheLanes{NoLanes};
 	void* containerInfo{nullptr};
 	void* pendingContext{nullptr};
 	void* context{nullptr};

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ReactReconciler/ReactFiberLane.h"
+#include "ReactReconciler/ReactFiberStack.h"
 
 #include <cstdint>
 #include <limits>
@@ -64,6 +65,11 @@ enum class SuspendedReason : std::uint8_t {
   SuspendedOnAction = 9,
 };
 
+struct LegacyContextEntry {
+  void* context{nullptr};
+  bool didChange{false};
+};
+
 struct WorkLoopState {
   ExecutionContext executionContext{NoContext};
   FiberRoot* workInProgressRoot{nullptr};
@@ -114,6 +120,10 @@ struct WorkLoopState {
   std::uint32_t nestedPassiveUpdateCount{0};
   FiberRoot* rootWithPassiveNestedUpdates{nullptr};
   bool isRunningInsertionEffect{false};
+  StackCursor<void*> rootHostContainerCursor{createCursor<void*>(nullptr)};
+  StackCursor<void*> hostContextCursor{createCursor<void*>(nullptr)};
+  StackCursor<FiberNode*> hostContextFiberCursor{createCursor<FiberNode*>(nullptr)};
+  StackCursor<LegacyContextEntry> legacyContextCursor{createCursor(LegacyContextEntry{})};
 };
 
 } // namespace react

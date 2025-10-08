@@ -160,9 +160,36 @@
 
 ### 其余 Reconciler 文件
 
+#### 2025-10-09 状态快照
+
+- [ ] `beginWork` / `completeWork` / `performUnitOfWork` 逐行对齐 JS 行为。
+- [ ] `updateFunctionComponent` / `updateClassComponent` 翻译并挂接 Hook/Class 生命周期。
+- [ ] Suspense 粘滞 fallback（`ForceSuspenseFallback`）与 Offscreen 延迟逻辑。
+- 🔄 HostContext / Hydration 桥接：`pushHostContainer` / `popHostContainer` 与顶层 legacy context 栈已接通；`pushHostContext`、hydration-specific context 仍待补齐。
+- [ ] Offscreen 缓存池、transition tracing、legacy defer 分支。
+- [ ] Profiler `stateNode` 计时字段与提交跟踪。
+- [ ] `ReactFiberNewContext` 的 `lazilyPropagateParentContextChanges` 高级分支。
+
 - 🔄 `ReactFiberWorkLoop`：核心渲染循环已迁移；`performUnitOfWork`、`beginWork`、`completeWork` 仍需逐行对齐。
-  - [x] `updateContextProvider` / `updateContextConsumer` C++ 版本译制并接入 `beginWork`。
+  - ✅ `beginWork` 已接入 HostComponent / HostText / HostPortal / Fragment / Mode / Profiler / Context Provider & Consumer / Scope / Offscreen（含 LegacyHidden）等分支，保持与 JS 行为一致。
+  - ✅ 辅助函数如 `markRef`、`appendAllChildren`、`ensureProfilerStateNode`、`ensureOffscreenState`、`deferHiddenOffscreenComponent` 等已按 JS 逻辑落地；Portal、Scope、Profiler、Context 栈的翻译在 C++ 侧生效。
+  - 🔄 待办与阻塞项：
+    - [ ] `mountLazyComponent`、`updateForwardRef`、`updateMemoComponent`、`updateSimpleMemoComponent`、`mountIncomplete{Class,Function}` —— 依赖 Hooks 与 Class 运行时，暂未落地。
+    - [ ] `updateSuspenseComponent`、`updateSuspenseListComponent`、`deferHiddenOffscreenComponent` 的 hydration 与 fallback 路径 —— 需 Suspense handler 栈。
+    - [ ] `updateHostHoistable` —— 依赖 Host Resource API（`getResource`、`createHoistableInstance`）及水合逻辑。
+  - [ ] `updateHostSingleton` —— 客户端路径已落地；hydration 单例流程与 `pushHostContext`/资源栈仍待补齐。
+    - [ ] `updateActivityComponent`、`updateViewTransition`、`updateTracingMarkerComponent` —— 待 Transition Tracing / Activity 栈翻译。
+    - [ ] `updateCacheComponent`、`pushCacheProvider`、`popCacheProvider` —— 取决于 Cache 管理模块。
+    - [ ] `pushHostContainer`、`popHostContainer`、`pushTopLevelLegacyContextObject`、`popTopLevelLegacyContextObject` —— 需 Host Context 与 Legacy Context 栈。
+    - [ ] `pushTransition`、`popRootTransition` —— 等待 `ReactFiberTransition` 翻译。
+    - [ ] Hydration diagnostics：`emitPendingHydrationWarnings`、`upgradeHydrationErrorsToRecoverable`、`getIsHydrating`。
+  - 📌 下一步（已开启）：
+  - [ ] 扩展 `updateHostSingleton`：在现有客户端实现基础上补全 hydration / `pushHostContext` 路径。
+    - [ ] 同步 `TODO: translate` 计数（当前 20 处）至本表，确保每次提交后更新追踪清单。
+  - ✅ `updateContextProvider` / `updateContextConsumer` C++ 版本译制并接入 `beginWork`。
+  - ✅ `jsRuntime` 相关参数统一改为引用语义（`Runtime&`），连带移除空指针防御并同步调用方签名。
 - 🔄 `ReactFiberThrow`：错误恢复路径已迁移；需与 `ReactFiberWorkLoop` 的异常流程联通。
+  - [x] 与 `ReactFiberWorkLoop` 保持 `Runtime&` 接口一致，去除指针判定分支。
 - 🔄 `ReactFiberBeginWork` / `ReactFiberCompleteWork`：已接入 Fragment / Mode / Profiler 的入口逻辑；仍缺子 Fiber 对齐。
   - [x] `markRef` 旗标同步（Fragment refs）。
   - [x] `updateFragment` / `updateMode` / `updateProfiler` 初步移植。
@@ -179,6 +206,9 @@
     - [x] Lazy 节点：接入 `resolveLazy`、Suspense thenable 处理（依赖 `ReactFiberThenable` 完整实现）。
     - [x] Scope 组件：`updateScopeComponent` 推进 children diff + ref 标记。
     - [x] Portal 组件：`updatePortalComponent` 推栈容器并复刻挂载/更新路径。
+  - 🔄 Suspense 组件：基础 children/fallback 分支已接入，补上 `ForceSuspenseFallback` 粘滞逻辑；仍待 Offscreen fragment 与延迟处理。
+  - 🔄 HostComponent：`markRef`、直接文本子节点及 children diff 已落地；仍缺 `pushHostContext`/水合路径与 transition-aware hooks。
+  - 🔄 Offscreen 组件：补齐隐藏分支的 baseLanes 合并与 HiddenContext/Suspense handler 推栈；仍缺缓存池、transition tracing 与 legacy defer 特化。
     - [ ] Profiler state node：补充计时字段与 child placement 行为。
   - 🔄 `ReactFiberNewContext`：provider 栈与上下文传播逻辑正在移植。
     - [x] `pushProvider` / `popProvider` / `scheduleContextWorkOnParentPath`。
