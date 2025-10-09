@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ReactDOM/client/ReactDOMComponent.h"
+#include "ReactReconciler/ReactFiberWorkLoopState.h"
 
 #include "jsi/jsi.h"
 
@@ -11,7 +12,8 @@ namespace react {
 
 class HostInterface {
 public:
-  HostInterface() = default;
+    HostInterface() = default;
+    virtual ~HostInterface() = default;
 
   std::shared_ptr<ReactDOMInstance> createHostInstance(
       facebook::jsi::Runtime& runtime,
@@ -46,6 +48,8 @@ public:
       std::shared_ptr<ReactDOMInstance> instance,
       const std::string& oldText,
       const std::string& newText);
+
+        virtual void handleHydrationError(const HydrationErrorInfo& info);
 
 private:
   void detachFromParent(const std::shared_ptr<ReactDOMInstance>& child);

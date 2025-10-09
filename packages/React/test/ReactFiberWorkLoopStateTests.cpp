@@ -1,10 +1,17 @@
+#include "ReactReconciler/ReactFiberHydrationContext_ext.h"
 #include "ReactReconciler/ReactFiberWorkLoop.h"
 #include "ReactRuntime/ReactRuntime.h"
+#include "ReactRuntime/ReactHostInterface.h"
 
 #include <cassert>
 #include <cmath>
 #include <limits>
 #include <iostream>
+#include <string>
+
+namespace react {
+void emitPendingHydrationWarnings(ReactRuntime& runtime);
+}
 
 namespace react::test {
 
@@ -52,12 +59,33 @@ void resetState(ReactRuntime& runtime) {
   setIsRunningInsertionEffect(runtime, false);
 }
 
+class RecordingHostInterface : public HostInterface {
+public:
+  void handleHydrationError(const HydrationErrorInfo& info) override {
+    recordedErrors.push_back(info);
+  }
+
+  std::vector<HydrationErrorInfo> recordedErrors{};
+};
+
 } // namespace
 
 bool runReactFiberWorkLoopStateTests() {
   ReactRuntime runtime;
+  auto recordingHost = std::make_shared<RecordingHostInterface>();
+  runtime.setHostInterface(recordingHost);
+  std::vector<std::string> callbackMessages;
+  runtime.setHydrationErrorCallback([&](const HydrationErrorInfo& info) {
+    callbackMessages.push_back(info.message);
+  });
+  runtime.notifyHydrationError(HydrationErrorInfo{nullptr, "direct"});
+  assert(recordingHost->recordedErrors.size() == 1);
+  assert(recordingHost->recordedErrors.back().message == "direct");
+  assert(callbackMessages.size() == 1 && callbackMessages.back() == "direct");
   // renderRootConcurrent should mirror sync behavior when the scheduler never yields.
   resetState(runtime);
+  recordingHost->recordedErrors.clear();
+  callbackMessages.clear();
 
   // Execution context bitmask operations
   assert(getExecutionContext(runtime) == NoContext);
@@ -212,10 +240,35 @@ bool runReactFiberWorkLoopStateTests() {
 
   assert(getWorkInProgressRootRecoverableErrors(runtime).empty());
   auto& recoverableErrors = getWorkInProgressRootRecoverableErrors(runtime);
-  recoverableErrors.push_back(reinterpret_cast<void*>(0x3));
+  recoverableErrors.push_back(HydrationErrorInfo{nullptr, "recoverable"});
   assert(recoverableErrors.size() == 1);
   clearWorkInProgressRootRecoverableErrors(runtime);
   assert(getWorkInProgressRootRecoverableErrors(runtime).empty());
+
+  FiberNode hydrationFiber{};
+  queueHydrationError(runtime, hydrationFiber, "hydration");
+  auto& pendingRecoverableErrors = getPendingRecoverableErrors(runtime);
+  pendingRecoverableErrors.push_back(HydrationErrorInfo{nullptr, "pending"});
+  react::emitPendingHydrationWarnings(runtime);
+  assert(recordingHost->recordedErrors.size() == 2);
+  assert(recordingHost->recordedErrors[0].message == "hydration");
+  assert(recordingHost->recordedErrors[1].message == "pending");
+  assert(callbackMessages.size() == 2);
+  assert(callbackMessages[0] == "hydration");
+  assert(callbackMessages[1] == "pending");
+  recordingHost->recordedErrors.clear();
+  callbackMessages.clear();
+  auto drainedErrors = runtime.drainHydrationErrors();
+  assert(drainedErrors.size() == 2);
+  assert(recordingHost->recordedErrors.size() == 2);
+  assert(recordingHost->recordedErrors[0].message == "hydration");
+  assert(recordingHost->recordedErrors[1].message == "pending");
+  assert(callbackMessages.size() == 2);
+  assert(callbackMessages[0] == "hydration");
+  assert(callbackMessages[1] == "pending");
+  assert(getPendingRecoverableErrors(runtime).empty());
+  assert(runtime.drainHydrationErrors().empty());
+  assert(recordingHost->recordedErrors.size() == 2);
 
   assert(!getWorkInProgressRootDidIncludeRecursiveRenderUpdate(runtime));
   setWorkInProgressRootDidIncludeRecursiveRenderUpdate(runtime, true);
@@ -281,7 +334,7 @@ bool runReactFiberWorkLoopStateTests() {
   auto& existingConcurrentErrors = getWorkInProgressRootConcurrentErrors(runtime);
   existingConcurrentErrors.push_back(reinterpret_cast<void*>(0x4));
   auto& existingRecoverableErrors = getWorkInProgressRootRecoverableErrors(runtime);
-  existingRecoverableErrors.push_back(reinterpret_cast<void*>(0x5));
+  existingRecoverableErrors.push_back(HydrationErrorInfo{nullptr, "existing"});
   setEntangledRenderLanes(runtime, TransitionLane4);
 
   FiberRoot prepareRoot{};

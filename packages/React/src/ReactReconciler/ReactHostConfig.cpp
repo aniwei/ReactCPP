@@ -63,6 +63,15 @@ HostInstance createInstance(
   return runtime.createInstance(jsRuntime, type, props);
 }
 
+HostInstance createHoistableInstance(
+    ReactRuntime& runtime,
+    Runtime& jsRuntime,
+    const std::string& type,
+    const Object& props) {
+  // The test host treats hoistable instances identically to regular instances.
+  return createInstance(runtime, jsRuntime, type, props);
+}
+
 HostTextInstance createTextInstance(
     ReactRuntime& runtime,
     Runtime& jsRuntime,
@@ -264,6 +273,159 @@ void commitTextUpdate(
 
 void resetAfterCommit(ReactRuntime& /*runtime*/) {
   // No-op for the test host environment.
+}
+
+void* getRootHostContext(ReactRuntime& /*runtime*/, void* rootContainer) {
+  return rootContainer;
+}
+
+void* getChildHostContext(ReactRuntime& /*runtime*/, void* parentContext, const std::string& /*type*/) {
+  return parentContext;
+}
+
+bool supportsHydration(ReactRuntime& /*runtime*/) {
+  // The test host always models its tree in memory, so hydration support is determined
+  // purely by whether an existing host container contains children. Enable by default
+  // so the reconciler can attempt to reuse server-rendered instances.
+  return true;
+}
+
+namespace {
+
+ReactDOMComponent* asComponent(void* pointer) {
+  if (pointer == nullptr) {
+    return nullptr;
+  }
+  return dynamic_cast<ReactDOMComponent*>(static_cast<ReactDOMInstance*>(pointer));
+}
+
+ReactDOMInstance* asInstance(void* pointer) {
+  if (pointer == nullptr) {
+    return nullptr;
+  }
+  return static_cast<ReactDOMInstance*>(pointer);
+}
+
+bool isSingletonScope(const std::string& type) {
+  return type == "html" || type == "head" || type == "body";
+}
+
+ReactDOMInstance* previousHydratableOnEnteringSingleton = nullptr;
+
+} // namespace
+
+void* getFirstHydratableChildWithinContainer(ReactRuntime& /*runtime*/, void* container) {
+  ReactDOMComponent* component = asComponent(container);
+  if (component == nullptr) {
+    return nullptr;
+  }
+
+  for (const auto& child : component->children) {
+    if (child) {
+      return child.get();
+    }
+  }
+
+  return nullptr;
+}
+
+void* getFirstHydratableChild(ReactRuntime& /*runtime*/, const HostInstance& parent) {
+  auto component = std::dynamic_pointer_cast<ReactDOMComponent>(parent);
+  if (!component) {
+    return nullptr;
+  }
+
+  for (const auto& child : component->children) {
+    if (child) {
+      return child.get();
+    }
+  }
+
+  return nullptr;
+}
+
+void* getNextHydratableSibling(ReactRuntime& /*runtime*/, void* instance) {
+  ReactDOMInstance* current = asInstance(instance);
+  if (current == nullptr) {
+    return nullptr;
+  }
+
+  auto parent = current->getParent();
+  if (!parent) {
+    return nullptr;
+  }
+
+  auto parentComponent = std::dynamic_pointer_cast<ReactDOMComponent>(parent);
+  if (!parentComponent) {
+    return nullptr;
+  }
+
+  bool foundCurrent = false;
+  for (const auto& sibling : parentComponent->children) {
+    if (!sibling) {
+      continue;
+    }
+
+    if (foundCurrent) {
+      return sibling.get();
+    }
+
+    if (sibling.get() == current) {
+      foundCurrent = true;
+    }
+  }
+
+  return nullptr;
+}
+
+bool prepareToHydrateHostTextInstance(
+    ReactRuntime& /*runtime*/,
+    const HostTextInstance& textInstance,
+    const std::string& textContent) {
+  auto component = std::dynamic_pointer_cast<ReactDOMComponent>(textInstance);
+  if (!component) {
+    return true;
+  }
+
+  const std::string& existing = component->getTextContent();
+  return existing != textContent;
+}
+
+bool supportsSingletons(ReactRuntime& /*runtime*/) {
+  return true;
+}
+
+void* getFirstHydratableChildWithinSingleton(
+    ReactRuntime& runtime,
+    const std::string& type,
+    const HostInstance& singleton,
+    void* currentHydratableInstance) {
+  if (!singleton) {
+    return currentHydratableInstance;
+  }
+
+  if (!isSingletonScope(type)) {
+    return currentHydratableInstance;
+  }
+
+  previousHydratableOnEnteringSingleton = static_cast<ReactDOMInstance*>(currentHydratableInstance);
+  return getFirstHydratableChild(runtime, singleton);
+}
+
+void* getNextHydratableSiblingAfterSingleton(
+    ReactRuntime& /*runtime*/,
+    const std::string& type,
+    void* currentHydratableInstance) {
+  if (!isSingletonScope(type)) {
+    return currentHydratableInstance;
+  }
+
+  auto* previous = previousHydratableOnEnteringSingleton;
+  previousHydratableOnEnteringSingleton = nullptr;
+  if (previous != nullptr) {
+    return previous;
+  }
+  return currentHydratableInstance;
 }
 
 } // namespace react::hostconfig

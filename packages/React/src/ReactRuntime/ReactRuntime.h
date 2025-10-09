@@ -67,6 +67,8 @@ public:
 
   void setShouldAttemptEagerTransitionCallback(std::function<bool()> callback);
   [[nodiscard]] bool shouldAttemptEagerTransition() const;
+  void setHydrationErrorCallback(std::function<void(const HydrationErrorInfo&)> callback);
+  void notifyHydrationError(const HydrationErrorInfo& info);
   void renderRootSync(
     facebook::jsi::Runtime& runtime,
     std::uint32_t rootElementOffset,
@@ -133,8 +135,11 @@ public:
 
   void flushAllTasksForTest();
 
+  std::vector<HydrationErrorInfo> drainHydrationErrors();
+
 private:
   std::shared_ptr<HostInterface> ensureHostInterface();
+  void dispatchHydrationError(const HydrationErrorInfo& info);
   void registerRootContainer(const std::shared_ptr<ReactDOMInstance>& rootContainer);
 
   struct ScheduledTask {
@@ -147,6 +152,7 @@ private:
   };
 
   std::shared_ptr<HostInterface> hostInterface_{};
+  std::function<void(const HydrationErrorInfo&)> hydrationErrorCallback_{};
   WorkLoopState workLoopState_{};
   RootSchedulerState rootSchedulerState_{};
   AsyncActionState asyncActionState_{};

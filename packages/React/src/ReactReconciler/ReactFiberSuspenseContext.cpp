@@ -52,12 +52,10 @@ SuspenseContext setShallowSuspenseListContext(
 
 void pushPrimaryTreeSuspenseHandler(FiberNode& handler) {
   FiberNode* const current = handler.alternate;
-  [[maybe_unused]] auto* const props = static_cast<SuspenseProps*>(handler.pendingProps);
-
   pushSuspenseListContext(handler, setDefaultShallowSuspenseListContext(gSuspenseStackCursor.current));
 
   if constexpr (enableSuspenseAvoidThisFallback) {
-    const bool avoidFallback = props != nullptr && props->unstable_avoidThisFallback;
+    const bool avoidFallback = false;
     const bool isHidden = current == nullptr || isCurrentTreeHidden();
     if (avoidFallback && isHidden) {
       if (gShellBoundary == nullptr) {

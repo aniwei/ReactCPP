@@ -2,6 +2,8 @@
 #include "ReactRuntime/ReactWasmBridge.h"
 #include "ReactRuntime/ReactWasmLayout.h"
 #include "ReactDOM/client/ReactDOMComponent.h"
+#include "ReactReconciler/ReactFiberHydrationContext.h"
+#include "ReactReconciler/ReactFiberHydrationContext_ext.h"
 #include "reconciler/FiberNode.h"
 #include "TestRuntime.h"
 
@@ -1416,6 +1418,93 @@ bool testHostInterfaceDomBridge(TestContext& ctx) {
   return true;
 }
 
+  bool testClaimHydratableSingleton(TestContext& ctx) {
+    auto& runtime = ctx.reactRuntime;
+    auto& rt = ctx.runtime;
+
+    runtime.resetWorkLoop();
+
+    Object rootProps(rt);
+    auto rootContainer = std::make_shared<ReactDOMComponent>(rt, "root", rootProps);
+
+    Object mismatchProps(rt);
+    auto mismatchInstance = std::make_shared<ReactDOMComponent>(rt, "script", mismatchProps);
+    mismatchInstance->setParent(rootContainer);
+
+    Object targetProps(rt);
+    auto targetInstance = std::make_shared<ReactDOMComponent>(rt, "body", targetProps);
+    targetInstance->setParent(rootContainer);
+
+    rootContainer->children.push_back(mismatchInstance);
+    rootContainer->children.push_back(targetInstance);
+
+    Object childProps(rt);
+    auto childInstance = std::make_shared<ReactDOMComponent>(rt, "div", childProps);
+    childInstance->setParent(targetInstance);
+    targetInstance->children.push_back(childInstance);
+
+    FiberNode hostRoot{};
+    hostRoot.tag = WorkTag::HostRoot;
+    hostRoot.stateNode = rootContainer.get();
+
+    if (!enterHydrationState(runtime, hostRoot, rootContainer->children.front().get())) {
+      std::cerr << "Expected hydration state to be entered" << std::endl;
+      return false;
+    }
+
+    auto typeStorage = std::make_unique<Value>(rt, String::createFromUtf8(rt, "body"));
+
+    FiberNode singletonFiber{};
+    singletonFiber.tag = WorkTag::HostSingleton;
+    singletonFiber.type = typeStorage.get();
+    singletonFiber.elementType = typeStorage.get();
+    singletonFiber.returnFiber = &hostRoot;
+
+    auto& state = runtime.workLoopState();
+    state.hydrationErrors.clear();
+
+    ReactDOMInstance* claimed = claimHydratableSingleton(runtime, singletonFiber, "body");
+    if (claimed != targetInstance.get()) {
+      std::cerr << "Expected singleton hydration to claim matching instance" << std::endl;
+      resetHydrationState(runtime);
+      return false;
+    }
+
+    if (state.hydrationParentFiber != &singletonFiber) {
+      std::cerr << "Expected hydration parent fiber to be the singleton" << std::endl;
+      resetHydrationState(runtime);
+      return false;
+    }
+
+    if (!state.rootOrSingletonHydrationContext) {
+      std::cerr << "Expected singleton hydration context to remain active" << std::endl;
+      resetHydrationState(runtime);
+      return false;
+    }
+
+    if (state.nextHydratableInstance != childInstance.get()) {
+      std::cerr << "Expected next hydratable instance to advance to singleton child" << std::endl;
+      resetHydrationState(runtime);
+      return false;
+    }
+
+    if (state.hydrationErrors.size() != 1) {
+      std::cerr << "Expected a single mismatch error from skipping non-matching singleton" << std::endl;
+      resetHydrationState(runtime);
+      return false;
+    }
+
+    if (state.hydrationErrors.back().message != "Hydration: singleton instance mismatch") {
+      std::cerr << "Expected mismatch error message for singleton hydration" << std::endl;
+      resetHydrationState(runtime);
+      return false;
+    }
+
+    runtime.drainHydrationErrors();
+    resetHydrationState(runtime);
+    return true;
+  }
+
 bool testSchedulerPriorityApi(TestContext&) {
   ReactRuntime runtime;
 
@@ -1551,6 +1640,7 @@ int main() {
   ok &= react::testReconcileArrayKeyedReuseAndUpdate(ctx);
   ok &= react::testReconcileArrayHandlesDeletionAndPlacement(ctx);
   ok &= react::testHostInterfaceDomBridge(ctx);
+  ok &= react::testClaimHydratableSingleton(ctx);
   ok &= react::testSchedulerPriorityApi(ctx);
   ok &= react::testRuntimeSchedulerRespectsPriority(ctx);
   ok &= react::testRuntimeSchedulerCancellation(ctx);

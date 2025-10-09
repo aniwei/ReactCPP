@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <iterator>
 #include <limits>
 #include <sstream>
 #include <unordered_map>
@@ -508,6 +509,14 @@ void ReactRuntime::setShouldAttemptEagerTransitionCallback(std::function<bool()>
   shouldAttemptEagerTransitionCallback_ = std::move(callback);
 }
 
+void ReactRuntime::setHydrationErrorCallback(std::function<void(const HydrationErrorInfo&)> callback) {
+  hydrationErrorCallback_ = std::move(callback);
+}
+
+void ReactRuntime::notifyHydrationError(const HydrationErrorInfo& info) {
+  dispatchHydrationError(info);
+}
+
 bool ReactRuntime::shouldAttemptEagerTransition() const {
   if (shouldAttemptEagerTransitionCallback_) {
     return shouldAttemptEagerTransitionCallback_();
@@ -709,6 +718,32 @@ void ReactRuntime::flushAllTasksForTest() {
   }
 }
 
+std::vector<HydrationErrorInfo> ReactRuntime::drainHydrationErrors() {
+  auto& state = workLoopState_;
+  std::vector<HydrationErrorInfo> drained;
+  drained.reserve(state.hydrationErrors.size() + state.pendingRecoverableErrors.size());
+
+  std::move(
+      state.hydrationErrors.begin(),
+      state.hydrationErrors.end(),
+      std::back_inserter(drained));
+  state.hydrationErrors.clear();
+
+  std::move(
+      state.pendingRecoverableErrors.begin(),
+      state.pendingRecoverableErrors.end(),
+      std::back_inserter(drained));
+  state.pendingRecoverableErrors.clear();
+
+  if (!drained.empty()) {
+    for (const auto& error : drained) {
+      dispatchHydrationError(error);
+    }
+  }
+
+  return drained;
+}
+
 void ReactRuntime::unregisterRootContainer(const ReactDOMInstance* rootContainer) {
   if (rootContainer == nullptr) {
     return;
@@ -731,6 +766,14 @@ void ReactRuntime::registerRootContainer(const std::shared_ptr<ReactDOMInstance>
     return;
   }
   registeredRoots_[rootContainer.get()] = rootContainer;
+}
+
+void ReactRuntime::dispatchHydrationError(const HydrationErrorInfo& info) {
+  auto hostInterface = ensureHostInterface();
+  hostInterface->handleHydrationError(info);
+  if (hydrationErrorCallback_) {
+    hydrationErrorCallback_(info);
+  }
 }
 
 } // namespace react

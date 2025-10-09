@@ -1,6 +1,9 @@
 #include "ReactRuntime/ReactHostInterface.h"
 
 #include <algorithm>
+#include <iostream>
+
+#include "ReactReconciler/ReactFiber.h"
 
 namespace react {
 
@@ -166,6 +169,11 @@ void HostInterface::commitHostTextUpdate(
     return;
   }
   component->setTextContent(newText);
+}
+
+void HostInterface::handleHydrationError(const HydrationErrorInfo& info) {
+  const std::string key = info.fiber != nullptr ? info.fiber->key : std::string{};
+  std::cerr << "[HydrationWarning] Fiber key: " << key << " - " << info.message << std::endl;
 }
 
 } // namespace react

@@ -2,13 +2,16 @@
 
 #include "ReactReconciler/ReactFiber.h"
 #include "ReactReconciler/ReactFiberFlags.h"
-#include "ReactReconciler/ReactFiberThenable.h"
+#include "ReactReconciler/ReactFiberHydrationContext.h"
 #include "ReactReconciler/ReactFiberNewContext.h"
+#include "ReactReconciler/ReactFiberThenable.h"
+#include "ReactReconciler/ReactFiberTreeContext.h"
 #include "ReactReconciler/ReactTypeOfMode.h"
 #include "ReactReconciler/ReactWorkTags.h"
 #include "shared/ReactSymbols.h"
 #include "ReactRuntime/ReactJSXRuntime.h"
 
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <unordered_map>
@@ -26,8 +29,88 @@ using facebook::jsi::String;
 using facebook::jsi::Symbol;
 using facebook::jsi::Value;
 
+std::unique_ptr<ThenableState> currentThenableState;
+std::size_t thenableIndexCounter = 0;
+thread_local ReactRuntime* currentReactRuntime = nullptr;
+
+class RuntimeScope {
+ public:
+  explicit RuntimeScope(ReactRuntime* runtime) : previous(currentReactRuntime) {
+    currentReactRuntime = runtime;
+  }
+
+  ~RuntimeScope() {
+    currentReactRuntime = previous;
+  }
+
+ private:
+  ReactRuntime* previous;
+};
+
+class ThenableScope {
+ public:
+  ThenableScope()
+      : previousState(std::move(currentThenableState)), previousIndex(thenableIndexCounter) {
+    thenableIndexCounter = 0;
+  }
+
+  ~ThenableScope() {
+    currentThenableState = std::move(previousState);
+    thenableIndexCounter = previousIndex;
+  }
+
+ private:
+  std::unique_ptr<ThenableState> previousState;
+  std::size_t previousIndex{0};
+};
+
+ReactRuntime* getCurrentReactRuntime() {
+  return currentReactRuntime;
+}
+
+void recordChildForkIfHydrating(FiberNode& returnFiber, std::size_t forkCount) {
+  if (forkCount == 0) {
+    return;
+  }
+  ReactRuntime* runtime = getCurrentReactRuntime();
+  if (runtime != nullptr && getIsHydrating(*runtime)) {
+    pushTreeFork(returnFiber, forkCount);
+  }
+}
+
 Value* storeValue(Runtime& runtime, const Value& source) {
   return new Value(runtime, source);
+}
+
+ThenableState& ensureThenableState(Runtime& runtime) {
+  if (currentThenableState == nullptr) {
+    currentThenableState = std::make_unique<ThenableState>(createThenableState(runtime));
+  }
+  return *currentThenableState;
+}
+
+bool isThenable(Runtime& runtime, const Value& value) {
+  if (!value.isObject()) {
+    return false;
+  }
+  Object objectValue = value.getObject(runtime);
+  if (!objectValue.hasProperty(runtime, "then")) {
+    return false;
+  }
+  Value thenValue = objectValue.getProperty(runtime, "then");
+  if (!thenValue.isObject()) {
+    return false;
+  }
+  Object thenObject = thenValue.getObject(runtime);
+  return thenObject.isFunction(runtime);
+}
+
+Value unwrapThenable(Runtime& runtime, const Value& thenableValue) {
+  ThenableState& state = ensureThenableState(runtime);
+  std::size_t index = thenableIndexCounter;
+  thenableIndexCounter += 1;
+  Value resolved(runtime, trackUsedThenable(runtime, state, thenableValue, index));
+  return resolved;
 }
 
 bool isNullLike(const Value& value) {
@@ -429,6 +512,7 @@ int placeChildWithTracking(
   child->sibling = nullptr;
 
   if (!shouldTrackSideEffects) {
+    child->flags = static_cast<FiberFlags>(child->flags | Forked);
     return lastPlacedIndex;
   }
 
@@ -694,6 +778,15 @@ FiberNode* createFiberForChildValue(
     }
   }
 
+  if (isThenable(runtime, childValue)) {
+    Value resolved = unwrapThenable(runtime, childValue);
+    bool innerReuse = false;
+    FiberNode* resolvedFiber = createFiberForChildValue(
+        runtime, returnFiber, existing, resolved, renderLanes, innerReuse);
+    didReuseExisting = innerReuse;
+    return resolvedFiber;
+  }
+
   return nullptr;
 }
 
@@ -759,6 +852,7 @@ FiberNode* reconcileChildrenArray(
     }
   }
 
+  recordChildForkIfHydrating(workInProgress, length);
   workInProgress.child = firstNewChild;
   return firstNewChild;
 }
@@ -828,6 +922,12 @@ FiberNode* reconcileChildCollection(
       return reconcileChildrenArray(
           runtime, currentFirstChild, workInProgress, collected, renderLanes, shouldTrackSideEffects);
     }
+
+    if (isThenable(runtime, nextChildren)) {
+      Value resolved = unwrapThenable(runtime, nextChildren);
+      return reconcileChildCollection(
+          runtime, currentFirstChild, workInProgress, resolved, renderLanes, shouldTrackSideEffects);
+    }
   }
 
   if (shouldTrackSideEffects) {
@@ -891,19 +991,25 @@ void resetChildFibers(FiberNode& workInProgress, Lanes renderLanes) {
 }
 
 FiberNode* mountChildFibers(
+    ReactRuntime* reactRuntime,
     Runtime& runtime,
     FiberNode& workInProgress,
     const Value& nextChildren,
     Lanes renderLanes) {
+  RuntimeScope runtimeScope(reactRuntime);
+  ThenableScope thenableScope;
   return reconcileChildCollection(runtime, nullptr, workInProgress, nextChildren, renderLanes, false);
 }
 
 FiberNode* reconcileChildFibers(
+    ReactRuntime* reactRuntime,
     Runtime& runtime,
     FiberNode* currentFirstChild,
     FiberNode& workInProgress,
     const Value& nextChildren,
     Lanes renderLanes) {
+  RuntimeScope runtimeScope(reactRuntime);
+  ThenableScope thenableScope;
   return reconcileChildCollection(runtime, currentFirstChild, workInProgress, nextChildren, renderLanes, true);
 }
 

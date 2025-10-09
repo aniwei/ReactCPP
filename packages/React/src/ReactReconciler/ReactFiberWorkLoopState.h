@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <string>
 #include <vector>
 
 namespace react {
@@ -70,6 +71,22 @@ struct LegacyContextEntry {
   bool didChange{false};
 };
 
+struct TreeForkEntry {
+  FiberNode* provider{nullptr};
+  std::size_t forkCount{0};
+};
+
+struct TreeIdEntry {
+  FiberNode* provider{nullptr};
+  std::uint32_t id{1u};
+  std::string overflow{};
+};
+
+struct HydrationErrorInfo {
+  FiberNode* fiber{nullptr};
+  std::string message{};
+};
+
 struct WorkLoopState {
   ExecutionContext executionContext{NoContext};
   FiberRoot* workInProgressRoot{nullptr};
@@ -89,7 +106,7 @@ struct WorkLoopState {
   Lane deferredLane{NoLane};
   Lanes suspendedRetryLanes{NoLanes};
   std::vector<void*> concurrentErrors{};
-  std::vector<void*> recoverableErrors{};
+  std::vector<HydrationErrorInfo> recoverableErrors{};
   bool didIncludeRecursiveRenderUpdate{false};
   bool didIncludeCommitPhaseUpdate{false};
   bool didReceiveUpdate{false};
@@ -107,7 +124,7 @@ struct WorkLoopState {
   Lanes pendingEffectsRemainingLanes{NoLanes};
   double pendingEffectsRenderEndTime{-0.0};
   std::vector<const Transition*> pendingPassiveTransitions{};
-  std::vector<void*> pendingRecoverableErrors{};
+  std::vector<HydrationErrorInfo> pendingRecoverableErrors{};
   void* pendingViewTransition{nullptr};
   std::vector<void*> pendingViewTransitionEvents{};
   void* pendingTransitionTypes{nullptr};
@@ -120,6 +137,18 @@ struct WorkLoopState {
   std::uint32_t nestedPassiveUpdateCount{0};
   FiberRoot* rootWithPassiveNestedUpdates{nullptr};
   bool isRunningInsertionEffect{false};
+  bool isHydrating{false};
+  FiberNode* hydrationParentFiber{nullptr};
+  void* nextHydratableInstance{nullptr};
+  bool rootOrSingletonHydrationContext{false};
+  std::vector<HydrationErrorInfo> hydrationErrors{};
+  FiberNode* treeForkProvider{nullptr};
+  std::size_t treeForkCount{0};
+  std::vector<TreeForkEntry> treeForkStack{};
+  FiberNode* treeContextProvider{nullptr};
+  std::uint32_t treeContextId{1u};
+  std::string treeContextOverflow{};
+  std::vector<TreeIdEntry> treeIdStack{};
   StackCursor<void*> rootHostContainerCursor{createCursor<void*>(nullptr)};
   StackCursor<void*> hostContextCursor{createCursor<void*>(nullptr)};
   StackCursor<FiberNode*> hostContextFiberCursor{createCursor<FiberNode*>(nullptr)};

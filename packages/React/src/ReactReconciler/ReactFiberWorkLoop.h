@@ -74,7 +74,7 @@ double getPendingEffectsRenderEndTime(ReactRuntime& runtime);
 void setPendingEffectsRenderEndTime(ReactRuntime& runtime, double time);
 std::vector<const Transition*>& getPendingPassiveTransitions(ReactRuntime& runtime);
 void clearPendingPassiveTransitions(ReactRuntime& runtime);
-std::vector<void*>& getPendingRecoverableErrors(ReactRuntime& runtime);
+std::vector<HydrationErrorInfo>& getPendingRecoverableErrors(ReactRuntime& runtime);
 void clearPendingRecoverableErrors(ReactRuntime& runtime);
 void* getPendingViewTransition(ReactRuntime& runtime);
 void setPendingViewTransition(ReactRuntime& runtime, void* transition);
@@ -156,7 +156,7 @@ void setWorkInProgressSuspendedRetryLanes(ReactRuntime& runtime, Lanes lanes);
 std::vector<void*>& getWorkInProgressRootConcurrentErrors(ReactRuntime& runtime);
 void clearWorkInProgressRootConcurrentErrors(ReactRuntime& runtime);
 
-std::vector<void*>& getWorkInProgressRootRecoverableErrors(ReactRuntime& runtime);
+std::vector<HydrationErrorInfo>& getWorkInProgressRootRecoverableErrors(ReactRuntime& runtime);
 void clearWorkInProgressRootRecoverableErrors(ReactRuntime& runtime);
 
 bool getWorkInProgressRootDidIncludeRecursiveRenderUpdate(ReactRuntime& runtime);

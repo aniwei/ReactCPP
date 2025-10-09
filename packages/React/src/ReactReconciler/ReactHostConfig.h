@@ -21,6 +21,12 @@ HostInstance createInstance(
   const std::string& type,
   const facebook::jsi::Object& props);
 
+HostInstance createHoistableInstance(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  const std::string& type,
+  const facebook::jsi::Object& props);
+
 HostTextInstance createTextInstance(
   ReactRuntime& runtime,
   facebook::jsi::Runtime& jsRuntime,
@@ -97,5 +103,28 @@ void commitTextUpdate(
   const std::string& newText);
 
 void resetAfterCommit(ReactRuntime& runtime);
+
+void* getRootHostContext(ReactRuntime& runtime, void* rootContainer);
+void* getChildHostContext(ReactRuntime& runtime, void* parentContext, const std::string& type);
+
+bool supportsHydration(ReactRuntime& runtime);
+void* getFirstHydratableChildWithinContainer(ReactRuntime& runtime, void* container);
+void* getNextHydratableSibling(ReactRuntime& runtime, void* instance);
+void* getFirstHydratableChild(ReactRuntime& runtime, const HostInstance& parent);
+bool prepareToHydrateHostTextInstance(
+  ReactRuntime& runtime,
+  const HostTextInstance& textInstance,
+  const std::string& textContent);
+
+bool supportsSingletons(ReactRuntime& runtime);
+void* getFirstHydratableChildWithinSingleton(
+  ReactRuntime& runtime,
+  const std::string& type,
+  const HostInstance& singleton,
+  void* currentHydratableInstance);
+void* getNextHydratableSiblingAfterSingleton(
+  ReactRuntime& runtime,
+  const std::string& type,
+  void* currentHydratableInstance);
 
 } // namespace react::hostconfig

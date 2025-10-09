@@ -165,7 +165,7 @@
 - [ ] `beginWork` / `completeWork` / `performUnitOfWork` 逐行对齐 JS 行为。
 - [ ] `updateFunctionComponent` / `updateClassComponent` 翻译并挂接 Hook/Class 生命周期。
 - [ ] Suspense 粘滞 fallback（`ForceSuspenseFallback`）与 Offscreen 延迟逻辑。
-- 🔄 HostContext / Hydration 桥接：`pushHostContainer` / `popHostContainer` 与顶层 legacy context 栈已接通；`pushHostContext`、hydration-specific context 仍待补齐。
+- 🔄 HostContext / Hydration 桥接：`pushHostContainer` / `popHostContainer` 与顶层 legacy context 栈已接通；客户端 `pushHostContext`/`popHostContext` 与 `reset/enter/popHydrationState` scaffolding 已完成，Hydration context 已抽离为独立模块 (`ReactFiberHydrationContext.*` + `_ext` 额外实例匹配)，HostConfig (`supportsHydration`、`getFirstHydratableChildWithinContainer`、`getNextHydratableSibling`) 提供基础遍历，HostComponent beginWork 已尝试 claim hydratable 实例，并在属性/直接文本 mismatch 时标记 Hydration 错误；HostText beginWork 亦支持复用 dehydrated 文本节点并在 mismatch 时排队 Hydration 错误；WorkLoop 状态现记录 `hydrationErrors` 队列并在初次提交前升级为 `pendingRecoverableErrors`，`ReactRuntime::drainHydrationErrors` 在排空时通过 `HostInterface::handleHydrationError` 以及可选 `setHydrationErrorCallback` 主动通知宿主并继续返回聚合向量；hydration-specific context 推栈、tree-id 与更全面的实例/薄弱分支匹配仍待补齐。
 - [ ] Offscreen 缓存池、transition tracing、legacy defer 分支。
 - [ ] Profiler `stateNode` 计时字段与提交跟踪。
 - [ ] `ReactFiberNewContext` 的 `lazilyPropagateParentContextChanges` 高级分支。
@@ -176,15 +176,15 @@
   - 🔄 待办与阻塞项：
     - [ ] `mountLazyComponent`、`updateForwardRef`、`updateMemoComponent`、`updateSimpleMemoComponent`、`mountIncomplete{Class,Function}` —— 依赖 Hooks 与 Class 运行时，暂未落地。
     - [ ] `updateSuspenseComponent`、`updateSuspenseListComponent`、`deferHiddenOffscreenComponent` 的 hydration 与 fallback 路径 —— 需 Suspense handler 栈。
-    - [ ] `updateHostHoistable` —— 依赖 Host Resource API（`getResource`、`createHoistableInstance`）及水合逻辑。
-  - [ ] `updateHostSingleton` —— 客户端路径已落地；hydration 单例流程与 `pushHostContext`/资源栈仍待补齐。
+  - [ ] `updateHostHoistable` —— 客户端实例/更新路径已接入，水合路径现支持复用现有实例并回传属性 mismatch；仍缺 Host Resource API（`getResource`、资源栈管理）。
+  - [ ] `updateHostSingleton` —— 客户端路径已落地；hydration 单例流程已接入 `claimHydratableSingleton` 并在 mismatch 时排队错误，仍缺资源栈与 Host Resource API。
     - [ ] `updateActivityComponent`、`updateViewTransition`、`updateTracingMarkerComponent` —— 待 Transition Tracing / Activity 栈翻译。
     - [ ] `updateCacheComponent`、`pushCacheProvider`、`popCacheProvider` —— 取决于 Cache 管理模块。
     - [ ] `pushHostContainer`、`popHostContainer`、`pushTopLevelLegacyContextObject`、`popTopLevelLegacyContextObject` —— 需 Host Context 与 Legacy Context 栈。
     - [ ] `pushTransition`、`popRootTransition` —— 等待 `ReactFiberTransition` 翻译。
-    - [ ] Hydration diagnostics：`emitPendingHydrationWarnings`、`upgradeHydrationErrorsToRecoverable`、`getIsHydrating`。
+  - [x] Hydration diagnostics：`emitPendingHydrationWarnings`、`upgradeHydrationErrorsToRecoverable`、`getIsHydrating`。
   - 📌 下一步（已开启）：
-  - [ ] 扩展 `updateHostSingleton`：在现有客户端实现基础上补全 hydration / `pushHostContext` 路径。
+  - [x] 扩展 `updateHostSingleton`：在现有客户端实现基础上补全 hydration / `pushHostContext` 路径。
     - [ ] 同步 `TODO: translate` 计数（当前 20 处）至本表，确保每次提交后更新追踪清单。
   - ✅ `updateContextProvider` / `updateContextConsumer` C++ 版本译制并接入 `beginWork`。
   - ✅ `jsRuntime` 相关参数统一改为引用语义（`Runtime&`），连带移除空指针防御并同步调用方签名。
