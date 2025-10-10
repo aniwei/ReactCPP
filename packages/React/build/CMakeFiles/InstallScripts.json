@@ -1,9 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/Users/weiyanhai/Desktop/workspace/ReactCPP/packages/React/build/cmake_install.cmake",
-		"/Users/weiyanhai/Desktop/workspace/ReactCPP/packages/React/build/src/cmake_install.cmake",
-		"/Users/weiyanhai/Desktop/workspace/ReactCPP/packages/React/build/test/cmake_install.cmake"
-	],
-	"Parallel" : false
-}

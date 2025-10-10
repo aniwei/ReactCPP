@@ -7,6 +7,7 @@
 #include "ReactReconciler/ReactFiberFlags.h"
 #include "ReactReconciler/ReactEventPriorities.h"
 #include "ReactReconciler/ReactFiberLane.h"
+#include "ReactReconciler/ReactProfilerTimer.h"
 #include "ReactReconciler/ReactFiberWorkLoop.h"
 #include "ReactRuntime/ReactRuntime.h"
 #include "shared/ReactFeatureFlags.h"
@@ -1030,6 +1031,10 @@ bool performSyncWorkOnRoot(
     return true;
   }
 
+  if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
+    syncNestedUpdateFlag();
+  }
+
   return performWorkOnRoot(runtime, jsRuntime, root, lanes, true);
 }
 
@@ -1117,7 +1122,7 @@ void ensureRootIsScheduled(
           didSetLegacyFlag = true;
         }
       }
-    } catch (const std::exception&) {
+  } catch (const std::exception& ex) {
 #ifndef NDEBUG
       std::cerr << "React ensureRootIsScheduled failed to flag legacy update: " << ex.what() << std::endl;
 #endif
