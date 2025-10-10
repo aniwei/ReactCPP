@@ -63,7 +63,7 @@
 | `startDefaultTransitionIndicatorIfNeeded` | `startDefaultTransitionIndicatorIfNeeded` | 🔄 | 与 JS 基本一致，仍缺错误上报差异化。 |
 | `scheduleTaskForRootDuringMicrotask` | `scheduleTaskForRootDuringMicrotask` | 🔄 | 引入 fake act handle；需验证 `lanesToEventPriority`→Scheduler 映射与 continuation 复用策略。 |
 | `performWorkOnRootViaSchedulerTask` | `performWorkOnRootViaSchedulerTask` | 🔄 | 并发入口已实现；待补 profiler `trackSchedulerEvent` 与 JS Continuation 语义验证。 |
-| `performSyncWorkOnRoot` | `performSyncWorkOnRoot` | 🔄 | 新增同步渲染封装；仍需补 DEV `syncNestedUpdateFlag`。 |
+| `performSyncWorkOnRoot` | `performSyncWorkOnRoot` | ✅ | 已接入 DEV `syncNestedUpdateFlag`，与 JS 行为一致。 |
 | `scheduleCallback` | `scheduleCallback` | 🔄 | 支持 act 队列映射与 `didTimeout` 透传；仍缺 Scheduler continuation 回传。 |
 | `cancelCallback` | `cancelCallback` | ✅ | 处理 act 队列移除与运行时任务取消。 |
 | `scheduleImmediateRootScheduleTask` | `scheduleImmediateRootScheduleTask` | ✅ | 实现 `actQueue` 推入 + `supportsMicrotasks` 检测与 Safari fallback。 |
@@ -133,7 +133,7 @@
 
 - [x] 在同步入口刷新 pending passive effects。
 - [x] 垂直复用 `performWorkOnRoot(... forceSync=true)`。
-- [ ] DEV：`enableProfilerNestedUpdatePhase` 时调用 `syncNestedUpdateFlag`。
+- [x] DEV：`enableProfilerNestedUpdatePhase` 时调用 `syncNestedUpdateFlag`。
 
 #### `scheduleCallback` / `cancelCallback`
 

@@ -573,6 +573,9 @@ void commitRoot(
     throw std::logic_error("Cannot commit the same tree twice");
   }
 
+  const bool didIncludeRenderPhaseUpdate =
+      getWorkInProgressRootDidIncludeRecursiveRenderUpdate(runtime);
+
   Lanes remainingLanes = mergeLanes(finishedWork.lanes, finishedWork.childLanes);
   remainingLanes = mergeLanes(remainingLanes, getConcurrentlyUpdatedLanes());
   const Lanes pendingDiff = subtractLanes(previousPendingLanes, lanes);
@@ -612,8 +615,7 @@ void commitRoot(
   pendingRecoverableErrors = workRecoverableErrors;
   workRecoverableErrors.clear();
 
-  setPendingDidIncludeRenderPhaseUpdate(
-      runtime, getWorkInProgressRootDidIncludeRecursiveRenderUpdate(runtime));
+  setPendingDidIncludeRenderPhaseUpdate(runtime, didIncludeRenderPhaseUpdate);
 
   auto& pendingPassiveEffects = getPendingPassiveEffects(runtime);
   pendingPassiveEffects.clear();
@@ -633,6 +635,40 @@ void commitRoot(
   setDidScheduleUpdateDuringPassiveEffects(runtime, false);
 
   flushPendingEffects(runtime, jsRuntime, true);
+
+  if (includesSyncLane(getPendingEffectsLanes(runtime)) &&
+      (disableLegacyMode || root.tag != RootTag::LegacyRoot)) {
+    flushPendingEffects(runtime, jsRuntime, false);
+  }
+
+  ensureRootIsScheduled(runtime, jsRuntime, root);
+
+  const Lanes remainingLanesAfterCommit = root.pendingLanes;
+  const bool didIncludeCommitPhaseUpdate = getDidIncludeCommitPhaseUpdate(runtime);
+  const bool didScheduleCascadingSyncUpdate =
+      (enableInfiniteRenderLoopDetection &&
+       (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
+      (includesSomeLane(lanes, UpdateLanes) &&
+       includesSomeLane(remainingLanesAfterCommit, SyncUpdateLanes));
+
+  if (didScheduleCascadingSyncUpdate) {
+    if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
+      markNestedUpdateScheduled();
+    }
+
+    FiberRoot* const previousNestedUpdatesRoot = getRootWithNestedUpdates(runtime);
+    if (previousNestedUpdatesRoot == &root) {
+      const std::uint32_t nestedCount = getNestedUpdateCount(runtime);
+      setNestedUpdateCount(runtime, nestedCount + 1);
+    } else {
+      setNestedUpdateCount(runtime, 0);
+      setRootWithNestedUpdates(runtime, &root);
+    }
+  } else {
+    setNestedUpdateCount(runtime, 0);
+  }
+
+  flushSyncWorkOnAllRoots(runtime, jsRuntime, NoLanes);
 }
 
 void scheduleRootTask(
