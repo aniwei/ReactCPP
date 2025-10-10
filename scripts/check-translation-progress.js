@@ -58,7 +58,7 @@ function analyzeProgress(data) {
 
 function printProgress(analysis) {
   console.log('🚀 ReactCPP Translation Progress Report\n');
-  console.log('=' * 50);
+  console.log('='.repeat(50));
   
   // Overall progress
   const { statusCount, total } = analysis;

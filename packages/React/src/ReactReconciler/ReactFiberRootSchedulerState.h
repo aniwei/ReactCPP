@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <optional>
+#include <string>
 #include <unordered_map>
 
 namespace react {
@@ -25,6 +26,9 @@ struct RootSchedulerState {
   Lane currentEventTransitionLane{NoLane};
   std::uint64_t nextActCallbackId{1};
   std::unordered_map<std::uint64_t, std::shared_ptr<facebook::jsi::Value>> actCallbacks{};
+  bool hasTrackedSchedulerEvent{false};
+  std::string lastTrackedSchedulerEventType{};
+  double lastTrackedSchedulerEventTimestamp{-1.0};
 };
 
 } // namespace react

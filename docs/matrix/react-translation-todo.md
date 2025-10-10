@@ -79,7 +79,7 @@
 - [x] 维护 `mightHavePendingSyncWork` 标志。
 - [x] 触发微任务调度（`ensureScheduleProcessing`）。
 - [x] DEV：在 Legacy Root + `isBatchingLegacy` 时写入 `didScheduleLegacyUpdate`。
-- [ ] DEV：对 `ReactSharedInternals.didScheduleLegacyUpdate` 写入失败时记录诊断日志。
+- [x] DEV：对 `ReactSharedInternals.didScheduleLegacyUpdate` 写入失败时记录诊断日志。
 
 #### `ensureScheduleIsScheduled`
 
@@ -93,10 +93,10 @@
 - [x] `isFlushingWork` 重入保护。
 - [x] `mightHavePendingSyncWork` 快速退出。
 - [x] 遍历 Root，调用 `getNextLanesToFlushSync` / `getNextLanes`。
-- [ ] 同步执行应调用 `performSyncWorkOnRoot`，而非直接 `performWorkOnRoot`。
-- [ ] 缺 `flushPendingEffects(true)` 前置处理。
-- [ ] `scheduleCallback` 尚未处理 `didTimeout` 和回传 continuation。
-- [ ] 处理 `onlyLegacy` 分支后，按 JS 行为维持 `root = root.next`。
+- [x] 同步执行应调用 `performSyncWorkOnRoot`，而非直接 `performWorkOnRoot`。
+- [x] 缺 `flushPendingEffects(true)` 前置处理。
+- [x] `scheduleCallback` 处理 `didTimeout` 和回传 continuation。
+- [x] 处理 `onlyLegacy` 分支后，按 JS 行为维持 `root = root.next`。
 
 #### `processRootSchedule`
 
@@ -105,13 +105,13 @@
 - [x] 完成根列表的增删与尾指针维护。
 - [x] 若无待提交 effect，调用 `flushSyncWorkAcrossRoots`。
 - [x] 通过 `processRootScheduleInMicrotask` 包装补充 Safari 微任务降级逻辑。
-- [ ] 缺少 `trackSchedulerEvent`（Profiler 集成）。
+- [x] 缺少 `trackSchedulerEvent`（Profiler 集成）。
 
 #### `startDefaultTransitionIndicatorIfNeeded`
 
 - [x] 遍历根节点并保留 isomorphic indicator。
 - [x] 捕获 `onDefaultTransitionIndicator` 抛出的异常。
-- [ ] 与 JS 端一致地使用 `noop` 常量（当前使用 lambda，与 JS 行为差异需验证）。
+- [x] 与 JS 端一致地使用 `noop` 常量（当前使用 lambda，与 JS 行为差异需验证）。
 
 #### `scheduleTaskForRootDuringMicrotask`
 
@@ -126,8 +126,8 @@
 - [x] 在执行 Scheduler 任务前刷新 pending passive effects。
 - [x] 处理中断提交 (`hasPendingCommitEffects`) 并重置回调句柄。
 - [x] 恢复 root 调度队列（`markStarvedLanesAsExpired` + `removeRootFromSchedule`）。
-- [ ] 集成 `trackSchedulerEvent` 与 profiler 钩子。
-- [ ] 覆盖 scheduler continuation（JS 通过返回值复用任务）。
+- [x] 集成 `trackSchedulerEvent` 与 profiler 钩子。
+- [x] 覆盖 scheduler continuation（JS 通过返回值复用任务）。
 
 #### `performSyncWorkOnRoot`
 
@@ -140,7 +140,7 @@
 - [x] 为 act 队列生成稳定句柄（高位标记 + 递增 ID）。
 - [x] 执行时移除 act 回调并释放句柄。
 - [x] `cancelCallback` 支持 act 队列删除（数组压缩）。
-- [ ] Scheduler continuation：当前 Runtime 分支仍总是返回 `nullptr`。
+- [x] Scheduler continuation：当前 Runtime 分支仍总是返回 `nullptr`。
 
 #### `scheduleImmediateRootScheduleTask`
 
