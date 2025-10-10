@@ -121,6 +121,83 @@ OffscreenProps* createOffscreenProps(Runtime& jsRuntime, OffscreenMode mode, con
   return props;
 }
 
+OffscreenMode resolveActivityMode(Runtime& jsRuntime, const Value& modeValue) {
+  if (!modeValue.isString()) {
+    return OffscreenMode::Visible;
+  }
+
+  const std::string modeString = modeValue.getString(jsRuntime).utf8(jsRuntime);
+  if (modeString == "hidden") {
+    return OffscreenMode::Hidden;
+  }
+
+  return OffscreenMode::Visible;
+}
+
+FiberNode* mountActivityChildren(
+    ReactRuntime& runtime,
+    Runtime& jsRuntime,
+    FiberNode& workInProgress,
+    OffscreenMode mode,
+    const Value& children,
+    Lanes renderLanes) {
+  auto* offscreenProps = createOffscreenProps(jsRuntime, mode, children);
+  FiberNode* primaryChild = createFiber(WorkTag::OffscreenComponent, offscreenProps, std::string{}, workInProgress.mode);
+  primaryChild->pendingProps = offscreenProps;
+  primaryChild->memoizedProps = offscreenProps;
+  primaryChild->returnFiber = &workInProgress;
+  primaryChild->lanes = renderLanes;
+  primaryChild->ref = workInProgress.ref;
+  primaryChild->sibling = nullptr;
+
+  if (offscreenProps->children != nullptr) {
+    primaryChild->child = mountChildFibers(&runtime, jsRuntime, *primaryChild, *offscreenProps->children, renderLanes);
+  } else {
+    Value undefinedChildren = Value::undefined();
+    primaryChild->child = mountChildFibers(&runtime, jsRuntime, *primaryChild, undefinedChildren, renderLanes);
+  }
+
+  workInProgress.child = primaryChild;
+  return primaryChild;
+}
+
+FiberNode* updateActivityChildren(
+    ReactRuntime& runtime,
+    Runtime& jsRuntime,
+    FiberNode& workInProgress,
+    FiberNode* current,
+    OffscreenMode mode,
+    const Value& children,
+    Lanes renderLanes) {
+  FiberNode* currentChild = current != nullptr ? current->child : nullptr;
+  FiberNode* workChild = nullptr;
+
+  if (currentChild != nullptr && currentChild->tag == WorkTag::OffscreenComponent) {
+    workChild = createWorkInProgress(currentChild, currentChild->pendingProps);
+  } else if (currentChild != nullptr) {
+    workChild = createWorkInProgress(currentChild, currentChild->pendingProps);
+  } else {
+    workChild = createFiber(WorkTag::OffscreenComponent, nullptr, std::string{}, workInProgress.mode);
+  }
+
+  auto* offscreenProps = createOffscreenProps(jsRuntime, mode, children);
+  workChild->pendingProps = offscreenProps;
+  workChild->memoizedProps = offscreenProps;
+  workChild->returnFiber = &workInProgress;
+  workChild->lanes = currentChild != nullptr ? currentChild->lanes : renderLanes;
+  workChild->ref = workInProgress.ref;
+  workChild->sibling = nullptr;
+
+  FiberNode* currentFirstChild = currentChild != nullptr ? currentChild->child : nullptr;
+  Value nextChildrenValue = offscreenProps->children != nullptr
+      ? Value(jsRuntime, *offscreenProps->children)
+      : Value::undefined();
+  workChild->child = reconcileChildFibers(&runtime, jsRuntime, currentFirstChild, *workChild, nextChildrenValue, renderLanes);
+
+  workInProgress.child = workChild;
+  return workChild;
+}
+
 Value* createFragmentChildren(Runtime& jsRuntime, const Value& children) {
   return cloneForFiber(jsRuntime, children);
 }
@@ -1638,15 +1715,38 @@ FiberNode* updateScopeComponent(
 
 FiberNode* updateActivityComponent(
     ReactRuntime& runtime,
+    Runtime& jsRuntime,
     FiberNode* current,
     FiberNode& workInProgress,
     Lanes renderLanes) {
-  (void)runtime;
-  (void)current;
-  (void)workInProgress;
-  (void)renderLanes;
-  // TODO: translate updateActivityComponent.
-  return workInProgress.child;
+  Value nextPropsValue = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
+  Object nextPropsObject = ensureObject(jsRuntime, nextPropsValue);
+
+  Value nextChildrenValue = Value::undefined();
+  if (nextPropsObject.hasProperty(jsRuntime, kChildrenPropName)) {
+    nextChildrenValue = nextPropsObject.getProperty(jsRuntime, kChildrenPropName);
+  }
+
+  Value modeValue = Value::undefined();
+  if (nextPropsObject.hasProperty(jsRuntime, "mode")) {
+    modeValue = nextPropsObject.getProperty(jsRuntime, "mode");
+  }
+
+  const OffscreenMode offscreenMode = resolveActivityMode(jsRuntime, modeValue);
+
+  if (getIsHydrating(runtime)) {
+    queueHydrationError(runtime, workInProgress, "Hydration for Activity boundaries is not yet supported");
+    resetHydrationState(runtime);
+  }
+
+  workInProgress.flags = static_cast<FiberFlags>(workInProgress.flags & ~DidCapture);
+  workInProgress.memoizedState = nullptr;
+
+  if (current == nullptr) {
+    return mountActivityChildren(runtime, jsRuntime, workInProgress, offscreenMode, nextChildrenValue, renderLanes);
+  }
+
+  return updateActivityChildren(runtime, jsRuntime, workInProgress, current, offscreenMode, nextChildrenValue, renderLanes);
 }
 
 FiberNode* deferHiddenOffscreenComponent(
@@ -2530,7 +2630,7 @@ FiberNode* beginWork(
       break;
     }
     case WorkTag::ActivityComponent:
-      return updateActivityComponent(runtime, current, *workInProgress, renderLanes);
+      return updateActivityComponent(runtime, jsRuntime, current, *workInProgress, renderLanes);
     case WorkTag::OffscreenComponent:
       return updateOffscreenComponent(runtime, jsRuntime, current, *workInProgress, renderLanes, workInProgress->pendingProps);
     case WorkTag::LegacyHiddenComponent: {
