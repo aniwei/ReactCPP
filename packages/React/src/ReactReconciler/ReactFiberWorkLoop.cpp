@@ -110,6 +110,10 @@ struct TracingMarkerInstance {
 StackCursor<std::optional<std::vector<TracingMarkerInstance*>>> markerInstanceStack =
     createCursor<std::optional<std::vector<TracingMarkerInstance*>>>(std::nullopt);
 
+StackCursor<void*> resumedCacheCursor = createCursor<void*>(nullptr);
+StackCursor<std::optional<std::vector<const Transition*>>> transitionStackCursor =
+  createCursor<std::optional<std::vector<const Transition*>>>(std::nullopt);
+
 Value* cloneForFiber(Runtime& jsRuntime, const Value& source) {
   return new Value(jsRuntime, source);
 }
@@ -556,10 +560,41 @@ void pushTransition(
     const CachePoolPtr& cachePool,
     const std::vector<const Transition*>* transitions) {
   (void)runtime;
-  (void)fiber;
-  (void)cachePool;
-  (void)transitions;
-  // TODO: Port transition stack management once ReactFiberTransition is translated.
+
+  void* const nextCache = cachePool != nullptr ? cachePool->pool : resumedCacheCursor.current;
+  push(resumedCacheCursor, nextCache, &fiber);
+
+  if (!enableTransitionTracing) {
+    return;
+  }
+
+  std::optional<std::vector<const Transition*>> nextTransitions = std::nullopt;
+
+  if (!transitionStackCursor.current.has_value()) {
+    if (transitions != nullptr) {
+      nextTransitions = *transitions;
+    }
+  } else if (transitions == nullptr) {
+    nextTransitions = transitionStackCursor.current;
+  } else {
+    std::vector<const Transition*> merged = transitionStackCursor.current.value();
+    merged.insert(merged.end(), transitions->begin(), transitions->end());
+    nextTransitions = std::move(merged);
+  }
+
+  push(transitionStackCursor, std::move(nextTransitions), &fiber);
+}
+
+void popTransition(FiberNode& workInProgress, FiberNode* current) {
+  if (current == nullptr) {
+    return;
+  }
+
+  if (enableTransitionTracing) {
+    pop(transitionStackCursor, &workInProgress);
+  }
+
+  pop(resumedCacheCursor, &workInProgress);
 }
 
 bool isHiddenMode(OffscreenMode mode) {
@@ -738,11 +773,26 @@ void pushMarkerInstance(FiberNode& workInProgress, TracingMarkerInstance& marker
   push(markerInstanceStack, std::move(nextStack), &workInProgress);
 }
 
-void pushRootTransition(FiberNode& workInProgress, FiberRoot& root, Lanes renderLanes) {
-  (void)workInProgress;
+void pushRootTransition(
+    ReactRuntime& runtime,
+    FiberNode& workInProgress,
+    FiberRoot& root,
+    Lanes renderLanes) {
   (void)root;
   (void)renderLanes;
-  // TODO: translate ReactFiberTransition stack push logic.
+  if (!enableTransitionTracing) {
+    return;
+  }
+
+  const auto& rootTransitions = getWorkInProgressTransitions(runtime);
+  std::optional<std::vector<const Transition*>> nextTransitions;
+  if (!rootTransitions.empty()) {
+    nextTransitions = rootTransitions;
+  } else {
+    nextTransitions = std::nullopt;
+  }
+
+  push(transitionStackCursor, std::move(nextTransitions), &workInProgress);
 }
 
 void pushHostContainer(ReactRuntime& runtime, FiberNode& workInProgress, void* container) {
@@ -2077,7 +2127,7 @@ FiberNode* updateHostRoot(
   }
 
   pushHostRootContext(runtime, workInProgress);
-  pushRootTransition(workInProgress, *fiberRoot, renderLanes);
+  pushRootTransition(runtime, workInProgress, *fiberRoot, renderLanes);
   if (enableTransitionTracing) {
     pushRootMarkerInstance(workInProgress);
   }
@@ -2116,11 +2166,18 @@ FiberNode* updateHostRoot(
   return workInProgress.child;
 }
 
-void popRootTransition(FiberNode& workInProgress, FiberRoot& root, Lanes renderLanes) {
-  (void)workInProgress;
+void popRootTransition(
+    ReactRuntime& runtime,
+    FiberNode& workInProgress,
+    FiberRoot& root,
+    Lanes renderLanes) {
   (void)root;
   (void)renderLanes;
-  // TODO: integrate ReactFiberTransition stack once it lands.
+  if (!enableTransitionTracing) {
+    return;
+  }
+
+  pop(transitionStackCursor, &workInProgress);
 }
 
 void popHostContainer(ReactRuntime& runtime, FiberNode& workInProgress) {
@@ -2306,7 +2363,7 @@ FiberNode* completeWork(
 
       popCacheProvider(*workInProgress, nullptr);
 
-      popRootTransition(*workInProgress, *fiberRoot, entangledRenderLanes);
+  popRootTransition(runtime, *workInProgress, *fiberRoot, entangledRenderLanes);
   popHostContainer(runtime, *workInProgress);
   popTopLevelLegacyContextObject(runtime, *workInProgress);
 
@@ -2432,7 +2489,16 @@ FiberNode* completeWork(
     case WorkTag::ContextConsumer:
     case WorkTag::Profiler:
     case WorkTag::SuspenseComponent:
+      bubbleProperties(*workInProgress);
+      break;
     case WorkTag::OffscreenComponent:
+    case WorkTag::LegacyHiddenComponent: {
+      popSuspenseHandler(*workInProgress);
+      popHiddenContext(runtime, *workInProgress);
+      popTransition(*workInProgress, current);
+      bubbleProperties(*workInProgress);
+      break;
+    }
     case WorkTag::CacheComponent:
     case WorkTag::MemoComponent:
     case WorkTag::ForwardRef:

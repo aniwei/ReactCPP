@@ -183,7 +183,7 @@
   - [x] `updateTracingMarkerComponent` —— 初版逻辑已落地，待后续补齐 Transition Tracing 栈与回调。
     - [ ] `updateCacheComponent`、`pushCacheProvider`、`popCacheProvider` —— 取决于 Cache 管理模块。
     - [ ] `pushHostContainer`、`popHostContainer`、`pushTopLevelLegacyContextObject`、`popTopLevelLegacyContextObject` —— 需 Host Context 与 Legacy Context 栈。
-    - [ ] `pushTransition`、`popRootTransition` —— 等待 `ReactFiberTransition` 翻译。
+  - [x] `pushTransition`、`popRootTransition` —— 基础栈管理已接入，后续补齐缓存池与 tracing 细节。
   - [x] Hydration diagnostics：`emitPendingHydrationWarnings`、`upgradeHydrationErrorsToRecoverable`、`getIsHydrating`。
   - 📌 下一步（已开启）：
   - [x] 扩展 `updateHostSingleton`：在现有客户端实现基础上补全 hydration / `pushHostContext` 路径。
