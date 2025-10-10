@@ -274,8 +274,8 @@ std::shared_ptr<react::ReactDOMInstance> mountElement(
   const auto& previousProps = existingComponent->getProps();
   Object payload(rt);
   if (computeUpdatePayload(rt, previousProps, extraction.propsMap, payload)) {
-    Object oldProps = createPropsObject(rt, previousProps);
-    runtime.commitUpdate(instance, oldProps, extraction.propsObject, payload);
+  Object oldProps = createPropsObject(rt, previousProps);
+  runtime.commitUpdate(rt, instance, oldProps, extraction.propsObject, payload);
   }
 
   reconcileChildren(runtime, rt, instance, extraction.children);
@@ -429,7 +429,7 @@ void reconcileChildren(
       beforeChild = currentChildren[index];
     }
 
-    auto attachedParent = child->parent.lock();
+    auto attachedParent = child->getParent();
     const bool isAttachedToParent = attachedParent && attachedParent.get() == parent.get();
 
     if (!isAttachedToParent) {
@@ -480,12 +480,24 @@ const AsyncActionState& ReactRuntime::asyncActionState() const {
   return asyncActionState_;
 }
 
+HookRuntimeState& ReactRuntime::hookState() {
+  return hookState_;
+}
+
+const HookRuntimeState& ReactRuntime::hookState() const {
+  return hookState_;
+}
+
 void ReactRuntime::resetWorkLoop() {
   workLoopState_ = WorkLoopState{};
 }
 
 void ReactRuntime::resetRootScheduler() {
   rootSchedulerState_ = RootSchedulerState{};
+}
+
+void ReactRuntime::resetHooks() {
+  hookState_ = HookRuntimeState{};
 }
 
 void ReactRuntime::setHostInterface(std::shared_ptr<HostInterface> hostInterface) {
@@ -501,6 +513,7 @@ void ReactRuntime::bindHostInterface(facebook::jsi::Runtime& runtime) {
 void ReactRuntime::reset() {
   resetWorkLoop();
   resetRootScheduler();
+  resetHooks();
   asyncActionState_ = AsyncActionState{};
   registeredRoots_.clear();
 }

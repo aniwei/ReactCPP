@@ -4,6 +4,7 @@
 #include "shared/ReactFeatureFlags.h"
 #include "shared/ReactSharedInternals.h"
 
+#include <array>
 #include <iostream>
 #include <optional>
 #include <stdexcept>
@@ -199,9 +200,9 @@ void ensureThenableInstrumentation(Runtime& runtime, Object& thenable) {
   }
 
   Function thenFunction = thenObject.asFunction(runtime);
-  Value args[] = {Value(runtime, onFulfilled), Value(runtime, onRejected)};
-  Value thisValue(runtime, thenable);
-  thenFunction.call(runtime, thisValue, args, 2);
+    std::array<Value, 2> args = {Value(runtime, onFulfilled), Value(runtime, onRejected)};
+    thenFunction.callWithThis(
+        runtime, thenable, static_cast<const Value*>(args.data()), args.size());
 }
 
 std::string valueToDisplayName(Runtime& runtime, const Object& thenable) {
@@ -424,32 +425,36 @@ jsi::Value trackUsedThenable(
 
   if (slot == nullptr) {
     slot = std::make_unique<Value>(runtime, incomingThenable);
-  } else if (!incomingClone.strictEquals(runtime, *slot)) {
+  } else if (!Value::strictEquals(runtime, incomingClone, *slot)) {
     warnAboutUncachedPromise(state);
 
     if (incomingThenable.hasProperty(runtime, kThenProp)) {
-      Value noopArgs[] = {Value(runtime, Function::createFromHostFunction(
-                                       runtime,
-                                       propId(runtime, "__react_uncachedThenableNoop"),
-                                       1,
-                                       [](Runtime&, const Value&, const Value*, size_t) -> Value {
-                                         return Value::undefined();
-                                       })),
-                          Value(runtime, Function::createFromHostFunction(
-                                       runtime,
-                                       propId(runtime, "__react_uncachedThenableNoopRejected"),
-                                       1,
-                                       [](Runtime&, const Value&, const Value*, size_t) -> Value {
-                                         return Value::undefined();
-                                       }))};
+      std::array<Value, 2> noopArgs = {
+          Value(runtime, Function::createFromHostFunction(
+                              runtime,
+                              propId(runtime, "__react_uncachedThenableNoop"),
+                              1,
+                              [](Runtime&, const Value&, const Value*, size_t) -> Value {
+                                return Value::undefined();
+                              })),
+          Value(runtime, Function::createFromHostFunction(
+                              runtime,
+                              propId(runtime, "__react_uncachedThenableNoopRejected"),
+                              1,
+                              [](Runtime&, const Value&, const Value*, size_t) -> Value {
+                                return Value::undefined();
+                              }))};
 
       Value thenValue = incomingThenable.getProperty(runtime, kThenProp);
       if (thenValue.isObject()) {
         Object thenObject = thenValue.getObject(runtime);
         if (thenObject.isFunction(runtime)) {
           Function thenFunction = thenObject.asFunction(runtime);
-          Value thisValue(runtime, incomingThenable);
-          thenFunction.call(runtime, thisValue, noopArgs, 2);
+      thenFunction.callWithThis(
+        runtime,
+        incomingThenable,
+        static_cast<const Value*>(noopArgs.data()),
+        noopArgs.size());
         }
       }
     }

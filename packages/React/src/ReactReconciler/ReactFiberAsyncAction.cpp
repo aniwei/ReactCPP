@@ -102,12 +102,13 @@ void disableIsomorphicDefaultIndicator(ReactRuntime& runtime) {
 
 AsyncActionThenablePtr entangleAsyncAction(
   ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
   const Transition* transition,
   AsyncActionThenablePtr thenable) {
   auto& state = getAsyncActionState(runtime);
 
   if (state.currentEntangledActionLane == NoLane) {
-    state.currentEntangledActionLane = requestTransitionLane(runtime, transition);
+    state.currentEntangledActionLane = requestTransitionLane(runtime, jsRuntime, transition);
   }
 
   if (!thenable) {
@@ -119,7 +120,7 @@ AsyncActionThenablePtr entangleAsyncAction(
 
   if (enableDefaultTransitionIndicator) {
     state.needsIsomorphicIndicator = true;
-    ensureScheduleIsScheduled(runtime);
+    ensureScheduleIsScheduled(runtime, jsRuntime);
   }
 
   return state.currentEntangledActionThenable;

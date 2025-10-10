@@ -55,7 +55,7 @@ ReactElementPtr hostValueToElement(jsi::Runtime& runtime, const jsi::Value& valu
   if (!object.isHostObject(runtime)) {
     return nullptr;
   }
-  auto host = runtime.getHostObject(object);
+  auto host = object.getHostObject(runtime);
   if (!host) {
     return nullptr;
   }
@@ -250,9 +250,10 @@ void collectChildrenRecursive(jsi::Runtime& runtime, const jsi::Value& value, st
     throw std::invalid_argument("Unsupported child node in JSX runtime");
   }
 
-  const size_t length = object.size(runtime);
+  jsi::Array array = object.getArray(runtime);
+  const size_t length = array.size(runtime);
   for (size_t index = 0; index < length; ++index) {
-    collectChildrenRecursive(runtime, object.getValueAtIndex(runtime, index), out);
+    collectChildrenRecursive(runtime, array.getValueAtIndex(runtime, index), out);
   }
 }
 
@@ -326,7 +327,7 @@ std::vector<WasmReactProp> encodeProps(
   return encoded;
 }
 
-WasmReactValue encodeArray(jsi::Runtime& runtime, const jsi::Object& array, WasmMemoryBuilder& builder) {
+WasmReactValue encodeArray(jsi::Runtime& runtime, const jsi::Array& array, WasmMemoryBuilder& builder) {
   const size_t length = array.size(runtime);
   std::vector<WasmReactValue> items;
   items.reserve(length);
@@ -382,7 +383,7 @@ WasmReactValue encodeValue(jsi::Runtime& runtime, const jsi::Value& value, WasmM
 
   auto object = value.getObject(runtime);
   if (object.isArray(runtime)) {
-    return encodeArray(runtime, object, builder);
+    return encodeArray(runtime, object.getArray(runtime), builder);
   }
 
   throw std::invalid_argument("Unsupported value while encoding");

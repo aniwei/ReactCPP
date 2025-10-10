@@ -29,25 +29,25 @@ jsi::Value makeStringValue(jsi::Runtime& runtime, const std::string& value) {
 }
 
 RenderFixture buildLayout(
-    jsi::Runtime& runtime,
+    TestRuntime& runtime,
     const std::string& childClassName,
     const std::string& textContent) {
-  using namespace react::jsx;
+  namespace jsxRuntime = react::jsx;
 
   jsi::Object childProps(runtime);
   childProps.setProperty(runtime, "className", makeStringValue(runtime, childClassName));
   childProps.setProperty(runtime, "children", makeStringValue(runtime, textContent));
 
-  auto childElement = jsx(runtime, makeStringValue(runtime, "span"), jsi::Value(runtime, childProps));
+  auto childElement = jsxRuntime::jsx(runtime, makeStringValue(runtime, "span"), jsi::Value(runtime, childProps));
 
   jsi::Object rootProps(runtime);
   rootProps.setProperty(runtime, "id", makeStringValue(runtime, "root"));
   auto childrenArray = runtime.makeArray(1);
-  childrenArray.setValueAtIndex(runtime, 0, createJsxHostValue(runtime, childElement));
+  childrenArray.setValueAtIndex(runtime, 0, jsxRuntime::createJsxHostValue(runtime, childElement));
   rootProps.setProperty(runtime, "children", jsi::Value(runtime, childrenArray));
 
-  auto rootElement = jsxs(runtime, makeStringValue(runtime, "div"), jsi::Value(runtime, rootProps));
-  auto layout = serializeToWasm(runtime, *rootElement);
+  auto rootElement = jsxRuntime::jsxs(runtime, makeStringValue(runtime, "div"), jsi::Value(runtime, rootProps));
+  auto layout = jsxRuntime::serializeToWasm(runtime, *rootElement);
 
   RenderFixture fixture;
   fixture.offset = layout.rootOffset;

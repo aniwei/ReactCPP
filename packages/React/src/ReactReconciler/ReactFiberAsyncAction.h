@@ -5,6 +5,12 @@
 #include <functional>
 #include <memory>
 
+namespace facebook {
+namespace jsi {
+class Runtime;
+} // namespace jsi
+} // namespace facebook
+
 namespace react {
 
 class ReactRuntime;
@@ -27,6 +33,7 @@ using AsyncActionThenablePtr = std::shared_ptr<AsyncActionThenable>;
 
 AsyncActionThenablePtr entangleAsyncAction(
   ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
   const Transition* transition,
   AsyncActionThenablePtr thenable);
 

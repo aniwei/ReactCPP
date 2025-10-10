@@ -13,6 +13,7 @@ class ReactDOMInstance;
 ReactDOMInstance* tryToClaimNextHydratableInstance(ReactRuntime& runtime, FiberNode& fiber, const std::string& type);
 ReactDOMInstance* tryToClaimNextHydratableTextInstance(ReactRuntime& runtime, FiberNode& fiber);
 ReactDOMInstance* claimHydratableSingleton(ReactRuntime& runtime, FiberNode& fiber, const std::string& type);
+void* tryToClaimNextHydratableSuspenseInstance(ReactRuntime& runtime, FiberNode& fiber);
 void queueHydrationError(ReactRuntime& runtime, FiberNode& fiber, const char* message);
 
 } // namespace react

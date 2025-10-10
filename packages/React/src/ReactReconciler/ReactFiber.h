@@ -8,17 +8,12 @@
 #include "ReactReconciler/ReactTypeOfMode.h"
 #include "ReactReconciler/ReactWorkTags.h"
 #include "ReactReconciler/ReactRootTags.h"
+#include "jsi/jsi.h"
 
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
-
-namespace facebook {
-namespace jsi {
-class Value;
-} // namespace jsi
-} // namespace facebook
 
 namespace react {
 

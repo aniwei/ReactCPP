@@ -1,7 +1,10 @@
 #include "ReactReconciler/ReactFiberRootScheduler.h"
 
-#include "ReactReconciler/ReactFiber.h"
 #include "ReactReconciler/ReactFiberAsyncAction.h"
+#include "ReactReconciler/ReactFiber.h"
+#include "ReactReconciler/ReactFiberCommitEffects.h"
+#include "ReactReconciler/ReactFiberConcurrentUpdates.h"
+#include "ReactReconciler/ReactFiberFlags.h"
 #include "ReactReconciler/ReactEventPriorities.h"
 #include "ReactReconciler/ReactFiberLane.h"
 #include "ReactReconciler/ReactFiberWorkLoop.h"
@@ -11,12 +14,26 @@
 #include "jsi/jsi.h"
 #include <exception>
 #include <iostream>
-#include <memory>
 #include <limits>
+#include <memory>
+#include <stdexcept>
 #include <utility>
 #include <utility>
 
 namespace react {
+
+bool performWorkOnRoot(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  FiberRoot& root,
+  Lanes lanes,
+  bool forceSync);
+bool performSyncWorkOnRoot(
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  FiberRoot& root,
+  Lanes lanes);
+
 namespace {
 
 RootSchedulerState& getState(ReactRuntime& runtime) {
@@ -122,7 +139,7 @@ bool removeActQueueCallback(facebook::jsi::Runtime& jsRuntime, const facebook::j
         continue;
       }
 
-      if (entry.strictEquals(jsRuntime, callbackValue)) {
+  if (facebook::jsi::Value::strictEquals(jsRuntime, entry, callbackValue)) {
         if (index + 1 < length) {
           facebook::jsi::Value last = queueArray.getValueAtIndex(jsRuntime, length - 1);
           queueArray.setValueAtIndex(jsRuntime, index, last);
@@ -259,9 +276,10 @@ TaskHandle scheduleCallback(
         return facebook::jsi::Value::null();
       });
 
-  facebook::jsi::Function queueFunction(hostFunction);
-  if (pushActQueueCallback(jsRuntime, std::move(queueFunction))) {
-    state.actCallbacks.emplace(actKey, hostFunction);
+  auto storedCallback = std::make_shared<facebook::jsi::Value>(facebook::jsi::Value(jsRuntime, hostFunction));
+
+  if (pushActQueueCallback(jsRuntime, std::move(hostFunction))) {
+    state.actCallbacks.emplace(actKey, std::move(storedCallback));
     return makeActCallbackHandle(state);
   }
 
@@ -283,7 +301,13 @@ void cancelCallback(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, Ta
     const std::uint64_t key = toActCallbackKey(handle);
     auto it = state.actCallbacks.find(key);
     if (it != state.actCallbacks.end()) {
-      removeActQueueCallback(jsRuntime, it->second);
+      if (it->second && it->second->isObject()) {
+        facebook::jsi::Object callbackObject = it->second->getObject(jsRuntime);
+        if (callbackObject.isFunction(jsRuntime)) {
+          facebook::jsi::Function storedFunction = callbackObject.asFunction(jsRuntime);
+          removeActQueueCallback(jsRuntime, storedFunction);
+        }
+      }
       state.actCallbacks.erase(it);
     }
     return;
@@ -331,8 +355,6 @@ bool tryScheduleRootMicrotask(ReactRuntime& runtime, facebook::jsi::Runtime& jsR
 void ensureScheduleProcessing(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime);
 void ensureScheduleIsScheduledInternal(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime);
 void scheduleImmediateRootScheduleTask(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime);
-bool performWorkOnRoot(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, FiberRoot& root, Lanes lanes, bool forceSync);
-bool performSyncWorkOnRoot(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, FiberRoot& root, Lanes lanes);
 void performWorkOnRootViaSchedulerTask(
   ReactRuntime& runtime,
   facebook::jsi::Runtime& jsRuntime,
@@ -477,12 +499,43 @@ SchedulerPriority toSchedulerPriority(Lane lane) {
 }
 
 void commitRoot(
-  FiberRoot& root, 
-  FiberNode& finishedWork) {
-  FiberNode* const previousCurrent = root.current;
+  ReactRuntime& runtime,
+  facebook::jsi::Runtime& jsRuntime,
+  FiberRoot& root,
+  FiberNode& finishedWork,
+  Lanes lanes,
+  Lanes previousPendingLanes) {
+  root.cancelPendingCommit = nullptr;
 
+  while (flushPendingEffects(runtime, jsRuntime, true)) {
+    if (getPendingEffectsStatus(runtime) == PendingEffectsStatus::None) {
+      break;
+    }
+  }
+
+  const ExecutionContext context = getExecutionContext(runtime);
+  if ((context & (RenderContext | CommitContext)) != NoContext) {
+    throw std::logic_error("commitRoot should not run during render or commit context");
+  }
+
+  FiberNode* const previousCurrent = root.current;
   if (previousCurrent == &finishedWork) {
-    return;
+    throw std::logic_error("Cannot commit the same tree twice");
+  }
+
+  Lanes remainingLanes = mergeLanes(finishedWork.lanes, finishedWork.childLanes);
+  remainingLanes = mergeLanes(remainingLanes, getConcurrentlyUpdatedLanes());
+  const Lanes pendingDiff = subtractLanes(previousPendingLanes, lanes);
+  remainingLanes = mergeLanes(remainingLanes, pendingDiff);
+
+  markRootFinished(root, lanes, remainingLanes, NoLane, NoLanes, NoLanes);
+
+  setDidIncludeCommitPhaseUpdate(runtime, false);
+
+  if (getWorkInProgressRoot(runtime) == &root) {
+    setWorkInProgressRoot(runtime, nullptr);
+    setWorkInProgressFiber(runtime, nullptr);
+    setWorkInProgressRootRenderLanes(runtime, NoLanes);
   }
 
   root.current = &finishedWork;
@@ -491,6 +544,45 @@ void commitRoot(
   if (previousCurrent != nullptr) {
     previousCurrent->alternate = &finishedWork;
   }
+
+  setPendingFinishedWork(runtime, &finishedWork);
+  setPendingEffectsRoot(runtime, &root);
+  setPendingEffectsLanes(runtime, lanes);
+  setPendingEffectsRemainingLanes(runtime, remainingLanes);
+  setPendingEffectsRenderEndTime(runtime, getCurrentTime(runtime));
+  setPendingSuspendedCommitReason(runtime, SuspendedCommitReason::ImmediateCommit);
+
+  auto& workTransitions = getWorkInProgressTransitions(runtime);
+  auto& pendingTransitions = getPendingPassiveTransitions(runtime);
+  pendingTransitions = workTransitions;
+  workTransitions.clear();
+
+  auto& workRecoverableErrors = getWorkInProgressRootRecoverableErrors(runtime);
+  auto& pendingRecoverableErrors = getPendingRecoverableErrors(runtime);
+  pendingRecoverableErrors = workRecoverableErrors;
+  workRecoverableErrors.clear();
+
+  setPendingDidIncludeRenderPhaseUpdate(
+      runtime, getWorkInProgressRootDidIncludeRecursiveRenderUpdate(runtime));
+
+  auto& pendingPassiveEffects = getPendingPassiveEffects(runtime);
+  pendingPassiveEffects.clear();
+
+  const bool hasPassiveEffects =
+      (finishedWork.subtreeFlags & PassiveMask) != NoFlags ||
+      (finishedWork.flags & PassiveMask) != NoFlags;
+
+  if (hasPassiveEffects) {
+    enqueuePendingPassiveEffect(runtime, finishedWork);
+    setPendingEffectsStatus(runtime, PendingEffectsStatus::Passive);
+  } else {
+    setPendingEffectsStatus(runtime, PendingEffectsStatus::None);
+  }
+
+  setIsFlushingPassiveEffects(runtime, false);
+  setDidScheduleUpdateDuringPassiveEffects(runtime, false);
+
+  flushPendingEffects(runtime, jsRuntime, true);
 }
 
 void scheduleRootTask(
@@ -651,78 +743,6 @@ void ensureScheduleProcessing(ReactRuntime& runtime, facebook::jsi::Runtime& jsR
   ensureScheduleIsScheduled(runtime, jsRuntime);
 }
 
-bool performSyncWorkOnRoot(
-  ReactRuntime& runtime,
-  facebook::jsi::Runtime& jsRuntime,
-  FiberRoot& root,
-  Lanes lanes) {
-  if (flushPendingEffects(runtime, jsRuntime, false)) {
-    return true;
-  }
-
-  return performWorkOnRoot(runtime, jsRuntime, root, lanes, true);
-}
-
-bool performWorkOnRoot(
-  ReactRuntime& runtime,
-  facebook::jsi::Runtime& jsRuntime,
-  FiberRoot& root,
-  Lanes lanes,
-  bool forceSync) {
-  const Lanes previousPendingLanes = root.pendingLanes;
-
-  const bool shouldRenderSync =
-      forceSync || includesBlockingLane(lanes) || includesSyncLane(lanes);
-
-  RootExitStatus status = shouldRenderSync
-      ? renderRootSync(runtime, jsRuntime, root, lanes, false)
-      : renderRootConcurrent(runtime, jsRuntime, root, lanes);
-
-  switch (status) {
-    case RootExitStatus::Completed: {
-      FiberNode* const finishedWork = root.current != nullptr ? root.current->alternate : nullptr;
-      const Lanes remainingLanes = subtractLanes(previousPendingLanes, lanes);
-      markRootFinished(root, lanes, remainingLanes, NoLane, NoLanes, NoLanes);
-
-      if (finishedWork != nullptr) {
-        commitRoot(root, *finishedWork);
-
-        if (enableDefaultTransitionIndicator && includesLoadingIndicatorLanes(lanes)) {
-          markIndicatorHandled(runtime, jsRuntime, root);
-        }
-      }
-
-      cleanupDefaultTransitionIndicatorIfNeeded(runtime, jsRuntime, root);
-      break;
-    }
-    case RootExitStatus::Suspended:
-    case RootExitStatus::SuspendedWithDelay:
-    case RootExitStatus::SuspendedAtTheShell: {
-      constexpr bool didAttemptEntireTree = false;
-      markRootSuspended(root, lanes, NoLane, didAttemptEntireTree);
-      break;
-    }
-    case RootExitStatus::Errored:
-    case RootExitStatus::FatalErrored: {
-      const Lanes remainingLanes = subtractLanes(previousPendingLanes, lanes);
-      markRootFinished(root, lanes, remainingLanes, NoLane, NoLanes, NoLanes);
-      break;
-    }
-    case RootExitStatus::InProgress:
-      break;
-  }
-
-  root.callbackNode = {};
-  root.callbackPriority = NoLane;
-
-  const bool hasRemainingWork = getHighestPriorityPendingLanes(root) != NoLanes;
-  if (!hasRemainingWork) {
-    removeRootFromSchedule(runtime, root);
-  }
-
-  return hasRemainingWork;
-}
-
 void flushSyncWorkAcrossRoots(
   ReactRuntime& runtime,
   facebook::jsi::Runtime& jsRuntime,
@@ -873,6 +893,75 @@ void scheduleImmediateRootScheduleTask(ReactRuntime& runtime, facebook::jsi::Run
 }
 
 } // namespace
+
+bool performSyncWorkOnRoot(
+    ReactRuntime& runtime,
+    facebook::jsi::Runtime& jsRuntime,
+    FiberRoot& root,
+    Lanes lanes) {
+  if (flushPendingEffects(runtime, jsRuntime, false)) {
+    return true;
+  }
+
+  return performWorkOnRoot(runtime, jsRuntime, root, lanes, true);
+}
+
+bool performWorkOnRoot(
+    ReactRuntime& runtime,
+    facebook::jsi::Runtime& jsRuntime,
+    FiberRoot& root,
+    Lanes lanes,
+    bool forceSync) {
+  const Lanes previousPendingLanes = root.pendingLanes;
+
+  const bool shouldRenderSync =
+      forceSync || includesBlockingLane(lanes) || includesSyncLane(lanes);
+
+  RootExitStatus status = shouldRenderSync
+      ? renderRootSync(runtime, jsRuntime, root, lanes, false)
+      : renderRootConcurrent(runtime, jsRuntime, root, lanes);
+
+  switch (status) {
+    case RootExitStatus::Completed: {
+      FiberNode* const finishedWork = root.current != nullptr ? root.current->alternate : nullptr;
+      if (finishedWork != nullptr) {
+        commitRoot(runtime, jsRuntime, root, *finishedWork, lanes, previousPendingLanes);
+
+        if (enableDefaultTransitionIndicator && includesLoadingIndicatorLanes(lanes)) {
+          markIndicatorHandled(runtime, jsRuntime, root);
+        }
+      }
+
+      cleanupDefaultTransitionIndicatorIfNeeded(runtime, jsRuntime, root);
+      break;
+    }
+    case RootExitStatus::Suspended:
+    case RootExitStatus::SuspendedWithDelay:
+    case RootExitStatus::SuspendedAtTheShell: {
+      constexpr bool didAttemptEntireTree = false;
+      markRootSuspended(root, lanes, NoLane, didAttemptEntireTree);
+      break;
+    }
+    case RootExitStatus::Errored:
+    case RootExitStatus::FatalErrored: {
+      const Lanes remainingLanes = subtractLanes(previousPendingLanes, lanes);
+      markRootFinished(root, lanes, remainingLanes, NoLane, NoLanes, NoLanes);
+      break;
+    }
+    case RootExitStatus::InProgress:
+      break;
+  }
+
+  root.callbackNode = {};
+  root.callbackPriority = NoLane;
+
+  const bool hasRemainingWork = getHighestPriorityPendingLanes(root) != NoLanes;
+  if (!hasRemainingWork) {
+    removeRootFromSchedule(runtime, root);
+  }
+
+  return hasRemainingWork;
+}
 
 void ensureRootIsScheduled(
   ReactRuntime& runtime,

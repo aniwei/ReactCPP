@@ -26,6 +26,7 @@ class HostInterface;
 class ReactDOMInstance;
 struct FiberRoot;
 struct FiberNode;
+struct Hook;
 
 enum class IsomorphicIndicatorRegistrationState : std::uint8_t {
   Uninitialized = 0,
@@ -47,6 +48,16 @@ struct AsyncActionState {
   const void* indicatorRegistrationToken{nullptr};
 };
 
+struct HookRuntimeState {
+  FiberNode* currentlyRenderingFiber{nullptr};
+  Hook* currentHook{nullptr};
+  Hook* workInProgressHook{nullptr};
+  Hook* firstWorkInProgressHook{nullptr};
+  Hook* lastCurrentHook{nullptr};
+  Lanes renderLanes{NoLanes};
+  std::unique_ptr<facebook::jsi::Value> previousDispatcher{};
+};
+
 class ReactRuntime {
 public:
   ReactRuntime();
@@ -57,9 +68,12 @@ public:
   const RootSchedulerState& rootSchedulerState() const;
   AsyncActionState& asyncActionState();
   const AsyncActionState& asyncActionState() const;
+  HookRuntimeState& hookState();
+  const HookRuntimeState& hookState() const;
 
   void resetWorkLoop();
   void resetRootScheduler();
+  void resetHooks();
 
   void setHostInterface(std::shared_ptr<HostInterface> hostInterface);
   void bindHostInterface(facebook::jsi::Runtime& runtime);
@@ -156,6 +170,7 @@ private:
   WorkLoopState workLoopState_{};
   RootSchedulerState rootSchedulerState_{};
   AsyncActionState asyncActionState_{};
+  HookRuntimeState hookState_{};
   SchedulerPriority currentPriority_{SchedulerPriority::NormalPriority};
   std::uint64_t nextTaskId_{1};
   std::function<bool()> shouldAttemptEagerTransitionCallback_{};

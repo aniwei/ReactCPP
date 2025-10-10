@@ -86,6 +86,15 @@ ReactDOMInstance* claimHydratableSingleton(ReactRuntime& runtime, FiberNode& fib
   return nullptr;
 }
 
+void* tryToClaimNextHydratableSuspenseInstance(ReactRuntime& runtime, FiberNode& fiber) {
+  (void)runtime;
+  (void)fiber;
+  // Suspense instance hydration is not yet supported in the host runtime. Returning nullptr
+  // ensures the caller will gracefully fallback to client rendering while still emitting
+  // a hydration warning for debugging purposes.
+  return nullptr;
+}
+
 void queueHydrationError(ReactRuntime& runtime, FiberNode& fiber, const char* message) {
   auto& state = getState(runtime);
   state.hydrationErrors.push_back({&fiber, std::string(message)});

@@ -9,9 +9,9 @@ namespace react::test {
 namespace jsi = facebook::jsi;
 
 bool runReactJSXRuntimeTests() {
-  using namespace react::jsx;
-
   TestRuntime runtime;
+  namespace jsxRuntime = react::jsx;
+  using jsxRuntime::SourceLocation;
 
   auto makeStringValue = [&runtime](const std::string& text) {
     return jsi::Value(runtime, jsi::String::createFromUtf8(runtime, text));
@@ -21,7 +21,7 @@ bool runReactJSXRuntimeTests() {
   childProps.setProperty(runtime, "className", makeStringValue("chip"));
   childProps.setProperty(runtime, "children", makeStringValue("Alpha"));
 
-  auto child = jsx(
+  auto child = jsxRuntime::jsx(
       runtime,
       makeStringValue("span"),
       jsi::Value(runtime, childProps),
@@ -45,10 +45,10 @@ bool runReactJSXRuntimeTests() {
   rootProps.setProperty(runtime, "__self", makeStringValue("ignoredSelf"));
 
   auto childrenArray = runtime.makeArray(1);
-  childrenArray.setValueAtIndex(runtime, 0, createJsxHostValue(runtime, child));
+  childrenArray.setValueAtIndex(runtime, 0, jsxRuntime::createJsxHostValue(runtime, child));
   rootProps.setProperty(runtime, "children", jsi::Value(runtime, childrenArray));
 
-  auto root = jsxs(runtime, makeStringValue("div"), jsi::Value(runtime, rootProps));
+  auto root = jsxRuntime::jsxs(runtime, makeStringValue("div"), jsi::Value(runtime, rootProps));
   assert(root != nullptr);
   assert(root->hasStaticChildren);
   assert(root->props.isObject());
@@ -57,7 +57,7 @@ bool runReactJSXRuntimeTests() {
   assert(!rootPropsView.hasProperty(runtime, "__source"));
   assert(!rootPropsView.hasProperty(runtime, "__self"));
 
-  auto layout = serializeToWasm(runtime, *root);
+  auto layout = jsxRuntime::serializeToWasm(runtime, *root);
   assert(layout.rootOffset != 0);
   assert(!layout.buffer.empty());
 
@@ -98,7 +98,7 @@ bool runReactJSXRuntimeTests() {
   devConfig.setProperty(runtime, "ref", makeStringValue("shouldBeReplaced"));
 
   SourceLocation location{"App.jsx", 42, 7};
-  auto devElement = jsxDEV(
+  auto devElement = jsxRuntime::jsxDEV(
       runtime,
       makeStringValue("span"),
       jsi::Value(runtime, devConfig),

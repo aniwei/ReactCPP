@@ -8,6 +8,8 @@ set(REACT_CPP_SOURCE_FILES
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactCapturedValue.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiber.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberAsyncAction.cpp
+    ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberCommitEffects.cpp
+    ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberHooks.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberErrorLogger.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberHiddenContext.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberCallUserSpace.cpp

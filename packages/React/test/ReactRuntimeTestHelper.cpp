@@ -199,7 +199,7 @@ std::shared_ptr<ReactDOMInstance> findHostSibling(const std::shared_ptr<FiberNod
   }
   auto sibling = fiber->sibling;
   while (sibling) {
-    if ((static_cast<uint32_t>(sibling->flags) & static_cast<uint32_t>(FiberFlags::Placement)) == 0 && sibling->stateNode) {
+  if ((sibling->flags & Placement) == 0 && sibling->stateNode) {
       return sibling->stateNode;
     }
     sibling = sibling->sibling;
@@ -269,8 +269,8 @@ void commitDeletion(
     fiber->updatePayload = Value::undefined();
     fiber->memoizedProps = Value::undefined();
     fiber->pendingProps = Value::undefined();
-    fiber->flags = FiberFlags::NoFlags;
-    fiber->subtreeFlags = FiberFlags::NoFlags;
+  fiber->flags = NoFlags;
+  fiber->subtreeFlags = NoFlags;
     fiber->deletions.clear();
   }
 }
@@ -332,11 +332,11 @@ void commitPlacement(
     }
   }
 
-  fiber->flags = static_cast<FiberFlags>(static_cast<uint32_t>(fiber->flags) & ~static_cast<uint32_t>(FiberFlags::Placement));
+  fiber->flags = fiber->flags & ~Placement;
 
   if (createdInstance && fiber->tag == WorkTag::HostComponent && instance) {
     if (hostconfig::finalizeInitialChildren(runtime, rt, instance, instanceType, instanceProps)) {
-      fiber->flags = static_cast<FiberFlags>(static_cast<uint32_t>(fiber->flags) | static_cast<uint32_t>(FiberFlags::Update));
+  fiber->flags = fiber->flags | Update;
     }
   }
 }
@@ -361,8 +361,8 @@ std::shared_ptr<FiberNode> cloneFiberForReuse(
   clone->child = current->child;
   clone->memoizedProps = cloneValue(rt, nextProps);
   clone->memoizedState = cloneValue(rt, nextState);
-  clone->flags = FiberFlags::NoFlags;
-  clone->subtreeFlags = FiberFlags::NoFlags;
+  clone->flags = NoFlags;
+  clone->subtreeFlags = NoFlags;
   clone->deletions.clear();
   clone->alternate = current;
   current->alternate = clone;
@@ -378,8 +378,8 @@ std::shared_ptr<FiberNode> cloneFiberForReuse(
   }
 
   if (hasPayload) {
-    clone->flags = static_cast<FiberFlags>(static_cast<uint32_t>(clone->flags) | static_cast<uint32_t>(FiberFlags::Update));
-    clone->updatePayload = payload;
+  clone->flags = clone->flags | Update;
+  clone->updatePayload = Value(rt, payload);
   }
 
   return clone;
@@ -409,14 +409,14 @@ void commitMutationEffects(
         commitDeletion(runtime, rt, parent, deletion);
       }
       fiber->deletions.clear();
-      fiber->flags = static_cast<FiberFlags>(static_cast<uint32_t>(fiber->flags) & ~static_cast<uint32_t>(FiberFlags::ChildDeletion));
+  fiber->flags = fiber->flags & ~ChildDeletion;
     }
 
-    if ((static_cast<uint32_t>(fiber->flags) & static_cast<uint32_t>(FiberFlags::Placement)) != 0) {
+  if ((fiber->flags & Placement) != 0) {
       commitPlacement(runtime, rt, fiber);
     }
 
-    if ((static_cast<uint32_t>(fiber->flags) & static_cast<uint32_t>(FiberFlags::Update)) != 0) {
+  if ((fiber->flags & Update) != 0) {
       if (fiber->tag == WorkTag::HostText) {
         auto instance = fiber->stateNode;
         if (instance) {
@@ -427,14 +427,17 @@ void commitMutationEffects(
       } else {
         auto instance = fiber->stateNode;
         if (instance) {
-          Value prevProps = fiber->alternate ? fiber->alternate->memoizedProps : Value::undefined();
-          Value nextProps = fiber->memoizedProps;
+          Value prevProps = Value::undefined();
+          if (fiber->alternate) {
+            prevProps = Value(rt, fiber->alternate->memoizedProps);
+          }
+          Value nextProps = Value(rt, fiber->memoizedProps);
           hostconfig::commitUpdate(runtime, rt, instance, prevProps, nextProps, fiber->updatePayload);
         }
       }
 
-      fiber->updatePayload = Value::undefined();
-      fiber->flags = static_cast<FiberFlags>(static_cast<uint32_t>(fiber->flags) & ~static_cast<uint32_t>(FiberFlags::Update));
+  fiber->updatePayload = Value::undefined();
+  fiber->flags = fiber->flags & ~Update;
     }
 
     if (fiber->sibling) {
@@ -460,7 +463,7 @@ void reconcileChildren(
   }
 
   parent->deletions.clear();
-  parent->flags = static_cast<FiberFlags>(static_cast<uint32_t>(parent->flags) & ~static_cast<uint32_t>(FiberFlags::ChildDeletion));
+  parent->flags = parent->flags & ~ChildDeletion;
 
   std::vector<Value> desiredChildren;
   collectChildValues(rt, newChildren, desiredChildren);
@@ -522,13 +525,13 @@ void reconcileChildren(
         cloned->child = nullptr;
         cloned->sibling = nullptr;
         if (match->index != static_cast<uint32_t>(index)) {
-          cloned->flags = static_cast<FiberFlags>(static_cast<uint32_t>(cloned->flags) | static_cast<uint32_t>(FiberFlags::Placement));
+          cloned->flags = cloned->flags | Placement;
         }
         nextFiber = cloned;
       } else {
         auto fiber = std::make_shared<FiberNode>(WorkTag::HostText, cloneValue(rt, textValue), Value::undefined());
         fiber->memoizedProps = cloneValue(rt, textValue);
-        fiber->flags = FiberFlags::Placement;
+  fiber->flags = Placement;
         nextFiber = fiber;
       }
     } else if (childValue.isObject()) {
@@ -583,7 +586,7 @@ void reconcileChildren(
         cloned->child = match->child;
         cloned->sibling = nullptr;
         if (match->index != static_cast<uint32_t>(index)) {
-          cloned->flags = static_cast<FiberFlags>(static_cast<uint32_t>(cloned->flags) | static_cast<uint32_t>(FiberFlags::Placement));
+          cloned->flags = cloned->flags | Placement;
         }
         nextFiber = cloned;
       } else {
@@ -594,7 +597,7 @@ void reconcileChildren(
         fiber->memoizedProps = cloneValue(rt, propsValue);
         fiber->type = Value(rt, String::createFromUtf8(rt, extraction.type));
         fiber->elementType = cloneValue(rt, fiber->type);
-        fiber->flags = FiberFlags::Placement;
+  fiber->flags = Placement;
         nextFiber = fiber;
       }
     } else {
@@ -605,7 +608,7 @@ void reconcileChildren(
       continue;
     }
 
-    nextFiber->subtreeFlags = FiberFlags::NoFlags;
+  nextFiber->subtreeFlags = NoFlags;
     nextFiber->deletions.clear();
     nextFiber->sibling = nullptr;
     appendChild(nextFiber, static_cast<uint32_t>(index));
@@ -626,7 +629,7 @@ void reconcileChildren(
   leftovers.insert(leftovers.end(), unkeyedText.begin(), unkeyedText.end());
 
   if (!leftovers.empty()) {
-    parent->flags = static_cast<FiberFlags>(static_cast<uint32_t>(parent->flags) | static_cast<uint32_t>(FiberFlags::ChildDeletion));
+  parent->flags = parent->flags | ChildDeletion;
     for (auto& fiber : leftovers) {
       if (fiber) {
         parent->deletions.push_back(fiber);

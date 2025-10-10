@@ -178,7 +178,9 @@
     - [ ] `updateSuspenseComponent`、`updateSuspenseListComponent`、`deferHiddenOffscreenComponent` 的 hydration 与 fallback 路径 —— 需 Suspense handler 栈。
   - [ ] `updateHostHoistable` —— 客户端实例/更新路径已接入，水合路径现支持复用现有实例并回传属性 mismatch；仍缺 Host Resource API（`getResource`、资源栈管理）。
   - [ ] `updateHostSingleton` —— 客户端路径已落地；hydration 单例流程已接入 `claimHydratableSingleton` 并在 mismatch 时排队错误，仍缺资源栈与 Host Resource API。
-    - [ ] `updateActivityComponent`、`updateViewTransition`、`updateTracingMarkerComponent` —— 待 Transition Tracing / Activity 栈翻译。
+  - [ ] `updateActivityComponent` —— 待 Activity 栈翻译。
+  - [x] `updateViewTransition` —— 已实现显式命名处理与 hydration tree id 对齐。
+  - [x] `updateTracingMarkerComponent` —— 初版逻辑已落地，待后续补齐 Transition Tracing 栈与回调。
     - [ ] `updateCacheComponent`、`pushCacheProvider`、`popCacheProvider` —— 取决于 Cache 管理模块。
     - [ ] `pushHostContainer`、`popHostContainer`、`pushTopLevelLegacyContextObject`、`popTopLevelLegacyContextObject` —— 需 Host Context 与 Legacy Context 栈。
     - [ ] `pushTransition`、`popRootTransition` —— 等待 `ReactFiberTransition` 翻译。

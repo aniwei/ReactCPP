@@ -1,5 +1,7 @@
 #include "ReactReconciler/ReactFiberCallUserSpace.h"
 
+#include <array>
+
 namespace react {
 
 using facebook::jsi::Function;
@@ -7,9 +9,9 @@ using facebook::jsi::Runtime;
 using facebook::jsi::Value;
 
 Value callLazyInitInDEV(Runtime& runtime, const Function& initFunction, const Value& payload) {
-  Value thisValue = Value::undefined();
-  Value args[] = {Value(runtime, payload)};
-  return initFunction.call(runtime, thisValue, args, 1);
+  std::array<Value, 1> args{Value(runtime, payload)};
+  const Value* argPtr = args.data();
+  return initFunction.call(runtime, argPtr, args.size());
 }
 
 } // namespace react

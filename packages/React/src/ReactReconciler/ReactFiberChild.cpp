@@ -74,7 +74,7 @@ void recordChildForkIfHydrating(FiberNode& returnFiber, std::size_t forkCount) {
   }
   ReactRuntime* runtime = getCurrentReactRuntime();
   if (runtime != nullptr && getIsHydrating(*runtime)) {
-    pushTreeFork(returnFiber, forkCount);
+    pushTreeFork(*runtime, returnFiber, forkCount);
   }
 }
 
@@ -156,7 +156,9 @@ bool isSymbol(Runtime& runtime, const Value& value, const ReactSymbolDescriptor&
     return false;
   }
   Symbol descriptorSymbol = resolveSymbol(runtime, descriptor);
-  return value.getSymbol(runtime).strictEquals(runtime, descriptorSymbol);
+  Value valueSymbol(runtime, value.getSymbol(runtime));
+  Value descriptorValue(runtime, descriptorSymbol);
+  return Value::strictEquals(runtime, valueSymbol, descriptorValue);
 }
 
 bool toBoolean(Runtime& runtime, const Value& value) {
@@ -337,12 +339,12 @@ bool portalStateMatches(Runtime& runtime, const FiberNode& fiber, const Object& 
   }
 
   Value containerValue = portalObject.getProperty(runtime, kContainerInfoProp);
-  if (!state->containerInfo->strictEquals(runtime, containerValue)) {
+  if (!Value::strictEquals(runtime, *state->containerInfo, containerValue)) {
     return false;
   }
 
   Value implementationValue = portalObject.getProperty(runtime, kImplementationProp);
-  if (!state->implementation->strictEquals(runtime, implementationValue)) {
+  if (!Value::strictEquals(runtime, *state->implementation, implementationValue)) {
     return false;
   }
 
@@ -388,7 +390,7 @@ Array collectValuesFromIterator(Runtime& runtime, const Value& iterableValue, co
   }
 
   auto iteratorFn = iteratorFnObject.asFunction(runtime);
-  Value iteratorValue = iteratorFn.callWithThis(runtime, iterableValue, nullptr, 0);
+  Value iteratorValue = iteratorFn.callWithThis(runtime, iterableObject, nullptr, 0);
   if (!iteratorValue.isObject()) {
     throw std::invalid_argument("Iterator call did not return an object");
   }
@@ -408,8 +410,7 @@ Array collectValuesFromIterator(Runtime& runtime, const Value& iterableValue, co
   std::vector<Value> collected;
 
   while (true) {
-    Value iteratorThis(runtime, iteratorObject);
-    Value resultValue = nextFn.callWithThis(runtime, iteratorThis, nullptr, 0);
+    Value resultValue = nextFn.callWithThis(runtime, iteratorObject, nullptr, 0);
     if (!resultValue.isObject()) {
       throw std::invalid_argument("Iterator result is not an object");
     }
@@ -569,19 +570,19 @@ bool fiberTypeMatchesElement(Runtime& runtime, const FiberNode& fiber, const jsx
 
   if (fiber.elementType != nullptr) {
     const auto* fiberElementType = static_cast<const Value*>(fiber.elementType);
-    if (fiberElementType != nullptr && fiberElementType->strictEquals(runtime, element.type)) {
+    if (fiberElementType != nullptr && Value::strictEquals(runtime, *fiberElementType, element.type)) {
       return true;
     }
   }
 
-  auto* fiberTypeValue = static_cast<Value*>(fiber.type);
-  if (fiberTypeValue != nullptr && fiberTypeValue->strictEquals(runtime, element.type)) {
+  const auto* fiberTypeValue = static_cast<const Value*>(fiber.type);
+  if (fiberTypeValue != nullptr && Value::strictEquals(runtime, *fiberTypeValue, element.type)) {
     return true;
   }
 
   if (expectedTag == WorkTag::LazyComponent && element.type.isObject()) {
     Value resolvedType = resolveLazy(runtime, element.type);
-    if (fiberTypeValue != nullptr && fiberTypeValue->strictEquals(runtime, resolvedType)) {
+    if (fiberTypeValue != nullptr && Value::strictEquals(runtime, *fiberTypeValue, resolvedType)) {
       return true;
     }
   }

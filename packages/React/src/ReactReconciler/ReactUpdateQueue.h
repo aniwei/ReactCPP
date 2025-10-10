@@ -13,7 +13,7 @@ namespace react {
 
 class ReactRuntime;
 
-struct Update;
+struct UpdateNode;
 
 enum class UpdateTag : uint8_t {
   UpdateState = 0,
@@ -23,12 +23,12 @@ enum class UpdateTag : uint8_t {
 };
 
 struct SharedQueue {
-  Update* pending{nullptr};
+  UpdateNode* pending{nullptr};
   Lanes lanes{NoLanes};
   std::vector<std::function<void()>> hiddenCallbacks;
 };
 
-struct Update : ConcurrentUpdate {
+struct UpdateNode : ConcurrentUpdate {
   UpdateTag tag{UpdateTag::UpdateState};
   jsi::Value payload;
   std::function<jsi::Value(const jsi::Value&)> reducer;
@@ -37,18 +37,18 @@ struct Update : ConcurrentUpdate {
 
 struct UpdateQueue {
   jsi::Value baseState;
-  Update* firstBaseUpdate{nullptr};
-  Update* lastBaseUpdate{nullptr};
+  UpdateNode* firstBaseUpdate{nullptr};
+  UpdateNode* lastBaseUpdate{nullptr};
   SharedQueue shared;
   std::vector<std::function<void()>> callbacks;
-  std::vector<std::shared_ptr<Update>> ownedUpdates;
+  std::vector<std::shared_ptr<UpdateNode>> ownedUpdates;
 
   UpdateQueue();
 };
 
 std::shared_ptr<UpdateQueue> createUpdateQueue(jsi::Runtime& rt, const jsi::Value& baseState);
-std::shared_ptr<Update> createUpdate(Lane lane, jsi::Value payload = jsi::Value::undefined());
-void enqueueUpdate(UpdateQueue& queue, const std::shared_ptr<Update>& update);
+std::shared_ptr<UpdateNode> createUpdate(Lane lane, jsi::Value payload = jsi::Value::undefined());
+void enqueueUpdate(UpdateQueue& queue, const std::shared_ptr<UpdateNode>& update);
 void appendPendingUpdates(UpdateQueue& queue);
 const jsi::Value& processUpdateQueue(ReactRuntime& runtime, UpdateQueue& queue);
 void suspendIfUpdateReadFromEntangledAsyncAction(ReactRuntime& runtime);

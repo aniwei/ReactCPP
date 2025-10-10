@@ -2,6 +2,7 @@
 #include "ReactReconciler/ReactFiberWorkLoop.h"
 #include "ReactRuntime/ReactRuntime.h"
 #include "ReactRuntime/ReactHostInterface.h"
+#include "TestRuntime.h"
 
 #include <cassert>
 #include <cmath>
@@ -44,6 +45,7 @@ void resetState(ReactRuntime& runtime) {
   setPendingEffectsRemainingLanes(runtime, NoLanes);
   setPendingEffectsRenderEndTime(runtime, -0.0);
   clearPendingPassiveTransitions(runtime);
+  clearPendingPassiveEffects(runtime);
   clearPendingRecoverableErrors(runtime);
   setPendingViewTransition(runtime, nullptr);
   clearPendingViewTransitionEvents(runtime);
@@ -57,6 +59,7 @@ void resetState(ReactRuntime& runtime) {
   setNestedPassiveUpdateCount(runtime, 0);
   setRootWithPassiveNestedUpdates(runtime, nullptr);
   setIsRunningInsertionEffect(runtime, false);
+  clearPendingRenderPhaseUpdates(runtime);
 }
 
 class RecordingHostInterface : public HostInterface {
@@ -72,6 +75,7 @@ public:
 
 bool runReactFiberWorkLoopStateTests() {
   ReactRuntime runtime;
+  TestRuntime jsRuntime;
   auto recordingHost = std::make_shared<RecordingHostInterface>();
   runtime.setHostInterface(recordingHost);
   std::vector<std::string> callbackMessages;
@@ -313,6 +317,21 @@ bool runReactFiberWorkLoopStateTests() {
   assert(getPendingPassiveEffectsLanes(runtime) == DefaultLane);
   setPendingEffectsLanes(runtime, NoLanes);
 
+  assert(getPendingRenderPhaseUpdates(runtime) == nullptr);
+  enqueuePendingRenderPhaseUpdate(runtime, nullptr);
+  assert(getPendingRenderPhaseUpdates(runtime) != nullptr);
+  clearPendingRenderPhaseUpdates(runtime);
+  assert(getPendingRenderPhaseUpdates(runtime) == nullptr);
+
+  assert(getPendingPassiveEffects(runtime).empty());
+  FiberNode passiveFiber{};
+  enqueuePendingPassiveEffect(runtime, passiveFiber);
+  assert(getPendingPassiveEffects(runtime).size() == 1);
+  setPendingEffectsStatus(runtime, PendingEffectsStatus::Passive);
+  assert(flushPendingEffects(runtime, jsRuntime, false));
+  assert(getPendingPassiveEffects(runtime).empty());
+  assert(getPendingEffectsStatus(runtime) == PendingEffectsStatus::None);
+
   assert(!isWorkLoopSuspendedOnData(runtime));
   setWorkInProgressSuspendedReason(runtime, SuspendedReason::SuspendedOnData);
   assert(isWorkLoopSuspendedOnData(runtime));
@@ -431,7 +450,7 @@ bool runReactFiberWorkLoopStateTests() {
   setWorkInProgressRootRenderLanes(runtime, NoLanes);
   setWorkInProgressRootExitStatus(runtime, RootExitStatus::InProgress);
 
-  const RootExitStatus renderExit = renderRootSync(runtime, renderRoot, DefaultLane, false);
+  const RootExitStatus renderExit = renderRootSync(runtime, jsRuntime, renderRoot, DefaultLane, false);
   assert(renderExit == RootExitStatus::Completed);
   assert(getWorkInProgressRoot(runtime) == nullptr);
   assert(getWorkInProgressFiber(runtime) == nullptr);
@@ -456,29 +475,29 @@ bool runReactFiberWorkLoopStateTests() {
   setWorkInProgressRootExitStatus(runtime, RootExitStatus::InProgress);
   setWorkInProgressRootDidSkipSuspendedSiblings(runtime, false);
   setWorkInProgressFiber(runtime, childA);
-  completeUnitOfWork(runtime, *childA);
+  completeUnitOfWork(runtime, jsRuntime, *childA);
   assert(getWorkInProgressFiber(runtime) == childB);
   assert(getWorkInProgressRootExitStatus(runtime) == RootExitStatus::InProgress);
 
   setWorkInProgressFiber(runtime, parent);
   parent->returnFiber = nullptr;
   parent->sibling = nullptr;
-  completeUnitOfWork(runtime, *parent);
+  completeUnitOfWork(runtime, jsRuntime, *parent);
   assert(getWorkInProgressRootExitStatus(runtime) == RootExitStatus::Completed);
   assert(getWorkInProgressFiber(runtime) == nullptr);
 
   setWorkInProgressFiber(runtime, childA);
   setWorkInProgressRootExitStatus(runtime, RootExitStatus::InProgress);
-  performUnitOfWork(runtime, *childA);
+  performUnitOfWork(runtime, jsRuntime, *childA);
   assert(getWorkInProgressFiber(runtime) == childB);
 
   setWorkInProgressFiber(runtime, childA);
-  workLoopSync(runtime);
+  workLoopSync(runtime, jsRuntime);
   assert(getWorkInProgressFiber(runtime) == nullptr);
 
   // workLoopConcurrent should process limited slices; with trivial beginWork it finishes immediately.
   setWorkInProgressFiber(runtime, childA);
-  workLoopConcurrent(runtime, true);
+  workLoopConcurrent(runtime, jsRuntime, true);
   assert(getWorkInProgressFiber(runtime) == nullptr);
 
   resetState(runtime);
@@ -489,7 +508,7 @@ bool runReactFiberWorkLoopStateTests() {
   concurrentChild->returnFiber = concurrentCurrent;
   concurrentRoot.current = concurrentCurrent;
 
-  RootExitStatus concurrentStatus = renderRootConcurrent(runtime, concurrentRoot, DefaultLane);
+  RootExitStatus concurrentStatus = renderRootConcurrent(runtime, jsRuntime, concurrentRoot, DefaultLane);
   assert(concurrentStatus == RootExitStatus::Completed);
   assert(getWorkInProgressRoot(runtime) == nullptr);
   assert(getWorkInProgressFiber(runtime) == nullptr);
@@ -522,7 +541,7 @@ bool runReactFiberWorkLoopStateTests() {
   setWorkInProgressThrownValue(runtime, reinterpret_cast<void*>(0x7));
   setWorkInProgressRootExitStatus(runtime, RootExitStatus::InProgress);
 
-  RootExitStatus hydrationStatus = renderRootConcurrent(runtime, hydrationRoot, DefaultLane);
+  RootExitStatus hydrationStatus = renderRootConcurrent(runtime, jsRuntime, hydrationRoot, DefaultLane);
   assert(hydrationStatus == RootExitStatus::SuspendedAtTheShell);
   assert(getWorkInProgressRoot(runtime) == nullptr);
   assert(getWorkInProgressFiber(runtime) == nullptr);
@@ -555,7 +574,7 @@ bool runReactFiberWorkLoopStateTests() {
   setWorkInProgressThrownValue(runtime, reinterpret_cast<void*>(0x9));
   setWorkInProgressRootExitStatus(runtime, RootExitStatus::InProgress);
 
-  RootExitStatus immediateStatus = renderRootConcurrent(runtime, immediateRoot, DefaultLane);
+  RootExitStatus immediateStatus = renderRootConcurrent(runtime, jsRuntime, immediateRoot, DefaultLane);
   assert(immediateStatus == RootExitStatus::InProgress);
   assert(getWorkInProgressRoot(runtime) == &immediateRoot);
   assert(getWorkInProgressFiber(runtime) == immediateChild);
@@ -592,7 +611,7 @@ bool runReactFiberWorkLoopStateTests() {
   setWorkInProgressThrownValue(runtime, reinterpret_cast<void*>(0xA));
   setWorkInProgressRootExitStatus(runtime, RootExitStatus::InProgress);
 
-  RootExitStatus resumeStatus = renderRootConcurrent(runtime, resumeRoot, DefaultLane);
+  RootExitStatus resumeStatus = renderRootConcurrent(runtime, jsRuntime, resumeRoot, DefaultLane);
   assert(resumeStatus == RootExitStatus::Completed);
   assert(getWorkInProgressRoot(runtime) == nullptr);
   assert(getWorkInProgressFiber(runtime) == nullptr);
@@ -630,7 +649,7 @@ bool runReactFiberWorkLoopStateTests() {
   setWorkInProgressRootExitStatus(runtime, RootExitStatus::InProgress);
   setWorkInProgressRootDidSkipSuspendedSiblings(runtime, false);
 
-  RootExitStatus suspendedStatus = renderRootConcurrent(runtime, suspendedRoot, DefaultLane);
+  RootExitStatus suspendedStatus = renderRootConcurrent(runtime, jsRuntime, suspendedRoot, DefaultLane);
   assert(suspendedStatus == RootExitStatus::SuspendedAtTheShell);
   assert(getWorkInProgressRootDidSkipSuspendedSiblings(runtime));
   assert(getWorkInProgressSuspendedReason(runtime) == SuspendedReason::NotSuspended);
@@ -666,6 +685,7 @@ bool runReactFiberWorkLoopStateTests() {
   setWorkInProgressFiber(runtime, throwChild);
   throwAndUnwindWorkLoop(
     runtime,
+    jsRuntime,
     throwRoot,
     *throwChild,
     nullptr,

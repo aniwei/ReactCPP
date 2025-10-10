@@ -23,8 +23,8 @@ std::shared_ptr<UpdateQueue> createUpdateQueue(jsi::Runtime& rt, const jsi::Valu
   return queue;
 }
 
-std::shared_ptr<Update> createUpdate(Lane lane, jsi::Value payload) {
-  auto update = std::make_shared<Update>();
+std::shared_ptr<UpdateNode> createUpdate(Lane lane, jsi::Value payload) {
+  auto update = std::make_shared<UpdateNode>();
   update->lane = lane;
   update->tag = UpdateTag::UpdateState;
   update->payload = std::move(payload);
@@ -32,7 +32,7 @@ std::shared_ptr<Update> createUpdate(Lane lane, jsi::Value payload) {
   return update;
 }
 
-void enqueueUpdate(UpdateQueue& queue, const std::shared_ptr<Update>& update) {
+void enqueueUpdate(UpdateQueue& queue, const std::shared_ptr<UpdateNode>& update) {
   queue.ownedUpdates.push_back(update);
 
   auto* updatePtr = update.get();
@@ -57,7 +57,7 @@ void appendPendingUpdates(UpdateQueue& queue) {
   queue.shared.lanes = NoLanes;
 
   auto* lastPendingUpdate = pending;
-  auto* firstPendingUpdate = static_cast<Update*>(pending->next);
+  auto* firstPendingUpdate = static_cast<UpdateNode*>(pending->next);
   if (firstPendingUpdate == nullptr) {
     firstPendingUpdate = lastPendingUpdate;
   }
@@ -85,7 +85,7 @@ void callCallback(const std::function<void()>& callback) {
   callback();
 }
 
-void applyUpdateReducer(Update* update, jsi::Value& state) {
+void applyUpdateReducer(UpdateNode* update, jsi::Value& state) {
   if (update->reducer) {
     jsi::Value result = update->reducer(state);
     state = std::move(result);
@@ -107,9 +107,9 @@ const jsi::Value& processUpdateQueue(ReactRuntime& runtime, UpdateQueue& queue) 
   gHasForceUpdate = false;
   queue.callbacks.clear();
 
-  auto* current = queue.firstBaseUpdate;
+  UpdateNode* current = queue.firstBaseUpdate;
   while (current != nullptr) {
-  if (current->lane != NoLane && current->lane == peekEntangledActionLane(runtime)) {
+    if (current->lane != NoLane && current->lane == peekEntangledActionLane(runtime)) {
       gDidReadFromEntangledAsyncAction = true;
     }
 
@@ -129,7 +129,7 @@ const jsi::Value& processUpdateQueue(ReactRuntime& runtime, UpdateQueue& queue) 
       queue.callbacks.push_back(current->callback);
     }
 
-    current = static_cast<Update*>(current->next);
+    current = static_cast<UpdateNode*>(current->next);
   }
 
   queue.baseState = std::move(newState);

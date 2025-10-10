@@ -32,7 +32,7 @@ void registerRootDefaultIndicator(
 	std::function<std::function<void()>()> onDefaultTransitionIndicator);
 
 // Entry points for different scheduling contexts
-void performSyncWorkOnRoot(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, FiberRoot& root, Lanes lanes);
+bool performSyncWorkOnRoot(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, FiberRoot& root, Lanes lanes);
 RenderTaskFn performWorkOnRootViaSchedulerTask(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, FiberRoot& root, bool didTimeout);
 
 } // namespace react

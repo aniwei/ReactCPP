@@ -106,16 +106,16 @@ bool objectIs(Runtime& runtime, const Value& a, const Value& b) {
     return a.getBool() == b.getBool();
   }
   if (a.isString() && b.isString()) {
-    return a.strictEquals(runtime, b);
+    return Value::strictEquals(runtime, a, b);
   }
   if (a.isSymbol() && b.isSymbol()) {
-    return a.strictEquals(runtime, b);
+    return Value::strictEquals(runtime, a, b);
   }
   if (a.isObject() && b.isObject()) {
-    return a.strictEquals(runtime, b);
+    return Value::strictEquals(runtime, a, b);
   }
 
-  return a.strictEquals(runtime, b);
+  return Value::strictEquals(runtime, a, b);
 }
 
 bool contextsMatch(const ContextDependencyNode& dependency, const ContextHandle& handle) {
@@ -128,7 +128,7 @@ bool contextsMatch(const ContextDependencyNode& dependency, const ContextHandle&
   if (!dependency.context || !handle.context) {
     return false;
   }
-  return dependency.context->strictEquals(*dependency.runtime, *handle.context);
+  return Value::strictEquals(*dependency.runtime, *dependency.context, *handle.context);
 }
 
 bool dependencyMatchesAnyContext(
@@ -160,19 +160,6 @@ Value getObjectProperty(Runtime& runtime, const Value& objectValue, const char* 
   }
   return object.getProperty(runtime, propertyName);
 }
-
-void propagateContextChangesImpl(
-    FiberNode& workInProgress,
-    const std::vector<ContextHandle>& contexts,
-    Lanes renderLanes,
-    bool forcePropagateEntireTree);
-
-void propagateParentContextChangesImpl(
-    facebook::jsi::Runtime& runtime,
-    FiberNode& current,
-    FiberNode& workInProgress,
-    Lanes renderLanes,
-    bool forcePropagateEntireTree);
 
 ContextDependencyList* ensureContextList(FiberNode& fiber) {
   if (!fiber.dependencies) {
@@ -239,6 +226,19 @@ Value readContextForConsumer(Runtime& runtime, FiberNode* consumer, const Value&
 }
 
 } // namespace
+
+void propagateContextChangesImpl(
+  FiberNode& workInProgress,
+  const std::vector<ContextHandle>& contexts,
+  Lanes renderLanes,
+  bool forcePropagateEntireTree);
+
+void propagateParentContextChangesImpl(
+  facebook::jsi::Runtime& runtime,
+  FiberNode& current,
+  FiberNode& workInProgress,
+  Lanes renderLanes,
+  bool forcePropagateEntireTree);
 
 void resetContextDependencies() {
   gCurrentlyRenderingFiber = nullptr;

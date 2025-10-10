@@ -4,6 +4,7 @@
 
 #include "jsi/jsi.h"
 
+#include <memory>
 #include <optional>
 #include <unordered_map>
 
@@ -23,7 +24,7 @@ struct RootSchedulerState {
   std::optional<bool> supportsMicrotasksCache{};
   Lane currentEventTransitionLane{NoLane};
   std::uint64_t nextActCallbackId{1};
-  std::unordered_map<std::uint64_t, facebook::jsi::Function> actCallbacks{};
+  std::unordered_map<std::uint64_t, std::shared_ptr<facebook::jsi::Value>> actCallbacks{};
 };
 
 } // namespace react

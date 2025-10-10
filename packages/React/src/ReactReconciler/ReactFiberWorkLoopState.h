@@ -14,6 +14,11 @@ class FiberNode;
 struct FiberRoot;
 struct Transition;
 
+struct PendingRenderPhaseUpdateNode {
+  FiberNode* fiber{nullptr};
+  PendingRenderPhaseUpdateNode* next{nullptr};
+};
+
 using ExecutionContext = std::uint8_t;
 
 inline constexpr ExecutionContext NoContext = 0b000;
@@ -137,6 +142,8 @@ struct WorkLoopState {
   std::uint32_t nestedPassiveUpdateCount{0};
   FiberRoot* rootWithPassiveNestedUpdates{nullptr};
   bool isRunningInsertionEffect{false};
+  PendingRenderPhaseUpdateNode* pendingRenderPhaseUpdates{nullptr};
+  std::vector<FiberNode*> pendingPassiveEffects{};
   bool isHydrating{false};
   FiberNode* hydrationParentFiber{nullptr};
   void* nextHydratableInstance{nullptr};

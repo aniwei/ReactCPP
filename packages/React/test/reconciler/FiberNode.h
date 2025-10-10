@@ -32,8 +32,8 @@ struct FiberNode {
       memoizedProps(facebook::jsi::Value::undefined()),
       updateQueue(nullptr),
       memoizedState(facebook::jsi::Value::undefined()),
-      flags(FiberFlags::NoFlags),
-      subtreeFlags(FiberFlags::NoFlags),
+      flags(NoFlags),
+      subtreeFlags(NoFlags),
       alternate(nullptr),
       updatePayload(facebook::jsi::Value::undefined()) {}
 

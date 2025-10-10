@@ -257,7 +257,7 @@ void commitUpdate(
   Object prev = ensureObject(jsRuntime, prevProps);
   Object next = ensureObject(jsRuntime, nextProps);
   Object payloadObject = payload.getObject(jsRuntime);
-  runtime.commitUpdate(instance, prev, next, payloadObject);
+  runtime.commitUpdate(jsRuntime, instance, prev, next, payloadObject);
 }
 
 void commitTextUpdate(
