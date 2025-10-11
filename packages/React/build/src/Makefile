@@ -946,6 +946,30 @@ Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.cpp.s:
 	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/react_cpp_src.dir/build.make src/CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.cpp.s
 .PHONY : Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.cpp.s
 
+shared/ReactGlobalError.o: shared/ReactGlobalError.cpp.o
+.PHONY : shared/ReactGlobalError.o
+
+# target to build an object file
+shared/ReactGlobalError.cpp.o:
+	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/react_cpp_src.dir/build.make src/CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.o
+.PHONY : shared/ReactGlobalError.cpp.o
+
+shared/ReactGlobalError.i: shared/ReactGlobalError.cpp.i
+.PHONY : shared/ReactGlobalError.i
+
+# target to preprocess a source file
+shared/ReactGlobalError.cpp.i:
+	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/react_cpp_src.dir/build.make src/CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.i
+.PHONY : shared/ReactGlobalError.cpp.i
+
+shared/ReactGlobalError.s: shared/ReactGlobalError.cpp.s
+.PHONY : shared/ReactGlobalError.s
+
+# target to generate assembly for a file
+shared/ReactGlobalError.cpp.s:
+	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/react_cpp_src.dir/build.make src/CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.s
+.PHONY : shared/ReactGlobalError.cpp.s
+
 shared/ReactOwnerStackReset.o: shared/ReactOwnerStackReset.cpp.o
 .PHONY : shared/ReactOwnerStackReset.o
 
@@ -1129,6 +1153,9 @@ help:
 	@echo "... Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.o"
 	@echo "... Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.i"
 	@echo "... Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.s"
+	@echo "... shared/ReactGlobalError.o"
+	@echo "... shared/ReactGlobalError.i"
+	@echo "... shared/ReactGlobalError.s"
 	@echo "... shared/ReactOwnerStackReset.o"
 	@echo "... shared/ReactOwnerStackReset.i"
 	@echo "... shared/ReactOwnerStackReset.s"

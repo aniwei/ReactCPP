@@ -34,6 +34,7 @@ set(REACT_CPP_SOURCE_FILES
     ${_REACT_CPP_SRC_DIR}/ReactRuntime/ReactRuntime.cpp
     ${_REACT_CPP_SRC_DIR}/ReactRuntime/ReactWasmBridge.cpp
     ${_REACT_CPP_SRC_DIR}/shared/ReactOwnerStackReset.cpp
+    ${_REACT_CPP_SRC_DIR}/shared/ReactGlobalError.cpp
     ${_REACT_CPP_SRC_DIR}/shared/ReactSharedInternals.cpp
     ${_REACT_CPP_SRC_DIR}/shared/ReactSymbols.cpp
     ${_REACT_CPP_SRC_DIR}/../../jsi/jsi/jsi.cpp

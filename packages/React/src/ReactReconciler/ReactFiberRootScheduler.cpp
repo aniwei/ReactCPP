@@ -11,6 +11,7 @@
 #include "ReactReconciler/ReactFiberWorkLoop.h"
 #include "ReactRuntime/ReactRuntime.h"
 #include "shared/ReactFeatureFlags.h"
+#include "shared/ReactGlobalError.h"
 #include "shared/ReactSharedInternals.h"
 #include "jsi/jsi.h"
 #include <exception>
@@ -416,14 +417,6 @@ Lanes scheduleTaskForRootDuringMicrotask(ReactRuntime& runtime, facebook::jsi::R
 void startDefaultTransitionIndicatorIfNeeded(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime);
 void cleanupDefaultTransitionIndicatorIfNeeded(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, FiberRoot& root);
 
-void reportDefaultIndicatorError(const std::exception& ex) {
-  std::cerr << "React default transition indicator threw: " << ex.what() << std::endl;
-}
-
-void reportDefaultIndicatorUnknownError() {
-  std::cerr << "React default transition indicator threw an unknown exception" << std::endl;
-}
-
 void startDefaultTransitionIndicatorIfNeeded(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime) {
   (void)jsRuntime;
   if (!enableDefaultTransitionIndicator) {
@@ -458,10 +451,10 @@ void startDefaultTransitionIndicatorIfNeeded(ReactRuntime& runtime, facebook::js
       }
     } catch (const std::exception& ex) {
       root->pendingIndicator = noopIndicatorCallback();
-      reportDefaultIndicatorError(ex);
+      reportGlobalError(std::string("React default transition indicator threw: ") + ex.what());
     } catch (...) {
       root->pendingIndicator = noopIndicatorCallback();
-      reportDefaultIndicatorUnknownError();
+      reportGlobalError("React default transition indicator threw an unknown exception");
     }
   }
 }
@@ -486,9 +479,9 @@ void cleanupDefaultTransitionIndicatorIfNeeded(ReactRuntime& runtime, facebook::
   try {
     cleanup();
   } catch (const std::exception& ex) {
-    reportDefaultIndicatorError(ex);
+    reportGlobalError(std::string("React default transition indicator threw: ") + ex.what());
   } catch (...) {
-    reportDefaultIndicatorUnknownError();
+    reportGlobalError("React default transition indicator threw an unknown exception");
   }
 }
 

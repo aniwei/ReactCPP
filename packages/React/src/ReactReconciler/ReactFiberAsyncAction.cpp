@@ -3,10 +3,11 @@
 #include "ReactReconciler/ReactFiberRootScheduler.h"
 #include "ReactRuntime/ReactRuntime.h"
 #include "shared/ReactFeatureFlags.h"
+#include "shared/ReactGlobalError.h"
 
 #include <exception>
-#include <iostream>
 #include <memory>
+#include <string>
 #include <typeinfo>
 #include <utility>
 
@@ -19,14 +20,6 @@ AsyncActionState& getAsyncActionState(ReactRuntime& runtime) {
 
 const AsyncActionState& getAsyncActionState(const ReactRuntime& runtime) {
   return runtime.asyncActionState();
-}
-
-void reportIndicatorError(const std::exception& ex) {
-  std::cerr << "React default transition indicator threw: " << ex.what() << std::endl;
-}
-
-void reportIndicatorUnknownError() {
-  std::cerr << "React default transition indicator threw an unknown exception" << std::endl;
 }
 
 using DefaultIndicatorFunctionPtr = std::function<void()> (*)();
@@ -75,9 +68,9 @@ void stopIsomorphicDefaultIndicator(ReactRuntime& runtime) {
     try {
       cleanup();
     } catch (const std::exception& ex) {
-      reportIndicatorError(ex);
+      reportGlobalError(std::string("React default transition indicator threw: ") + ex.what());
     } catch (...) {
-      reportIndicatorUnknownError();
+      reportGlobalError("React default transition indicator threw an unknown exception");
     }
   }
 }
@@ -237,10 +230,10 @@ void startIsomorphicDefaultIndicatorIfNeeded(ReactRuntime& runtime) {
     }
   } catch (const std::exception& ex) {
     state.pendingIsomorphicIndicator = []() {};
-    reportIndicatorError(ex);
+    reportGlobalError(std::string("React default transition indicator threw: ") + ex.what());
   } catch (...) {
     state.pendingIsomorphicIndicator = []() {};
-    reportIndicatorUnknownError();
+    reportGlobalError("React default transition indicator threw an unknown exception");
   }
 }
 

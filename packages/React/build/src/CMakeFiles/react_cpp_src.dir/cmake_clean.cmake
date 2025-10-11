@@ -67,6 +67,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsi.cpp.o.d"
   "CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.cpp.o"
   "CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.cpp.o.d"
+  "CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.o"
+  "CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.o.d"
   "CMakeFiles/react_cpp_src.dir/shared/ReactOwnerStackReset.cpp.o"
   "CMakeFiles/react_cpp_src.dir/shared/ReactOwnerStackReset.cpp.o.d"
   "CMakeFiles/react_cpp_src.dir/shared/ReactSharedInternals.cpp.o"

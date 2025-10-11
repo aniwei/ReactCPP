@@ -534,10 +534,24 @@ src/CMakeFiles/react_cpp_src.dir/shared/ReactOwnerStackReset.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/react_cpp_src.dir/shared/ReactOwnerStackReset.cpp.s"
 	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/src/shared/ReactOwnerStackReset.cpp -o CMakeFiles/react_cpp_src.dir/shared/ReactOwnerStackReset.cpp.s
 
+src/CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.o: src/CMakeFiles/react_cpp_src.dir/flags.make
+src/CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.o: /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/src/shared/ReactGlobalError.cpp
+src/CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.o: src/CMakeFiles/react_cpp_src.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Building CXX object src/CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.o"
+	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.o -MF CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.o.d -o CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.o -c /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/src/shared/ReactGlobalError.cpp
+
+src/CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.i"
+	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/src/shared/ReactGlobalError.cpp > CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.i
+
+src/CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.s"
+	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/src/shared/ReactGlobalError.cpp -o CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.s
+
 src/CMakeFiles/react_cpp_src.dir/shared/ReactSharedInternals.cpp.o: src/CMakeFiles/react_cpp_src.dir/flags.make
 src/CMakeFiles/react_cpp_src.dir/shared/ReactSharedInternals.cpp.o: /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/src/shared/ReactSharedInternals.cpp
 src/CMakeFiles/react_cpp_src.dir/shared/ReactSharedInternals.cpp.o: src/CMakeFiles/react_cpp_src.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Building CXX object src/CMakeFiles/react_cpp_src.dir/shared/ReactSharedInternals.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_35) "Building CXX object src/CMakeFiles/react_cpp_src.dir/shared/ReactSharedInternals.cpp.o"
 	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/react_cpp_src.dir/shared/ReactSharedInternals.cpp.o -MF CMakeFiles/react_cpp_src.dir/shared/ReactSharedInternals.cpp.o.d -o CMakeFiles/react_cpp_src.dir/shared/ReactSharedInternals.cpp.o -c /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/src/shared/ReactSharedInternals.cpp
 
 src/CMakeFiles/react_cpp_src.dir/shared/ReactSharedInternals.cpp.i: cmake_force
@@ -551,7 +565,7 @@ src/CMakeFiles/react_cpp_src.dir/shared/ReactSharedInternals.cpp.s: cmake_force
 src/CMakeFiles/react_cpp_src.dir/shared/ReactSymbols.cpp.o: src/CMakeFiles/react_cpp_src.dir/flags.make
 src/CMakeFiles/react_cpp_src.dir/shared/ReactSymbols.cpp.o: /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/src/shared/ReactSymbols.cpp
 src/CMakeFiles/react_cpp_src.dir/shared/ReactSymbols.cpp.o: src/CMakeFiles/react_cpp_src.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_35) "Building CXX object src/CMakeFiles/react_cpp_src.dir/shared/ReactSymbols.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_36) "Building CXX object src/CMakeFiles/react_cpp_src.dir/shared/ReactSymbols.cpp.o"
 	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/react_cpp_src.dir/shared/ReactSymbols.cpp.o -MF CMakeFiles/react_cpp_src.dir/shared/ReactSymbols.cpp.o.d -o CMakeFiles/react_cpp_src.dir/shared/ReactSymbols.cpp.o -c /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/src/shared/ReactSymbols.cpp
 
 src/CMakeFiles/react_cpp_src.dir/shared/ReactSymbols.cpp.i: cmake_force
@@ -565,7 +579,7 @@ src/CMakeFiles/react_cpp_src.dir/shared/ReactSymbols.cpp.s: cmake_force
 src/CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsi.cpp.o: src/CMakeFiles/react_cpp_src.dir/flags.make
 src/CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsi.cpp.o: /Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsi.cpp
 src/CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsi.cpp.o: src/CMakeFiles/react_cpp_src.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_36) "Building CXX object src/CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsi.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_37) "Building CXX object src/CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsi.cpp.o"
 	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsi.cpp.o -MF CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsi.cpp.o.d -o CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsi.cpp.o -c /Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsi.cpp
 
 src/CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsi.cpp.i: cmake_force
@@ -579,7 +593,7 @@ src/CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/package
 src/CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.cpp.o: src/CMakeFiles/react_cpp_src.dir/flags.make
 src/CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.cpp.o: /Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.cpp
 src/CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.cpp.o: src/CMakeFiles/react_cpp_src.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_37) "Building CXX object src/CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_38) "Building CXX object src/CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.cpp.o"
 	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/src && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.cpp.o -MF CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.cpp.o.d -o CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.cpp.o -c /Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.cpp
 
 src/CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.cpp.i: cmake_force
@@ -625,6 +639,7 @@ react_cpp_src_OBJECTS = \
 "CMakeFiles/react_cpp_src.dir/ReactRuntime/ReactRuntime.cpp.o" \
 "CMakeFiles/react_cpp_src.dir/ReactRuntime/ReactWasmBridge.cpp.o" \
 "CMakeFiles/react_cpp_src.dir/shared/ReactOwnerStackReset.cpp.o" \
+"CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.o" \
 "CMakeFiles/react_cpp_src.dir/shared/ReactSharedInternals.cpp.o" \
 "CMakeFiles/react_cpp_src.dir/shared/ReactSymbols.cpp.o" \
 "CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsi.cpp.o" \
@@ -666,13 +681,14 @@ src/libreact_cpp_src.a: src/CMakeFiles/react_cpp_src.dir/ReactRuntime/ReactJSXRu
 src/libreact_cpp_src.a: src/CMakeFiles/react_cpp_src.dir/ReactRuntime/ReactRuntime.cpp.o
 src/libreact_cpp_src.a: src/CMakeFiles/react_cpp_src.dir/ReactRuntime/ReactWasmBridge.cpp.o
 src/libreact_cpp_src.a: src/CMakeFiles/react_cpp_src.dir/shared/ReactOwnerStackReset.cpp.o
+src/libreact_cpp_src.a: src/CMakeFiles/react_cpp_src.dir/shared/ReactGlobalError.cpp.o
 src/libreact_cpp_src.a: src/CMakeFiles/react_cpp_src.dir/shared/ReactSharedInternals.cpp.o
 src/libreact_cpp_src.a: src/CMakeFiles/react_cpp_src.dir/shared/ReactSymbols.cpp.o
 src/libreact_cpp_src.a: src/CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsi.cpp.o
 src/libreact_cpp_src.a: src/CMakeFiles/react_cpp_src.dir/Users/aniwei/Desktop/workspace/ReactCPP/packages/jsi/jsi/jsilib-posix.cpp.o
 src/libreact_cpp_src.a: src/CMakeFiles/react_cpp_src.dir/build.make
 src/libreact_cpp_src.a: src/CMakeFiles/react_cpp_src.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_38) "Linking CXX static library libreact_cpp_src.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_39) "Linking CXX static library libreact_cpp_src.a"
 	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/src && $(CMAKE_COMMAND) -P CMakeFiles/react_cpp_src.dir/cmake_clean_target.cmake
 	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/src && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/react_cpp_src.dir/link.txt --verbose=$(VERBOSE)
 

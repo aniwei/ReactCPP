@@ -226,6 +226,30 @@ ReactFiberLaneTests.cpp.s:
 	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/react_cpp_runtime_tests.dir/build.make test/CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberLaneTests.cpp.s
 .PHONY : ReactFiberLaneTests.cpp.s
 
+ReactFiberRootSchedulerTests.o: ReactFiberRootSchedulerTests.cpp.o
+.PHONY : ReactFiberRootSchedulerTests.o
+
+# target to build an object file
+ReactFiberRootSchedulerTests.cpp.o:
+	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/react_cpp_runtime_tests.dir/build.make test/CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRootSchedulerTests.cpp.o
+.PHONY : ReactFiberRootSchedulerTests.cpp.o
+
+ReactFiberRootSchedulerTests.i: ReactFiberRootSchedulerTests.cpp.i
+.PHONY : ReactFiberRootSchedulerTests.i
+
+# target to preprocess a source file
+ReactFiberRootSchedulerTests.cpp.i:
+	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/react_cpp_runtime_tests.dir/build.make test/CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRootSchedulerTests.cpp.i
+.PHONY : ReactFiberRootSchedulerTests.cpp.i
+
+ReactFiberRootSchedulerTests.s: ReactFiberRootSchedulerTests.cpp.s
+.PHONY : ReactFiberRootSchedulerTests.s
+
+# target to generate assembly for a file
+ReactFiberRootSchedulerTests.cpp.s:
+	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/react_cpp_runtime_tests.dir/build.make test/CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRootSchedulerTests.cpp.s
+.PHONY : ReactFiberRootSchedulerTests.cpp.s
+
 ReactFiberRuntimeTests.o: ReactFiberRuntimeTests.cpp.o
 .PHONY : ReactFiberRuntimeTests.o
 
@@ -439,6 +463,9 @@ help:
 	@echo "... ReactFiberLaneTests.o"
 	@echo "... ReactFiberLaneTests.i"
 	@echo "... ReactFiberLaneTests.s"
+	@echo "... ReactFiberRootSchedulerTests.o"
+	@echo "... ReactFiberRootSchedulerTests.i"
+	@echo "... ReactFiberRootSchedulerTests.s"
 	@echo "... ReactFiberRuntimeTests.o"
 	@echo "... ReactFiberRuntimeTests.i"
 	@echo "... ReactFiberRuntimeTests.s"

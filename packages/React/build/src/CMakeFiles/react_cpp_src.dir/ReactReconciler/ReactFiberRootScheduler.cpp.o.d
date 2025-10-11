@@ -978,6 +978,7 @@ src/CMakeFiles/react_cpp_src.dir/ReactReconciler/ReactFiberRootScheduler.cpp.o: 
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/forward_list \
   /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/src/ReactRuntime/ReactRuntime.h \
   /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/src/ReactReconciler/ReactFiberRootSchedulerState.h \
+  /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/src/shared/ReactGlobalError.h \
   /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/src/shared/ReactSharedInternals.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/iostream \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/istream \

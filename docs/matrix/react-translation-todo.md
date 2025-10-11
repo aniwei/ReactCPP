@@ -60,7 +60,7 @@
 | `flushSyncWorkAcrossRoots_impl` | `flushSyncWorkAcrossRoots` | 🔄 | 需补充 `performSyncWorkOnRoot` 垂直整合与 `flushPendingEffects` 调用。 |
 | `processRootScheduleInImmediateTask` | `processRootScheduleInImmediateTask` | 🔄 | 包装已补齐，仍缺 `trackSchedulerEvent`（Profiler 集成）。 |
 | `processRootScheduleInMicrotask` | `processRootScheduleInMicrotask` | ✅ | 重置 dedupe 标志，结合 Safari fallback 与 `act` 队列互斥。 |
-| `startDefaultTransitionIndicatorIfNeeded` | `startDefaultTransitionIndicatorIfNeeded` | 🔄 | 与 JS 基本一致，仍缺错误上报差异化。 |
+| `startDefaultTransitionIndicatorIfNeeded` | `startDefaultTransitionIndicatorIfNeeded` | ✅ | 对齐错误上报行为（使用 `reportGlobalError`），待持续关注 noop 对齐。 |
 | `scheduleTaskForRootDuringMicrotask` | `scheduleTaskForRootDuringMicrotask` | 🔄 | 引入 fake act handle；需验证 `lanesToEventPriority`→Scheduler 映射与 continuation 复用策略。 |
 | `performWorkOnRootViaSchedulerTask` | `performWorkOnRootViaSchedulerTask` | 🔄 | 并发入口已实现；待补 profiler `trackSchedulerEvent` 与 JS Continuation 语义验证。 |
 | `performSyncWorkOnRoot` | `performSyncWorkOnRoot` | ✅ | 已接入 DEV `syncNestedUpdateFlag`，与 JS 行为一致。 |
@@ -112,6 +112,7 @@
 - [x] 遍历根节点并保留 isomorphic indicator。
 - [x] 捕获 `onDefaultTransitionIndicator` 抛出的异常。
 - [x] 与 JS 端一致地使用 `noop` 常量（当前使用 lambda，与 JS 行为差异需验证）。
+- [x] 通过 `reportGlobalError` 统一错误上报，替换散落的 `std::cerr` 日志。
 
 #### `scheduleTaskForRootDuringMicrotask`
 
@@ -120,6 +121,7 @@
 - [x] 处理同步 Lane 的快速路径。
 - [x] 引入针对 `actQueue` 的 fake handle（高位标记 `TaskHandle`）以对齐测试场景。
 - [x] 事件优先级转换：`toSchedulerPriority` 现基于 `lanesToEventPriority`。
+- [x] 通过单元测试验证：在 `actQueue` 激活时能重新绑定回调并生成带高位标记的句柄。
 
 #### `performWorkOnRootViaSchedulerTask`
 

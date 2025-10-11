@@ -170,10 +170,24 @@ test/CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberAsyncActionTests.cpp.s: cm
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberAsyncActionTests.cpp.s"
 	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/test && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/test/ReactFiberAsyncActionTests.cpp -o CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberAsyncActionTests.cpp.s
 
+test/CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRootSchedulerTests.cpp.o: test/CMakeFiles/react_cpp_runtime_tests.dir/flags.make
+test/CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRootSchedulerTests.cpp.o: /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/test/ReactFiberRootSchedulerTests.cpp
+test/CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRootSchedulerTests.cpp.o: test/CMakeFiles/react_cpp_runtime_tests.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object test/CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRootSchedulerTests.cpp.o"
+	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/test && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT test/CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRootSchedulerTests.cpp.o -MF CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRootSchedulerTests.cpp.o.d -o CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRootSchedulerTests.cpp.o -c /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/test/ReactFiberRootSchedulerTests.cpp
+
+test/CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRootSchedulerTests.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRootSchedulerTests.cpp.i"
+	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/test && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/test/ReactFiberRootSchedulerTests.cpp > CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRootSchedulerTests.cpp.i
+
+test/CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRootSchedulerTests.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRootSchedulerTests.cpp.s"
+	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/test && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/test/ReactFiberRootSchedulerTests.cpp -o CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRootSchedulerTests.cpp.s
+
 test/CMakeFiles/react_cpp_runtime_tests.dir/ReactSharedConstantsTests.cpp.o: test/CMakeFiles/react_cpp_runtime_tests.dir/flags.make
 test/CMakeFiles/react_cpp_runtime_tests.dir/ReactSharedConstantsTests.cpp.o: /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/test/ReactSharedConstantsTests.cpp
 test/CMakeFiles/react_cpp_runtime_tests.dir/ReactSharedConstantsTests.cpp.o: test/CMakeFiles/react_cpp_runtime_tests.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object test/CMakeFiles/react_cpp_runtime_tests.dir/ReactSharedConstantsTests.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object test/CMakeFiles/react_cpp_runtime_tests.dir/ReactSharedConstantsTests.cpp.o"
 	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/test && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT test/CMakeFiles/react_cpp_runtime_tests.dir/ReactSharedConstantsTests.cpp.o -MF CMakeFiles/react_cpp_runtime_tests.dir/ReactSharedConstantsTests.cpp.o.d -o CMakeFiles/react_cpp_runtime_tests.dir/ReactSharedConstantsTests.cpp.o -c /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/test/ReactSharedConstantsTests.cpp
 
 test/CMakeFiles/react_cpp_runtime_tests.dir/ReactSharedConstantsTests.cpp.i: cmake_force
@@ -187,7 +201,7 @@ test/CMakeFiles/react_cpp_runtime_tests.dir/ReactSharedConstantsTests.cpp.s: cma
 test/CMakeFiles/react_cpp_runtime_tests.dir/ReactJSXRuntimeTests.cpp.o: test/CMakeFiles/react_cpp_runtime_tests.dir/flags.make
 test/CMakeFiles/react_cpp_runtime_tests.dir/ReactJSXRuntimeTests.cpp.o: /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/test/ReactJSXRuntimeTests.cpp
 test/CMakeFiles/react_cpp_runtime_tests.dir/ReactJSXRuntimeTests.cpp.o: test/CMakeFiles/react_cpp_runtime_tests.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object test/CMakeFiles/react_cpp_runtime_tests.dir/ReactJSXRuntimeTests.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object test/CMakeFiles/react_cpp_runtime_tests.dir/ReactJSXRuntimeTests.cpp.o"
 	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/test && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT test/CMakeFiles/react_cpp_runtime_tests.dir/ReactJSXRuntimeTests.cpp.o -MF CMakeFiles/react_cpp_runtime_tests.dir/ReactJSXRuntimeTests.cpp.o.d -o CMakeFiles/react_cpp_runtime_tests.dir/ReactJSXRuntimeTests.cpp.o -c /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/test/ReactJSXRuntimeTests.cpp
 
 test/CMakeFiles/react_cpp_runtime_tests.dir/ReactJSXRuntimeTests.cpp.i: cmake_force
@@ -201,7 +215,7 @@ test/CMakeFiles/react_cpp_runtime_tests.dir/ReactJSXRuntimeTests.cpp.s: cmake_fo
 test/CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeHostInterfaceTests.cpp.o: test/CMakeFiles/react_cpp_runtime_tests.dir/flags.make
 test/CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeHostInterfaceTests.cpp.o: /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/test/ReactRuntimeHostInterfaceTests.cpp
 test/CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeHostInterfaceTests.cpp.o: test/CMakeFiles/react_cpp_runtime_tests.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object test/CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeHostInterfaceTests.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object test/CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeHostInterfaceTests.cpp.o"
 	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/test && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT test/CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeHostInterfaceTests.cpp.o -MF CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeHostInterfaceTests.cpp.o.d -o CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeHostInterfaceTests.cpp.o -c /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/test/ReactRuntimeHostInterfaceTests.cpp
 
 test/CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeHostInterfaceTests.cpp.i: cmake_force
@@ -215,7 +229,7 @@ test/CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeHostInterfaceTests.cpp.s
 test/CMakeFiles/react_cpp_runtime_tests.dir/UpdateQueueTests.cpp.o: test/CMakeFiles/react_cpp_runtime_tests.dir/flags.make
 test/CMakeFiles/react_cpp_runtime_tests.dir/UpdateQueueTests.cpp.o: /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/test/UpdateQueueTests.cpp
 test/CMakeFiles/react_cpp_runtime_tests.dir/UpdateQueueTests.cpp.o: test/CMakeFiles/react_cpp_runtime_tests.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object test/CMakeFiles/react_cpp_runtime_tests.dir/UpdateQueueTests.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object test/CMakeFiles/react_cpp_runtime_tests.dir/UpdateQueueTests.cpp.o"
 	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/test && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT test/CMakeFiles/react_cpp_runtime_tests.dir/UpdateQueueTests.cpp.o -MF CMakeFiles/react_cpp_runtime_tests.dir/UpdateQueueTests.cpp.o.d -o CMakeFiles/react_cpp_runtime_tests.dir/UpdateQueueTests.cpp.o -c /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/test/UpdateQueueTests.cpp
 
 test/CMakeFiles/react_cpp_runtime_tests.dir/UpdateQueueTests.cpp.i: cmake_force
@@ -229,7 +243,7 @@ test/CMakeFiles/react_cpp_runtime_tests.dir/UpdateQueueTests.cpp.s: cmake_force
 test/CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeTestHelper.cpp.o: test/CMakeFiles/react_cpp_runtime_tests.dir/flags.make
 test/CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeTestHelper.cpp.o: /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/test/ReactRuntimeTestHelper.cpp
 test/CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeTestHelper.cpp.o: test/CMakeFiles/react_cpp_runtime_tests.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object test/CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeTestHelper.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object test/CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeTestHelper.cpp.o"
 	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/test && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT test/CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeTestHelper.cpp.o -MF CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeTestHelper.cpp.o.d -o CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeTestHelper.cpp.o -c /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/test/ReactRuntimeTestHelper.cpp
 
 test/CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeTestHelper.cpp.i: cmake_force
@@ -249,6 +263,7 @@ react_cpp_runtime_tests_OBJECTS = \
 "CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRuntimeTests.cpp.o" \
 "CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberWorkLoopStateTests.cpp.o" \
 "CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberAsyncActionTests.cpp.o" \
+"CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRootSchedulerTests.cpp.o" \
 "CMakeFiles/react_cpp_runtime_tests.dir/ReactSharedConstantsTests.cpp.o" \
 "CMakeFiles/react_cpp_runtime_tests.dir/ReactJSXRuntimeTests.cpp.o" \
 "CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeHostInterfaceTests.cpp.o" \
@@ -265,6 +280,7 @@ test/react_cpp_runtime_tests: test/CMakeFiles/react_cpp_runtime_tests.dir/ReactF
 test/react_cpp_runtime_tests: test/CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRuntimeTests.cpp.o
 test/react_cpp_runtime_tests: test/CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberWorkLoopStateTests.cpp.o
 test/react_cpp_runtime_tests: test/CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberAsyncActionTests.cpp.o
+test/react_cpp_runtime_tests: test/CMakeFiles/react_cpp_runtime_tests.dir/ReactFiberRootSchedulerTests.cpp.o
 test/react_cpp_runtime_tests: test/CMakeFiles/react_cpp_runtime_tests.dir/ReactSharedConstantsTests.cpp.o
 test/react_cpp_runtime_tests: test/CMakeFiles/react_cpp_runtime_tests.dir/ReactJSXRuntimeTests.cpp.o
 test/react_cpp_runtime_tests: test/CMakeFiles/react_cpp_runtime_tests.dir/ReactRuntimeHostInterfaceTests.cpp.o
@@ -273,7 +289,7 @@ test/react_cpp_runtime_tests: test/CMakeFiles/react_cpp_runtime_tests.dir/ReactR
 test/react_cpp_runtime_tests: test/CMakeFiles/react_cpp_runtime_tests.dir/build.make
 test/react_cpp_runtime_tests: src/libreact_cpp_src.a
 test/react_cpp_runtime_tests: test/CMakeFiles/react_cpp_runtime_tests.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Linking CXX executable react_cpp_runtime_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Linking CXX executable react_cpp_runtime_tests"
 	cd /Users/aniwei/Desktop/workspace/ReactCPP/packages/React/build/test && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/react_cpp_runtime_tests.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

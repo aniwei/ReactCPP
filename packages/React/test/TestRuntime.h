@@ -13,7 +13,7 @@ using namespace facebook::jsi;
 
 class TestRuntime : public Runtime {
  public:
-  TestRuntime() = default;
+  TestRuntime() : globalObjectData_(std::make_shared<ObjectData>()) {}
 
   Array makeArray(size_t length) {
     return createArray(length);
@@ -45,7 +45,7 @@ class TestRuntime : public Runtime {
   }
 
   Object global() override {
-    return createObject();
+    return make<Object>(new ObjectValue(globalObjectData_));
   }
 
   std::string description() override {
@@ -580,6 +580,8 @@ class TestRuntime : public Runtime {
     }
     return Value(baseRuntime(), *it->second);
   }
+
+  std::shared_ptr<ObjectData> globalObjectData_;
 };
 
 } // namespace react::test
