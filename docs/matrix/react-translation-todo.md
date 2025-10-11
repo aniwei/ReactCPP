@@ -17,6 +17,21 @@
 
 ---
 
+## 总览
+
+| 模块 | 进度估算 | 现状概述 |
+| --- | --- | --- |
+| React Shared | ~75% | Feature flag、Fiber 常量等已稳定；待补 DEV 诊断与实验键追踪。 |
+| React Reconciler | ~45% | WorkLoop、Context、Child reconciler 主干已对齐；Hydration/Unwind 正在补齐，Profiler/Scheduler 钩子缺口仍在。 |
+| React DOM | ~20% | HostConfig 桩位与属性 diff 起步；事件系统与 hydration 仍未对接。 |
+| React Core | ~25% | Hooks 框架及 unwind 重置落地；公共入口与 context API 仍缺。 |
+| Scheduler | ~5% | act 队列句柄已映射；完整任务循环尚未移植。 |
+| 实验性模块 | 0% | Flight、RSC、Transition Tracing 未启动。 |
+
+> 进度为粗略估算，依据已完成函数数目与剩余 TODO 复选项评估，供迭代排序参考。
+
+---
+
 ## 模块索引
 
 - [React Shared](#react-shared-模块) — Feature flags、常量、内部桥接。
@@ -43,6 +58,70 @@
 ---
 
 ## React Reconciler 模块
+
+> 当前整体进度约 45%。核心渲染循环、上下文与 child reconciler 主干已落地，重点转向 hydration/unwind、Class/Hooks 落差以及 Profiler/Scheduler 配套。以下按对齐优先级列出：
+
+- 🔼 **短期优先**：
+  - 先完成 `updateFunctionComponent` 的 updater wiring 与 Hook 重置路径，确保中断/重试行为与 JS 一致（Class 支持暂缓）。
+  - 覆盖 `resetSuspendedWorkLoopOnUnwind`/`unwindInterruptedWork` 新增逻辑的单测，验证 Host/Suspense/Cache 栈在 hydration 与并发中断场景下恢复正确。
+  - 将 `flushSyncWorkAcrossRoots` 与 Scheduler continuation (`scheduleCallback` 返回值) 对齐，解决并发调度缺口。
+
+#### `updateFunctionComponent` 转译分阶段工作项
+
+- ✅ 阶段 0：定位 JS 参考 (`ReactFiberWorkLoop.new.js`) 并梳理 C++ stub 所需依赖（hooks、context、render-phase 更新管线）。
+- ✅ 阶段 1（最小骨架）：
+  - [x] 重建主体流程：安装 dispatcher、调用 `renderWithHooks`、处理 `didReceiveUpdate`/bailout。
+  - [x] 接入 `prepareToReadContext`、`checkScheduledUpdateOrContext` 等前置逻辑。
+- ✅ 阶段 2（Hook/Updater 对齐）：
+  - [x] 在函数组件 bailout 时复用 `updateQueue` 并清理由 Hooks 设置的 flags/lanes（`bailoutHooks`）。
+  - [x] 合并 render-phase 更新队列，刷新 root lanes（`finishQueueingConcurrentUpdatesOnRoot` 等）。
+- ✅ 阶段 3（children 调和）：
+  - [x] 依据 `nextChildren` 与旧 props 差异执行 `reconcileChildren` 或 `cloneChildFibers`。
+  - [x] 设置 `PerformedWork`、`DidCapture`、`Ref` 等 flags，并处理提前 bailout。
+- 🔄 阶段 4（中断/重试 & DEV）：
+  - [x] 对齐 `bailoutOnAlreadyFinishedWork`、hydration retry、`checkDidRenderIdHook` 等路径。
+  - [x] 接入调度分析器标记、Strict Mode legacy context 警告、`useId` 重绘校验。
+  - [ ] 透传 legacy context 第二参数：实现 `getUnmaskedContext`/`getMaskedContext` 管线并将结果传入 `callFunctionComponent`。
+  - [ ] 完整恢复 DEV 日志串（区分 `disableLegacyContext` feature flag 变体并更新复用缓存）。
+- 🟡 阶段 5（完整验证）：
+  - [ ] 构造最小测试/断言覆盖：`useState`/`useEffect`、render-phase 更新、hydration 中断。
+  - [ ] 更新 `react-source-mapping.csv` 与本文档状态，登记残余 TODO。
+
+
+---
+
+## ReactCPP 翻译 TODO 总清单
+
+### 高优先级（核心功能/主循环）
+- [ ] `getUnmaskedContext`/`getMaskedContext` 及 legacy context 相关管线实现，确保函数组件第二参数（context）正确传递。
+- [ ] DEV 日志串和 feature flag 变体分支（如 disableLegacyContext/disableLegacyContextForFunctionComponents）完整覆盖。
+- [ ] Scheduler 任务循环、优先级映射、Profiler 钩子、TransitionTracing 相关代码。
+- [ ] Hooks 框架高级 API（如 useMutableSource/useSyncExternalStore）补齐。
+- [ ] Hydration/Unwind/Cache/Offscreen/Suspense fallback/transition tracing/host resource API 等边缘分支。
+
+### 中优先级（功能完善/边缘场景）
+- [ ] Class 组件与遗留路径：`updateClassComponent`、`insertUpdateIntoFiber`、class context、legacyContext stack、error boundary 捕获。
+- [ ] Suspense/Offscreen/Cache 深入：`updateSuspenseComponent`、`updateSuspenseListComponent` hydrate/fallback、Offscreen 隐藏队列、缓存池管理、transition-aware 恢复、`updateCacheComponent` 引用计数与上下文传播。
+- [ ] Host/Hydration 完整性：HostContext push/pop、`HostHoistable`/`HostSingleton` 资源 API、hydration tree-id、`popTreeContext`、Suspense/Cache unwinding、`resetHydrationState`、`QueueHydrationError`。
+- [ ] Profiler state node 计时字段、`onRender`/`onCommit` 钩子、Transition tracing 标记与 `popMarkerInstance` 生命周期测试。
+
+### 低优先级（实验性/未来扩展）
+- [ ] Flight/Server Components/TransitionTracing/事件系统/部分 DOM Hydration 相关代码。
+- [ ] Scheduler continuation 返回值、任务复用链路与 host 适配层。
+- [ ] 扫描并清零 `TODO: translate`，对照 JS 版本逐文件 diff。
+- [ ] 执行编译/单测/集成测试矩阵，记录 known gaps。
+- [ ] 更新 `docs/matrix/react-source-mapping.csv`、发布阶段总结并准备下一模块（DOM/Scheduler）。
+
+---
+
+- 🔁 **中期推进**：
+  - 完成 Suspense fallback（含 `ForceSuspenseFallback`）、Offscreen 延迟与隐藏缓存池管理。
+  - 扩展 Cache/Transition tracing 栈，联通 profiler 与资源引用计数。
+  - 校准 `ReactFiberChild` 剩余的 Profiler/context 状态节点分支，并补充 thenable 索引一致性测试。
+- 📌 **长期待办**：
+  - 实现 `lazilyPropagateParentContextChanges` 的多 renderer / HostTransition 分支。
+  - 引入 Profiler state node 计时字段与提交跟踪，配合未来的性能工具链。
+  - 清空 `TODO` 清单并同步 CSV 映射，形成自动校验流程。
 
 ### `ReactFiberRootScheduler`
 
@@ -162,12 +241,13 @@
 
 ### 其余 Reconciler 文件
 
-#### 2025-10-09 状态快照
+#### 2025-10-11 状态快照
 
 - [ ] `beginWork` / `completeWork` / `performUnitOfWork` 逐行对齐 JS 行为。
-- [ ] `updateFunctionComponent` / `updateClassComponent` 翻译并挂接 Hook/Class 生命周期。
+- [ ] `updateFunctionComponent` 翻译并挂接 Hook 生命周期。
+- [ ] `updateClassComponent` 翻译与 updater wiring（暂缓，待 Function 完成后再启封）。
 - [ ] Suspense 粘滞 fallback（`ForceSuspenseFallback`）与 Offscreen 延迟逻辑。
-- 🔄 HostContext / Hydration 桥接：`pushHostContainer` / `popHostContainer` 与顶层 legacy context 栈已接通；客户端 `pushHostContext`/`popHostContext` 与 `reset/enter/popHydrationState` scaffolding 已完成，Hydration context 已抽离为独立模块 (`ReactFiberHydrationContext.*` + `_ext` 额外实例匹配)，HostConfig (`supportsHydration`、`getFirstHydratableChildWithinContainer`、`getNextHydratableSibling`) 提供基础遍历，HostComponent beginWork 已尝试 claim hydratable 实例，并在属性/直接文本 mismatch 时标记 Hydration 错误；HostText beginWork 亦支持复用 dehydrated 文本节点并在 mismatch 时排队 Hydration 错误；WorkLoop 状态现记录 `hydrationErrors` 队列并在初次提交前升级为 `pendingRecoverableErrors`，`ReactRuntime::drainHydrationErrors` 在排空时通过 `HostInterface::handleHydrationError` 以及可选 `setHydrationErrorCallback` 主动通知宿主并继续返回聚合向量；hydration-specific context 推栈、tree-id 与更全面的实例/薄弱分支匹配仍待补齐。
+- 🔄 HostContext / Hydration 桥接：`pushHostContainer` / `popHostContainer` 与顶层 legacy context 栈已接通；客户端 `pushHostContext`/`popHostContext` 与 `reset/enter/popHydrationState` scaffolding 已完成，Hydration context 已抽离为独立模块 (`ReactFiberHydrationContext.*` + `_ext` 额外实例匹配)，HostConfig (`supportsHydration`、`getFirstHydratableChildWithinContainer`、`getNextHydratableSibling`) 提供基础遍历，HostComponent beginWork 已尝试 claim hydratable 实例，并在属性/直接文本 mismatch 时标记 Hydration 错误；HostText beginWork 亦支持复用 dehydrated 文本节点并在 mismatch 时排队 Hydration 错误；WorkLoop 状态现记录 `hydrationErrors` 队列并在初次提交前升级为 `pendingRecoverableErrors`，`ReactRuntime::drainHydrationErrors` 在排空时通过 `HostInterface::handleHydrationError` 以及可选 `setHydrationErrorCallback` 主动通知宿主并继续返回聚合向量；hydration-specific context 推栈、tree-id 与更全面的实例/薄弱分支匹配仍待补齐。新增：`resetSuspendedWorkLoopOnUnwind`/`unwindInterruptedWork` 完成 hydration 中断栈弹出与 Hook/子 reconciler 重置。
 - [ ] Offscreen 缓存池、transition tracing、legacy defer 分支。
 - [ ] Profiler `stateNode` 计时字段与提交跟踪。
 - [ ] `ReactFiberNewContext` 的 `lazilyPropagateParentContextChanges` 高级分支。
@@ -175,16 +255,21 @@
 - 🔄 `ReactFiberWorkLoop`：核心渲染循环已迁移；`performUnitOfWork`、`beginWork`、`completeWork` 仍需逐行对齐。
   - ✅ `beginWork` 已接入 HostComponent / HostText / HostPortal / Fragment / Mode / Profiler / Context Provider & Consumer / Scope / Offscreen（含 LegacyHidden）等分支，保持与 JS 行为一致。
   - ✅ 辅助函数如 `markRef`、`appendAllChildren`、`ensureProfilerStateNode`、`ensureOffscreenState`、`deferHiddenOffscreenComponent` 等已按 JS 逻辑落地；Portal、Scope、Profiler、Context 栈的翻译在 C++ 侧生效。
+  - 🔄 新增：`resetSuspendedWorkLoopOnUnwind`/`unwindInterruptedWork`/`resetWorkInProgressStack` 现同步清理 Hook 状态、thenable 跟踪、Suspense handler、Cache provider、Transition marker 栈；须完成 Class updater wiring 与渲染阶段更新回滚的边缘分支验证。
   - 🔄 待办与阻塞项：
   - [ ] `mountLazyComponent`、`updateForwardRef`、`updateMemoComponent`、`updateSimpleMemoComponent` —— 依赖 Hooks 与 Class 运行时，暂未落地。
-  - ✅ `mountIncomplete{Class,Function}` —— 与 JS 行为一致地降级 Fiber 标签并复用 `update{Class,Function}Component` 逻辑。
-  - [ ] `updateSuspenseComponent`、`updateSuspenseListComponent`、`deferHiddenOffscreenComponent` 的 hydration 与 fallback 路径 —— 需 Suspense handler 栈（📎 `deferHiddenOffscreenComponent` 已补齐上下文传播与缓存池保存，仍缺水合/回退细节）。
+  - [x] `mountLazyComponent`
+  - [x] `updateForwardRef`
+  - [x] `updateMemoComponent`
+  - [x] `updateSimpleMemoComponent`
+  - ✅ `mountIncomplete{Class,Function}` —— Legacy 模式下断开 alternate 并复用 `update{Class,Function}Component` 路径。
+  - [ ] `updateSuspenseComponent`、`updateSuspenseListComponent`、`deferHiddenOffscreenComponent` 的 hydration 与 fallback 路径 —— 需 Suspense handler 栈（📎 `deferHiddenOffscreenComponent` 已补齐上下文传播与缓存池保存，仍缺水合/回退细节）。现已在 unwind 阶段补入 Suspense handler pop 与 hydration reset，后续需验证 fallback 捕获与重试调度是否对齐。
   - [ ] `updateHostHoistable` —— 客户端实例/更新路径已接入，水合路径现支持复用现有实例并回传属性 mismatch；仍缺 Host Resource API（`getResource`、资源栈管理）。
   - [ ] `updateHostSingleton` —— 客户端路径已落地；hydration 单例流程已接入 `claimHydratableSingleton` 并在 mismatch 时排队错误，仍缺资源栈与 Host Resource API。
   - [x] `updateActivityComponent` —— 已提供非水合路径；后续补齐 Activity hydration / 选择性重试。
   - [x] `updateViewTransition` —— 已实现显式命名处理与 hydration tree id 对齐。
   - [x] `updateTracingMarkerComponent` —— 初版逻辑已落地，待后续补齐 Transition Tracing 栈与回调。
-  - 🔄 `updateCacheComponent`（待实现）；`pushCacheProvider` / `popCacheProvider` 已接通基础栈，`acquireDeferredCache` 获取 Offscreen 缓存池。
+  - 🔄 `updateCacheComponent`（部分完成）；已接入缓存状态复用、更新队列克隆与上下文推栈，仍缺刷新上下文传播与缓存引用计数；需验证与最新 unwind/reset 栈的引用释放配合。
     - [ ] `pushHostContainer`、`popHostContainer`、`pushTopLevelLegacyContextObject`、`popTopLevelLegacyContextObject` —— 需 Host Context 与 Legacy Context 栈。
   - [x] `pushTransition`、`popRootTransition` —— 基础栈管理已接入，后续补齐缓存池与 tracing 细节。
   - [x] `getRemainingWorkInPrimaryTree` —— 已合并 deferred lane，支持 `useDeferredValue` 分支恢复重试。
@@ -216,13 +301,14 @@
   - 🔄 HostComponent：`markRef`、直接文本子节点及 children diff 已落地；仍缺 `pushHostContext`/水合路径与 transition-aware hooks。
   - 🔄 Offscreen 组件：补齐隐藏分支的 baseLanes 合并与 HiddenContext/Suspense handler 推栈；仍缺缓存池、transition tracing 与 legacy defer 特化。
     - [ ] Profiler state node：补充计时字段与 child placement 行为。
+  - 🔄 Cache 组件：`updateCacheComponent` 初版已接通缓存上下文推栈与子节点调和；仍缺缓存刷新派生状态、UpdateQueue 处理与上下文变更传播。
   - 🔄 `ReactFiberNewContext`：provider 栈与上下文传播逻辑正在移植。
     - [x] `pushProvider` / `popProvider` / `scheduleContextWorkOnParentPath`。
     - [x] `propagateContextChange`、`checkIfContextChanged` 以及依赖链匹配。
     - [x] Provider / Consumer begin 阶段上下文推栈与读取路径在 `ReactFiberWorkLoop` 中落地。
     - [ ] `lazilyPropagateParentContextChanges` 中的 HostTransition / 多 renderer DEV 分支。
   - [ ] Profiler `stateNode` 结构与计时字段对齐。
-- ⛔ `ReactChildFiber`：Child reconciler 逻辑未移植。
+- 🔄 `ReactChildFiber`：核心 diff（数组/迭代器/Portal）已移植；仍缺 profiler/context state node 特殊分支与 thenable 索引同步测试。
 
 > Reconciler 子模块 TODO 详见即将新增的小节，请根据实际进度补充细化的复选项。
 
@@ -252,7 +338,7 @@
 
 ## React Core 模块
 
-- ⛔ Hooks：`ReactHooks`、`ReactFiberHooks` 模块未翻译。
+- 🔄 Hooks：`ReactFiberHooks` 主体与 dispatcher 安装/重置、`resetHooksOnUnwind`、thenable 跟踪已翻译；仍缺 `useMutableSource`、`useSyncExternalStore`、submit 后重置以及 DEV 诊断分支。
 - ⛔ Context：`ReactContext`、`ReactNewContext` 相关逻辑未翻译。
 - ⛔ 入口 API：`ReactBaseClasses`、`React` 入口尚待处理。
 

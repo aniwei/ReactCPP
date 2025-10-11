@@ -52,8 +52,8 @@ void enqueueUpdate(UpdateQueue& queue, const std::shared_ptr<UpdateNode>& update
 void appendPendingUpdates(UpdateQueue& queue);
 const jsi::Value& processUpdateQueue(ReactRuntime& runtime, UpdateQueue& queue);
 void suspendIfUpdateReadFromEntangledAsyncAction(ReactRuntime& runtime);
-void resetHasForceUpdateBeforeProcessing();
-bool checkHasForceUpdateAfterProcessing();
+void resetHasForceUpdateBeforeProcessing(ReactRuntime& runtime);
+bool checkHasForceUpdateAfterProcessing(ReactRuntime& runtime);
 void deferHiddenCallbacks(UpdateQueue& queue);
 void commitHiddenCallbacks(UpdateQueue& queue);
 void commitCallbacks(UpdateQueue& queue);

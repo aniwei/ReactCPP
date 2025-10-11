@@ -93,7 +93,9 @@ FiberNode* markSuspenseBoundaryShouldCapture(
         if (sourceFiber.alternate == nullptr) {
           sourceFiber.tag = WorkTag::IncompleteClassComponent;
         } else {
-          // TODO: enqueue a force update once class update queues are ported.
+          auto update = createUpdate(SyncLane);
+          update->tag = UpdateTag::ForceUpdate;
+          enqueueUpdate(sourceFiber, std::move(update), SyncLane);
         }
       } else if (sourceFiber.tag == WorkTag::FunctionComponent) {
         if (sourceFiber.alternate == nullptr) {
@@ -214,8 +216,8 @@ bool throwException(
 
         auto* const rootStateNode = static_cast<FiberRoot*>(boundary->stateNode);
         if (rootStateNode != nullptr) {
-          auto update = createRootErrorClassUpdate(*rootStateNode, errorInfo, lane);
-          pushClassUpdate(*boundary, std::move(update));
+          auto update = createRootErrorUpdate(*rootStateNode, errorInfo, lane);
+          enqueueCapturedUpdate(*boundary, std::move(update));
         }
         return false;
       }
@@ -229,7 +231,7 @@ bool throwException(
 
             auto update = createClassErrorUpdate(lane);
             initializeClassErrorUpdate(*update, root, *boundary, errorInfo);
-            pushClassUpdate(*boundary, std::move(update));
+            enqueueCapturedUpdate(*boundary, std::move(update));
             return false;
           }
         }

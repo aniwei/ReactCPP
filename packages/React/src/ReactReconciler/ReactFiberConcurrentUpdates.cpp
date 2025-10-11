@@ -1,7 +1,10 @@
 #include "ReactFiberConcurrentUpdates.h"
 
-#include "ReactFiberLane.h"
 #include "ReactFiber.h"
+#include "ReactFiberHookTypes.h"
+#include "ReactFiberLane.h"
+#include "ReactFiberWorkLoop.h"
+#include "ReactRuntime/ReactRuntime.h"
 
 #include <array>
 #include <vector>
@@ -87,8 +90,14 @@ void enqueueConcurrentHookUpdateAndEagerlyBailout(
 	ConcurrentUpdateQueue* queue,
 	ConcurrentUpdate* update) {
 	enqueueUpdate(fiber, queue, update, NoLane);
-	// TODO: Match React's conditional flush once getWorkInProgressRoot wiring is available.
-	finishQueueingConcurrentUpdates();
+
+	const auto* hookQueue = static_cast<HookQueue*>(queue);
+	ReactRuntime* runtime = hookQueue != nullptr ? hookQueue->runtime : nullptr;
+	const bool isConcurrentlyRendering =
+		runtime != nullptr && getWorkInProgressRoot(*runtime) != nullptr;
+	if (!isConcurrentlyRendering) {
+		finishQueueingConcurrentUpdates();
+	}
 }
 
 FiberRoot* enqueueConcurrentClassUpdate(

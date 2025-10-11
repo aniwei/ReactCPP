@@ -170,7 +170,7 @@ void setWorkInProgressRootDidIncludeRecursiveRenderUpdate(ReactRuntime& runtime,
 
 void panicOnRootError(ReactRuntime& runtime, FiberRoot& root, void* error);
 void completeUnitOfWork(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, FiberNode& unitOfWork);
-void unwindUnitOfWork(ReactRuntime& runtime, FiberNode& unitOfWork, bool skipSiblings);
+void unwindUnitOfWork(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime, FiberNode& unitOfWork, bool skipSiblings);
 void throwAndUnwindWorkLoop(
 	ReactRuntime& runtime,
 	facebook::jsi::Runtime& jsRuntime,

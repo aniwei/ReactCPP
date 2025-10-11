@@ -74,9 +74,6 @@ void appendPendingUpdates(UpdateQueue& queue) {
 
 namespace {
 
-bool gDidReadFromEntangledAsyncAction = false;
-bool gHasForceUpdate = false;
-
 void callCallback(const std::function<void()>& callback) {
   if (!callback) {
     throw std::invalid_argument(
@@ -103,14 +100,15 @@ const jsi::Value& processUpdateQueue(ReactRuntime& runtime, UpdateQueue& queue) 
   appendPendingUpdates(queue);
 
   jsi::Value newState = std::move(queue.baseState);
-  gDidReadFromEntangledAsyncAction = false;
-  gHasForceUpdate = false;
+  auto& queueFlags = runtime.asyncActionState().genericUpdateQueueFlags;
+  queueFlags.didReadFromEntangledAsyncAction = false;
+  queueFlags.hasForceUpdate = false;
   queue.callbacks.clear();
 
   UpdateNode* current = queue.firstBaseUpdate;
   while (current != nullptr) {
     if (current->lane != NoLane && current->lane == peekEntangledActionLane(runtime)) {
-      gDidReadFromEntangledAsyncAction = true;
+      queueFlags.didReadFromEntangledAsyncAction = true;
     }
 
     switch (current->tag) {
@@ -121,7 +119,7 @@ const jsi::Value& processUpdateQueue(ReactRuntime& runtime, UpdateQueue& queue) 
         break;
       case UpdateTag::ForceUpdate:
         // ForceUpdate intentionally does not modify state in this simplified port.
-        gHasForceUpdate = true;
+        queueFlags.hasForceUpdate = true;
         break;
     }
 
@@ -141,7 +139,8 @@ const jsi::Value& processUpdateQueue(ReactRuntime& runtime, UpdateQueue& queue) 
 }
 
 void suspendIfUpdateReadFromEntangledAsyncAction(ReactRuntime& runtime) {
-  if (!gDidReadFromEntangledAsyncAction) {
+  const auto& queueFlags = runtime.asyncActionState().genericUpdateQueueFlags;
+  if (!queueFlags.didReadFromEntangledAsyncAction) {
     return;
   }
 
@@ -150,12 +149,12 @@ void suspendIfUpdateReadFromEntangledAsyncAction(ReactRuntime& runtime) {
   }
 }
 
-void resetHasForceUpdateBeforeProcessing() {
-  gHasForceUpdate = false;
+void resetHasForceUpdateBeforeProcessing(ReactRuntime& runtime) {
+  runtime.asyncActionState().genericUpdateQueueFlags.hasForceUpdate = false;
 }
 
-bool checkHasForceUpdateAfterProcessing() {
-  return gHasForceUpdate;
+bool checkHasForceUpdateAfterProcessing(ReactRuntime& runtime) {
+  return runtime.asyncActionState().genericUpdateQueueFlags.hasForceUpdate;
 }
 
 void deferHiddenCallbacks(UpdateQueue& queue) {

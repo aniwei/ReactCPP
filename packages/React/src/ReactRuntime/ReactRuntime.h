@@ -35,6 +35,11 @@ enum class IsomorphicIndicatorRegistrationState : std::uint8_t {
 };
 
 struct AsyncActionState {
+  struct UpdateQueueFlags {
+    bool didReadFromEntangledAsyncAction{false};
+    bool hasForceUpdate{false};
+  };
+
   Lane currentEntangledActionLane{NoLane};
   AsyncActionThenablePtr currentEntangledActionThenable{};
   IsomorphicIndicatorRegistrationState indicatorRegistrationState{
@@ -46,6 +51,8 @@ struct AsyncActionState {
   FiberRoot* indicatorRegistrationRoot{nullptr};
   const std::type_info* indicatorRegistrationType{nullptr};
   const void* indicatorRegistrationToken{nullptr};
+  UpdateQueueFlags classUpdateQueueFlags{};
+  UpdateQueueFlags genericUpdateQueueFlags{};
 };
 
 struct HookRuntimeState {
@@ -56,6 +63,9 @@ struct HookRuntimeState {
   Hook* lastCurrentHook{nullptr};
   Lanes renderLanes{NoLanes};
   std::unique_ptr<facebook::jsi::Value> previousDispatcher{};
+  std::uint32_t localIdCounter{0};
+  bool didScheduleRenderPhaseUpdate{false};
+  bool didScheduleRenderPhaseUpdateDuringThisPass{false};
 };
 
 class ReactRuntime {

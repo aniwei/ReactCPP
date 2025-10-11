@@ -275,6 +275,11 @@ void* getPortalContainerInfoImpl(FiberNode& fiber) {
   return state->containerInfo;
 }
 
+void resetChildReconcilerOnUnwind() {
+  currentThenableState.reset();
+  thenableIndexCounter = 0;
+}
+
 constexpr const char* kTypeofProp = "$$typeof";
 constexpr const char* kChildrenProp = "children";
 constexpr const char* kKeyProp = "key";

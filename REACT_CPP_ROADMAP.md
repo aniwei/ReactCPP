@@ -140,6 +140,8 @@
 - ✅ 补全 transition lane 桥接：引入 `transitionLanes` 结构及 `addTransitionToLanesMap`/`getTransitionsForLanes`/`clearTransitionsForLanes`，在 flag 关闭场景下保持零开销，便于后续启用 Transition Tracing。
 - ✅ 首版 `ReactFiberConcurrentUpdates` 翻译：落地并串联并发更新排队、悬挂更新继承、隐藏更新标记逻辑，配套运行时用例覆盖基本 enqueue/flush 行为。
 - ✅ 同步 `FiberNode` 依赖克隆与重置语义：引入 `Dependencies` 结构体与 `createWorkInProgress`/`resetWorkInProgress` 断言覆盖，确保双缓冲 fiber 不共享上下文快照。
+- ✅ 接入 FiberRoot 错误回调：对齐 `logUncaughtError` / `logCaughtError` 行为，并提供默认全局上报兜底。
+- ✅ 复刻 `enqueueConcurrentHookUpdateAndEagerlyBailout` 条件刷新逻辑，与 JS 并行队列排队语义保持一致。
 
 **任务清单**
 - [x] 生成 `FiberNode.h/.cpp`、`FiberRootNode.h/.cpp` 模板文件，保持字段与构造逻辑签名一致。
@@ -268,6 +270,8 @@
 | 输出 `FiberNode`/`FiberRootNode` C++ 模板骨架 | C++ 平台组 | ✅ 已完成 | 结合 `translate-react.js` 生成头/源文件，补充命名空间与 JS 行号注释。 |
 | 翻译 Lane mask 常量并补齐静态断言 | C++ 平台组 | ✅ 已完成 | 新增 `ReactFiberLane.h` + `ReactFiberLaneTests.cpp`，覆盖 `NoLane`~`DeferredLane` 常量与 bitmask helper。 |
 | 引入 `react-main` mirror & lockfile | 平台组 | 🔜 待启动 | 使用 `git subtree` 或子模块，配合 parity 脚本。 |
+| 对齐 `logUncaughtError` / `logCaughtError` 行为 | 平台组 | ✅ 已完成 | 接入 FiberRoot 错误回调并补充默认降级上报，串联 ClassUpdate 队列回调。 |
+| 复刻 `enqueueConcurrentHookUpdateAndEagerlyBailout` 条件刷新逻辑 | 平台组 | ✅ 已完成 | 根据运行中 WorkInProgress Root 决定是否即时 flush，并补充 Hook 队列 runtime 访问信息。 |
 | 自动生成 Feature Flag Header | 平台组 | ✅ 已完成 | `translate-react` 支持 `shared/ReactFeatureFlags.js`，生成宏 (`REACTCPP_ENABLE_EXPERIMENTAL` / `REACTCPP_ENABLE_PROFILE`) |
 | 扩展 `ReactDOMComponentTests`（gtest） | QA 小组 | ⏳ 进行中 | 复刻官方测试 `ReactDOMComponent-test.js` 关键用例。 |
 | 设计 parity CI 报告格式 | 平台组 | 🔜 待启动 | 输出 Markdown 摘要 + JSON 数据。 |

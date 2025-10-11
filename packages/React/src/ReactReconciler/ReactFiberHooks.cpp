@@ -4,6 +4,7 @@
 #include "ReactReconciler/ReactFiberFlags.h"
 #include "ReactReconciler/ReactFiberHookTypes.h"
 #include "ReactReconciler/ReactFiberLane.h"
+#include "ReactReconciler/ReactFiberWorkLoop.h"
 #include "ReactReconciler/ReactFiberNewContext.h"
 #include "ReactReconciler/ReactFiberRootScheduler.h"
 #include "ReactReconciler/ReactTypeOfMode.h"
@@ -930,6 +931,8 @@ void resetHookRenderState(HookRuntimeState& state) {
   state.firstWorkInProgressHook = nullptr;
   state.lastCurrentHook = nullptr;
   state.renderLanes = NoLanes;
+  state.didScheduleRenderPhaseUpdate = false;
+  state.didScheduleRenderPhaseUpdateDuringThisPass = false;
 }
 
 } // namespace
@@ -948,6 +951,7 @@ Value renderWithHooks(
   state.workInProgressHook = nullptr;
   state.currentHook = current != nullptr ? static_cast<Hook*>(current->memoizedState) : nullptr;
   state.lastCurrentHook = nullptr;
+  state.didScheduleRenderPhaseUpdateDuringThisPass = false;
 
   installDispatcher(runtime, jsRuntime, current == nullptr);
 
@@ -964,12 +968,59 @@ Value renderWithHooks(
 
   resetDispatcher(runtime, jsRuntime);
   resetHookRenderState(state);
+  finishQueueingConcurrentUpdates();
+  auto* root = getWorkInProgressRoot(runtime);
+  if (root != nullptr) {
+    markRootEntangled(*root, renderLanes);
+  }
 
   return children;
 }
 
 void resetHooksAfterSubmit(ReactRuntime&, Runtime&) {
   // Placeholder for future hook reset logic (e.g., passive effect queues).
+}
+
+void resetHooksOnUnwind(ReactRuntime& runtime, FiberNode& workInProgress) {
+  HookRuntimeState& state = runtime.hookState();
+
+  auto* hook = static_cast<Hook*>(workInProgress.memoizedState);
+  while (hook != nullptr) {
+    if (hook->queue) {
+      hook->queue->pending = nullptr;
+    }
+    hook = hook->next;
+  }
+
+  state.currentlyRenderingFiber = nullptr;
+  state.currentHook = nullptr;
+  state.workInProgressHook = nullptr;
+  state.firstWorkInProgressHook = nullptr;
+  state.lastCurrentHook = nullptr;
+  state.renderLanes = NoLanes;
+  state.localIdCounter = 0;
+  state.didScheduleRenderPhaseUpdate = false;
+  state.didScheduleRenderPhaseUpdateDuringThisPass = false;
+  state.previousDispatcher.reset();
+}
+
+void bailoutHooks(FiberNode& current, FiberNode& workInProgress, Lanes renderLanes) {
+  workInProgress.updateQueue = current.updateQueue;
+
+  FiberFlags flagsToClear = Passive | Update;
+  if ((workInProgress.mode & StrictEffectsMode) != NoMode) {
+    flagsToClear = static_cast<FiberFlags>(flagsToClear | MountPassiveDev | MountLayoutDev);
+  }
+
+  workInProgress.flags = static_cast<FiberFlags>(workInProgress.flags & ~flagsToClear);
+  current.lanes = removeLanes(current.lanes, renderLanes);
+}
+
+bool checkDidRenderIdHook(ReactRuntime& runtime) {
+  HookRuntimeState& state = runtime.hookState();
+  const bool didRenderIdHook = state.localIdCounter != 0;
+  state.localIdCounter = 0;
+  return didRenderIdHook;
 }
 
 } // namespace react

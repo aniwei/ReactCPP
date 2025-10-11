@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <functional>
 #include <optional>
+#include <string>
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
@@ -27,6 +28,14 @@ class FiberNode;
 struct FiberRoot;
 class Wakeable;
 struct Transition {};
+
+struct UncaughtErrorInfo {
+	std::string componentStack{};
+};
+
+struct CaughtErrorInfo : UncaughtErrorInfo {
+	void* errorBoundary{nullptr};
+};
 
 using TimeoutHandle = std::uintptr_t;
 inline constexpr TimeoutHandle noTimeout = 0;
@@ -567,6 +576,8 @@ struct FiberRoot {
 	LaneMap<std::optional<std::unordered_set<const Transition*>>> transitionLanes{
 		createLaneMap<std::optional<std::unordered_set<const Transition*>>>(std::nullopt)};
 	std::unordered_map<const Wakeable*, std::unordered_set<Lanes>> pingCache{};
+	std::function<void(void*, const UncaughtErrorInfo&)> onUncaughtError{};
+	std::function<void(void*, const CaughtErrorInfo&)> onCaughtError{};
 	std::function<std::function<void()>()> onDefaultTransitionIndicator{};
 	std::function<void()> pendingIndicator{};
 	void* pooledCache{nullptr};

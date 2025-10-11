@@ -26,6 +26,14 @@ facebook::jsi::Value renderWithHooks(
     Lanes renderLanes,
     const FunctionComponentRender& componentRender);
 
+void bailoutHooks(
+    FiberNode& current,
+    FiberNode& workInProgress,
+    Lanes renderLanes);
+
+bool checkDidRenderIdHook(ReactRuntime& runtime);
+
 void resetHooksAfterSubmit(ReactRuntime& runtime, facebook::jsi::Runtime& jsRuntime);
+void resetHooksOnUnwind(ReactRuntime& runtime, FiberNode& workInProgress);
 
 } // namespace react

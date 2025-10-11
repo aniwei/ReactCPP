@@ -31,5 +31,6 @@ FiberNode* reconcileChildFibers(
 	Lanes renderLanes);
 
 void* getPortalContainerInfo(FiberNode& fiber);
+void resetChildReconcilerOnUnwind();
 
 } // namespace react

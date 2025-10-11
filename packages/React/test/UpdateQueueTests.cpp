@@ -60,9 +60,9 @@ bool testForceUpdateTracking() {
   update->tag = UpdateTag::ForceUpdate;
   enqueueUpdate(queue, update);
 
-  resetHasForceUpdateBeforeProcessing();
+  resetHasForceUpdateBeforeProcessing(runtime);
   processUpdateQueue(runtime, queue);
-  assert(checkHasForceUpdateAfterProcessing());
+  assert(checkHasForceUpdateAfterProcessing(runtime));
 
   return true;
 }
