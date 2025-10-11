@@ -113,6 +113,7 @@ StackCursor<std::optional<std::vector<TracingMarkerInstance*>>> markerInstanceSt
 StackCursor<void*> resumedCacheCursor = createCursor<void*>(nullptr);
 StackCursor<std::optional<std::vector<const Transition*>>> transitionStackCursor =
   createCursor<std::optional<std::vector<const Transition*>>>(std::nullopt);
+StackCursor<void*> cacheProviderCursor = createCursor<void*>(nullptr);
 
 Value* cloneForFiber(Runtime& jsRuntime, const Value& source) {
   return new Value(jsRuntime, source);
@@ -449,10 +450,17 @@ bool shouldRemainOnFallback(FiberNode* current) {
   return hasSuspenseListContext(suspenseContext, ForceSuspenseFallback);
 }
 
-Lanes getRemainingWorkInPrimaryTree(FiberNode* current, bool primaryTreeDidDefer, Lanes renderLanes) {
+Lanes getRemainingWorkInPrimaryTree(
+  ReactRuntime& runtime,
+  FiberNode* current,
+  bool primaryTreeDidDefer,
+  Lanes renderLanes) {
   Lanes remaining = current != nullptr ? removeLanes(current->childLanes, renderLanes) : NoLanes;
   if (primaryTreeDidDefer) {
-    // TODO: integrate deferred lane tracking once the transition lane stack is translated.
+    const Lane deferredLane = getWorkInProgressDeferredLane(runtime);
+    if (deferredLane != NoLane) {
+      remaining = mergeLanes(remaining, laneToLanes(deferredLane));
+    }
   }
   return remaining;
 }
@@ -540,9 +548,53 @@ void setHostInstance(FiberNode& fiber, hostconfig::HostInstance instance) {
 
 using CachePoolPtr = std::shared_ptr<SpawnedCachePool>;
 
-CachePoolPtr acquireDeferredCache() {
-  // Cache support has not been translated yet; return an empty pool placeholder.
-  return CachePoolPtr{};
+struct CacheData {
+  // Placeholder cache container; extend with concrete fields once cache storage is ported.
+};
+
+void* createCacheInstance() {
+  return new CacheData();
+}
+
+void* peekCacheFromPool(ReactRuntime& runtime) {
+  if (resumedCacheCursor.current != nullptr) {
+    return resumedCacheCursor.current;
+  }
+
+  FiberRoot* const root = getWorkInProgressRoot(runtime);
+  if (root == nullptr) {
+    return nullptr;
+  }
+
+  if (root->pooledCache == nullptr) {
+    root->pooledCache = createCacheInstance();
+  }
+
+  return root->pooledCache;
+}
+
+CachePoolPtr makeCachePool(void* parent, void* cache) {
+  if (cache == nullptr) {
+    return CachePoolPtr{};
+  }
+
+  auto pool = std::make_shared<SpawnedCachePool>();
+  pool->parent = parent;
+  pool->pool = cache;
+  return pool;
+}
+
+CachePoolPtr getOffscreenDeferredCache(ReactRuntime& runtime) {
+  void* const cacheFromPool = peekCacheFromPool(runtime);
+  if (cacheFromPool == nullptr) {
+    return CachePoolPtr{};
+  }
+
+  return makeCachePool(cacheProviderCursor.current, cacheFromPool);
+}
+
+CachePoolPtr acquireDeferredCache(ReactRuntime& runtime) {
+  return getOffscreenDeferredCache(runtime);
 }
 
 ProfilerStateNode* ensureProfilerStateNode(FiberNode& fiber) {
@@ -719,6 +771,16 @@ void markRef(FiberNode* current, FiberNode& workInProgress) {
     if (current != nullptr && current->ref != nullptr) {
       workInProgress.flags = static_cast<FiberFlags>(workInProgress.flags | Ref);
     }
+
+void resetSuspendedCurrentOnMountInLegacyMode(FiberNode* current, FiberNode& workInProgress) {
+  if (!disableLegacyMode && (workInProgress.mode & ConcurrentMode) == NoMode) {
+    if (current != nullptr) {
+      current->alternate = nullptr;
+      workInProgress.alternate = nullptr;
+      workInProgress.flags = static_cast<FiberFlags>(workInProgress.flags | Placement);
+    }
+  }
+}
     return;
   }
 
@@ -848,9 +910,7 @@ void pushTopLevelLegacyContextObject(
 }
 
 void pushCacheProvider(FiberNode& workInProgress, void* cache) {
-  (void)workInProgress;
-  (void)cache;
-  // TODO: track cache provider stack when cache component is ported.
+  push(cacheProviderCursor, cache, &workInProgress);
 }
 
 void pushHostRootContext(ReactRuntime& runtime, FiberNode& workInProgress) {
@@ -1177,13 +1237,20 @@ FiberNode* updateHostText(
 }
 
 FiberNode* updateSuspenseComponent(
-    ReactRuntime& runtime,
-    Runtime& jsRuntime,
-    FiberNode* current,
-    FiberNode& workInProgress,
-    Lanes renderLanes) {
+  ReactRuntime& runtime,
+  Runtime& jsRuntime,
+  FiberNode* current,
+  FiberNode& workInProgress,
+  Lanes renderLanes) {
   Value nextPropsValue = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
   Object nextPropsObject = ensureObject(jsRuntime, nextPropsValue);
+
+#ifdef DEBUG {
+  if (shouldSuspend(workInProgress)) {
+    
+  }
+}
+#endif
 
   Value nextPrimaryChildren = Value::undefined();
   if (nextPropsValue.isObject() && nextPropsObject.hasProperty(jsRuntime, kChildrenPropName)) {
@@ -1211,7 +1278,7 @@ FiberNode* updateSuspenseComponent(
   const bool didPrimaryChildrenDefer = (workInProgress.flags & DidDefer) != 0;
   workInProgress.flags = static_cast<FiberFlags>(workInProgress.flags & ~DidDefer);
 
-  const Lanes primaryTreeLanes = getRemainingWorkInPrimaryTree(current, didPrimaryChildrenDefer, renderLanes);
+  const Lanes primaryTreeLanes = getRemainingWorkInPrimaryTree(runtime, current, didPrimaryChildrenDefer, renderLanes);
   const Lanes remainingPrimaryLanes = showFallback ? primaryTreeLanes : NoLanes;
 
   FiberNode* nextChild = nullptr;
@@ -1595,13 +1662,13 @@ FiberNode* updateFunctionComponent(
 }
 
 FiberNode* updateClassComponent(
-    ReactRuntime& runtime,
-    Runtime& jsRuntime,
-    FiberNode* current,
-    FiberNode& workInProgress,
-    void* componentType,
-    void* pendingProps,
-    Lanes renderLanes) {
+  ReactRuntime& runtime,
+  Runtime& jsRuntime,
+  FiberNode* current,
+  FiberNode& workInProgress,
+  void* componentType,
+  void* pendingProps,
+  Lanes renderLanes) {
   Value componentValue = cloneJsiValue(jsRuntime, componentType);
   Value propsValue = cloneJsiValue(jsRuntime, pendingProps);
 
@@ -1669,44 +1736,52 @@ FiberNode* updateSimpleMemoComponent(
 
 FiberNode* mountIncompleteClassComponent(
     ReactRuntime& runtime,
+    Runtime& jsRuntime,
     FiberNode* current,
     FiberNode& workInProgress,
     void* component,
     void* resolvedProps,
     Lanes renderLanes) {
-  (void)runtime;
-  (void)current;
-  (void)workInProgress;
-  (void)component;
-  (void)resolvedProps;
-  (void)renderLanes;
-  // TODO: translate mountIncompleteClassComponent.
-  return workInProgress.child;
+  resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress);
+  workInProgress.tag = WorkTag::ClassComponent;
+
+  return updateClassComponent(
+      runtime,
+      jsRuntime,
+      nullptr,
+      workInProgress,
+      component,
+      resolvedProps,
+      renderLanes);
 }
 
 FiberNode* mountIncompleteFunctionComponent(
     ReactRuntime& runtime,
+    Runtime& jsRuntime,
     FiberNode* current,
     FiberNode& workInProgress,
     void* component,
     void* resolvedProps,
     Lanes renderLanes) {
-  (void)runtime;
-  (void)current;
-  (void)workInProgress;
-  (void)component;
-  (void)resolvedProps;
-  (void)renderLanes;
-  // TODO: translate mountIncompleteFunctionComponent.
-  return workInProgress.child;
+  resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress);
+  workInProgress.tag = WorkTag::FunctionComponent;
+
+  return updateFunctionComponent(
+      runtime,
+      jsRuntime,
+      nullptr,
+      workInProgress,
+      component,
+      resolvedProps,
+      renderLanes);
 }
 
 FiberNode* updateSuspenseListComponent(
-    ReactRuntime& runtime,
-    Runtime& jsRuntime,
-    FiberNode* current,
-    FiberNode& workInProgress,
-    Lanes renderLanes) {
+  ReactRuntime& runtime,
+  Runtime& jsRuntime,
+  FiberNode* current,
+  FiberNode& workInProgress,
+  Lanes renderLanes) {
   Value nextPropsValue = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
   Object nextPropsObject = ensureObject(jsRuntime, nextPropsValue);
 
@@ -1739,11 +1814,11 @@ FiberNode* updateSuspenseListComponent(
 }
 
 FiberNode* updateScopeComponent(
-    ReactRuntime& runtime,
-    Runtime& jsRuntime,
-    FiberNode* current,
-    FiberNode& workInProgress,
-    Lanes renderLanes) {
+  ReactRuntime& runtime,
+  Runtime& jsRuntime,
+  FiberNode* current,
+  FiberNode& workInProgress,
+  Lanes renderLanes) {
   Value nextChildren = Value::undefined();
   Value nextPropsValue = cloneJsiValue(jsRuntime, workInProgress.pendingProps);
   if (nextPropsValue.isObject()) {
@@ -1800,16 +1875,15 @@ FiberNode* updateActivityComponent(
 }
 
 FiberNode* deferHiddenOffscreenComponent(
-    ReactRuntime& runtime,
-    Runtime& jsRuntime,
-    FiberNode* current,
-    FiberNode& workInProgress,
-    Lanes nextBaseLanes,
-    Lanes renderLanes) {
-  (void)jsRuntime;
+  ReactRuntime& runtime,
+  Runtime& jsRuntime,
+  FiberNode* current,
+  FiberNode& workInProgress,
+  Lanes nextBaseLanes,
+  Lanes renderLanes) {
   OffscreenState* state = ensureOffscreenState(workInProgress);
   state->baseLanes = nextBaseLanes;
-  state->cachePool = acquireDeferredCache();
+  state->cachePool = acquireDeferredCache(runtime);
 
   if (current != nullptr) {
     pushTransition(runtime, workInProgress, CachePoolPtr{}, nullptr);
@@ -1819,8 +1893,11 @@ FiberNode* deferHiddenOffscreenComponent(
   pushOffscreenSuspenseHandler(workInProgress);
 
   if (current != nullptr) {
-    (void)renderLanes;
-    // TODO: propagate parent context changes once the context stack translation is available.
+    propagateParentContextChangesToDeferredTree(
+      jsRuntime, 
+      *current, 
+      workInProgress, 
+      renderLanes);
   }
 
   return nullptr;
@@ -2230,9 +2307,8 @@ void upgradeHydrationErrorsToRecoverable(ReactRuntime& runtime) {
 }
 
 void popCacheProvider(FiberNode& workInProgress, void* cache) {
-  (void)workInProgress;
   (void)cache;
-  // TODO: release cache references when cache component is ported.
+  pop(cacheProviderCursor, &workInProgress);
 }
 
 void markUpdate(FiberNode& workInProgress) {
@@ -2678,14 +2754,26 @@ FiberNode* beginWork(
         break;
       }
       return mountIncompleteClassComponent(
-      runtime, current, *workInProgress, const_cast<void*>(workInProgress->type), workInProgress->pendingProps, renderLanes);
+          runtime,
+          jsRuntime,
+          current,
+          *workInProgress,
+          const_cast<void*>(workInProgress->type),
+          workInProgress->pendingProps,
+          renderLanes);
     }
     case WorkTag::IncompleteFunctionComponent: {
       if (disableLegacyMode) {
         break;
       }
       return mountIncompleteFunctionComponent(
-      runtime, current, *workInProgress, const_cast<void*>(workInProgress->type), workInProgress->pendingProps, renderLanes);
+          runtime,
+          jsRuntime,
+          current,
+          *workInProgress,
+          const_cast<void*>(workInProgress->type),
+          workInProgress->pendingProps,
+          renderLanes);
     }
     case WorkTag::SuspenseListComponent:
       return updateSuspenseListComponent(runtime, jsRuntime, current, *workInProgress, renderLanes);

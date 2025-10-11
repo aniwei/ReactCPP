@@ -176,16 +176,18 @@
   - ✅ `beginWork` 已接入 HostComponent / HostText / HostPortal / Fragment / Mode / Profiler / Context Provider & Consumer / Scope / Offscreen（含 LegacyHidden）等分支，保持与 JS 行为一致。
   - ✅ 辅助函数如 `markRef`、`appendAllChildren`、`ensureProfilerStateNode`、`ensureOffscreenState`、`deferHiddenOffscreenComponent` 等已按 JS 逻辑落地；Portal、Scope、Profiler、Context 栈的翻译在 C++ 侧生效。
   - 🔄 待办与阻塞项：
-    - [ ] `mountLazyComponent`、`updateForwardRef`、`updateMemoComponent`、`updateSimpleMemoComponent`、`mountIncomplete{Class,Function}` —— 依赖 Hooks 与 Class 运行时，暂未落地。
-    - [ ] `updateSuspenseComponent`、`updateSuspenseListComponent`、`deferHiddenOffscreenComponent` 的 hydration 与 fallback 路径 —— 需 Suspense handler 栈。
+  - [ ] `mountLazyComponent`、`updateForwardRef`、`updateMemoComponent`、`updateSimpleMemoComponent` —— 依赖 Hooks 与 Class 运行时，暂未落地。
+  - ✅ `mountIncomplete{Class,Function}` —— 与 JS 行为一致地降级 Fiber 标签并复用 `update{Class,Function}Component` 逻辑。
+  - [ ] `updateSuspenseComponent`、`updateSuspenseListComponent`、`deferHiddenOffscreenComponent` 的 hydration 与 fallback 路径 —— 需 Suspense handler 栈（📎 `deferHiddenOffscreenComponent` 已补齐上下文传播与缓存池保存，仍缺水合/回退细节）。
   - [ ] `updateHostHoistable` —— 客户端实例/更新路径已接入，水合路径现支持复用现有实例并回传属性 mismatch；仍缺 Host Resource API（`getResource`、资源栈管理）。
   - [ ] `updateHostSingleton` —— 客户端路径已落地；hydration 单例流程已接入 `claimHydratableSingleton` 并在 mismatch 时排队错误，仍缺资源栈与 Host Resource API。
   - [x] `updateActivityComponent` —— 已提供非水合路径；后续补齐 Activity hydration / 选择性重试。
   - [x] `updateViewTransition` —— 已实现显式命名处理与 hydration tree id 对齐。
   - [x] `updateTracingMarkerComponent` —— 初版逻辑已落地，待后续补齐 Transition Tracing 栈与回调。
-    - [ ] `updateCacheComponent`、`pushCacheProvider`、`popCacheProvider` —— 取决于 Cache 管理模块。
+  - 🔄 `updateCacheComponent`（待实现）；`pushCacheProvider` / `popCacheProvider` 已接通基础栈，`acquireDeferredCache` 获取 Offscreen 缓存池。
     - [ ] `pushHostContainer`、`popHostContainer`、`pushTopLevelLegacyContextObject`、`popTopLevelLegacyContextObject` —— 需 Host Context 与 Legacy Context 栈。
   - [x] `pushTransition`、`popRootTransition` —— 基础栈管理已接入，后续补齐缓存池与 tracing 细节。
+  - [x] `getRemainingWorkInPrimaryTree` —— 已合并 deferred lane，支持 `useDeferredValue` 分支恢复重试。
   - [x] Hydration diagnostics：`emitPendingHydrationWarnings`、`upgradeHydrationErrorsToRecoverable`、`getIsHydrating`。
   - 📌 下一步（已开启）：
   - [x] 扩展 `updateHostSingleton`：在现有客户端实现基础上补全 hydration / `pushHostContext` 路径。
