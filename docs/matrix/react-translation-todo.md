@@ -32,6 +32,43 @@
 
 ---
 
+## 当前待办总览
+
+### 紧急（下一迭代优先完成）
+
+- [x] `updateFunctionComponent`：补齐 legacy context 第二实参（对接 `getUnmaskedContext`/`getMaskedContext` 管线并透传到 `callFunctionComponent`）。
+- [x] `updateFunctionComponent`：恢复全部 DEV 日志路径，覆盖 `disableLegacyContext`/`disableLegacyContextForFunctionComponents` 变体并更新去重缓存。
+- [ ] `ReactFiberRootScheduler`：处理 `flushSyncWorkAcrossRoots` 内的 `flushPendingEffects(true)` 调用及 Scheduler continuation 返回值（`scheduleCallback`）。
+- [ ] `ReactFiberReconciler`：完成入口 API 翻译（`createContainer`/`updateContainer`/`injectIntoDevTools`），接入 `FiberRoot` 初始化与调度工具函数。
+- [ ] `ReactFiberRoot`：译出 `createFiberRoot`/`FiberRootNode` 初始化流程并对齐缓存、hydration、feature flag 逻辑。
+  - [x] 建立 `createFiberRoot` 主体：构造 `FiberRoot`、`HostRoot` fiber、缓存池占位并挂载更新队列。
+  - [x] 实装缓存引用计数（`retainCache`/`releaseCache`）。
+  - [ ] Suspense hydration 回调桥接。
+  - [ ] 接入 Default Transition Indicator/Transition Tracing 的真实执行与清理逻辑。
+
+### 验证与文档
+
+- [ ] 为函数组件路径补齐最小测试：`useState`/`useEffect`、render-phase 更新、hydration 中断重试。
+- [ ] 同步 `docs/matrix/react-source-mapping.csv`，标记阶段 4 细项的完成状态。
+- [ ] 统计并清空 `ReactFiberWorkLoop.cpp` 中遗留的 `TODO: translate` 注释（当前约 20 处），在本文档登记对应责任行。
+
+### 中期（Reconciler 主干）
+
+- [ ] 恢复 Class 组件链路：`updateClassComponent`、legacy context/error boundary wiring、`resumeMount/UpdateClassComponent`。
+- [ ] 深入 Suspense/Offscreen/Cache：补齐粘滞 fallback、隐藏队列、缓存池与 transition tracing。
+- [ ] Host/Hydration 完整性：补齐 `updateHostHoistable`/`updateHostSingleton` 的资源栈与 hydration 旁路、tree-id 推栈/弹栈。
+- [ ] `ReactFiberNewContext`：实现 `lazilyPropagateParentContextChanges` 的多 renderer/HostTransition 分支。
+- [ ] Profiler：补充 `stateNode` 计时字段、`trackSchedulerEvent` 钩子与提交阶段回调。
+
+### 其他模块
+
+- [ ] Hooks：翻译 `useMutableSource`、`useSyncExternalStore`、DEV 诊断分支以及提交后重置逻辑。
+- [ ] React DOM：实现 `prepareUpdate`/`commitUpdate`，对齐事件优先级，并启动 DOM 事件系统与 hydration 管线翻译。
+- [ ] Scheduler：移植任务循环（MessageChannel/postTask），补齐优先级映射与单测。
+- [ ] 实验性模块：规划 Flight、Server Components、Transition Tracing 的翻译顺序并在本文档建立对应章节。
+
+---
+
 ## 模块索引
 
 - [React Shared](#react-shared-模块) — Feature flags、常量、内部桥接。
@@ -87,32 +124,28 @@
   - [ ] 构造最小测试/断言覆盖：`useState`/`useEffect`、render-phase 更新、hydration 中断。
   - [ ] 更新 `react-source-mapping.csv` 与本文档状态，登记残余 TODO。
 
+##### 后续阶段：迈向完整 Reconciler 转译
 
----
-
-## ReactCPP 翻译 TODO 总清单
-
-### 高优先级（核心功能/主循环）
-- [ ] `getUnmaskedContext`/`getMaskedContext` 及 legacy context 相关管线实现，确保函数组件第二参数（context）正确传递。
-- [ ] DEV 日志串和 feature flag 变体分支（如 disableLegacyContext/disableLegacyContextForFunctionComponents）完整覆盖。
-- [ ] Scheduler 任务循环、优先级映射、Profiler 钩子、TransitionTracing 相关代码。
-- [ ] Hooks 框架高级 API（如 useMutableSource/useSyncExternalStore）补齐。
-- [ ] Hydration/Unwind/Cache/Offscreen/Suspense fallback/transition tracing/host resource API 等边缘分支。
-
-### 中优先级（功能完善/边缘场景）
-- [ ] Class 组件与遗留路径：`updateClassComponent`、`insertUpdateIntoFiber`、class context、legacyContext stack、error boundary 捕获。
-- [ ] Suspense/Offscreen/Cache 深入：`updateSuspenseComponent`、`updateSuspenseListComponent` hydrate/fallback、Offscreen 隐藏队列、缓存池管理、transition-aware 恢复、`updateCacheComponent` 引用计数与上下文传播。
-- [ ] Host/Hydration 完整性：HostContext push/pop、`HostHoistable`/`HostSingleton` 资源 API、hydration tree-id、`popTreeContext`、Suspense/Cache unwinding、`resetHydrationState`、`QueueHydrationError`。
-- [ ] Profiler state node 计时字段、`onRender`/`onCommit` 钩子、Transition tracing 标记与 `popMarkerInstance` 生命周期测试。
-
-### 低优先级（实验性/未来扩展）
-- [ ] Flight/Server Components/TransitionTracing/事件系统/部分 DOM Hydration 相关代码。
-- [ ] Scheduler continuation 返回值、任务复用链路与 host 适配层。
-- [ ] 扫描并清零 `TODO: translate`，对照 JS 版本逐文件 diff。
-- [ ] 执行编译/单测/集成测试矩阵，记录 known gaps。
-- [ ] 更新 `docs/matrix/react-source-mapping.csv`、发布阶段总结并准备下一模块（DOM/Scheduler）。
-
----
+1. ⏳ 阶段 6 — Class 组件与遗留路径
+  - [ ] 恢复 `updateClassComponent` wiring、`insertUpdateIntoFiber` 等 legacy 更新通路。
+  - [ ] 链接 class context、`legacyContext` stack 与 error boundary 捕获逻辑。
+  - [ ] 覆盖 `resumeMountClassComponent` / `resumeUpdateClassComponent` 等旧分支。
+2. ⏳ 阶段 7 — Suspense / Offscreen / Cache 深入
+  - [ ] 补齐 `updateSuspenseComponent`、`updateSuspenseListComponent` 的 hydrate/fallback 与粘滞逻辑。
+  - [ ] 实现 Offscreen 隐藏队列、缓存池管理与 transition-aware 恢复。
+  - [ ] 完成 `updateCacheComponent` 引用计数与上下文传播测试。
+3. ⏳ 阶段 8 — Host / Hydration 完整性
+  - [ ] 全面接通 HostContext push/pop、`HostHoistable`/`HostSingleton` 资源 API。
+  - [ ] 补齐 hydration tree-id、`popTreeContext` 旁路与 Suspense/Cache unwinding 交互。
+  - [ ] 将 `resetHydrationState`、`QueueHydrationError` 路径与宿主回调联调。
+4. ⏳ 阶段 9 — Scheduler / Profiler 生态
+  - [ ] 实现 Scheduler continuation 返回值、任务复用链路与 host 适配层。
+  - [ ] 补齐 Profiler state node 计时字段、`onRender`/`onCommit` 钩子。
+  - [ ] 接入 Transition tracing 标记与 `popMarkerInstance` 生命周期测试。
+5. ⏳ 阶段 10 — 最终验收
+  - [ ] 扫描并清零 `TODO: translate`，对照 JS 版本逐文件 diff。
+  - [ ] 执行编译/单测/集成测试矩阵，记录 known gaps。
+  - [ ] 更新 `docs/matrix/react-source-mapping.csv`、发布阶段总结并准备下一模块（DOM/Scheduler）。
 
 - 🔁 **中期推进**：
   - 完成 Suspense fallback（含 `ForceSuspenseFallback`）、Offscreen 延迟与隐藏缓存池管理。
@@ -311,6 +344,93 @@
 - 🔄 `ReactChildFiber`：核心 diff（数组/迭代器/Portal）已移植；仍缺 profiler/context state node 特殊分支与 thenable 索引同步测试。
 
 > Reconciler 子模块 TODO 详见即将新增的小节，请根据实际进度补充细化的复选项。
+
+### 文件级核对清单
+
+#### `ReactFiberWorkLoop.cpp`
+
+- `updateFunctionComponent`
+  - [x] 译入 legacy context 第二实参：对接 `getUnmaskedContext`/`getMaskedContext`，并更新 `callFunctionComponent` 调用。
+  - [x] 完整 DEV/feature flag 日志：`warnOnLegacyContextTypes` 需覆盖 disableLegacyContext 变体并同步缓存。
+  - [ ] 对照 JS 版本核对 `prepareToReadContext`、`setCurrentUpdatePriority` 等调用顺序是否一致。
+- `updateClassComponent`
+  - [ ] 恢复 update queue wiring、`checkClassInstanceIsValid` 诊断与 legacy context 绑定。
+  - [ ] 译入 `resumeMountClassComponent` / `resumeUpdateClassComponent` fallback 流程。
+- `updateHostComponent`
+  - [ ] 对齐 hydration 属性 diff：实现 `prepareToHydrateHostInstance` 分支。
+  - [ ] `pushHostContext`/`popHostContext` 路径需完整覆盖（包含 legacyHidden/transition aware 逻辑）。
+- `updateHostHoistable`
+  - [ ] 实现 host resource API（`getResource`/重用策略）与 hydration fallback。
+  - [ ] 核对 `enableHostSingletons` 分支，补齐 DEV warning。
+- `updateHostSingleton`
+  - [ ] 接入资源栈推/弹、hydration claim 失败时的 `queueHydrationError` 处理。
+  - [ ] 验证 `LayoutStatic` flag 设置与 JS 行为一致。
+- `updateSuspenseComponent`
+  - [ ] 粘滞 fallback（`ForceSuspenseFallback`）分支待实现。
+  - [ ] Hydration: 对齐 `tryToClaimNextHydratableSuspenseInstance`、`queueHydrationError`、`resetHydrationState` 调用顺序。
+- `updateSuspenseListComponent`
+  - [ ] 校验 `hasSuspenseListContext`/`setDefaultShallowSuspenseListContext` 逻辑，与 fallback 时 flag 设置一致。
+- `updateOffscreenComponent`
+  - [ ] 缓存池 `acquireDeferredCache`/`pushHiddenContext` 组合验证。
+  - [ ] Transition tracing：补齐 `pushTransition`/`popTransition` 与 visibility 模式切换。
+- `updateCacheComponent`
+  - [ ] 完成 `retainCache`/`releaseCache` 流程，确保引用计数与 queue 更新分支同步。
+  - [ ] 测试 baseState 替换与缓存上下文传播。
+- `attemptEarlyBailoutIfNoScheduledUpdate`
+  - [ ] 检查进入 `SuspenseListComponent`/`OffscreenComponent` 分支时 context 推栈是否缺失。
+- `resetSuspendedWorkLoopOnUnwind` / `unwindInterruptedWork`
+  - [ ] 对齐 Class 组件、Profiler、Host context 栈 unwind 的 flag 清理。
+
+#### `ReactFiberReconciler.cpp`
+
+- [ ] 搭建 `getContextForSubtree`、`findHostInstance` 等辅助函数的 C++ 版本，依赖 `ReactFiberTreeReflection` 与 `ReactInstanceMap` 翻译。
+- [ ] 翻译 `createContainer`/`createHydrationContainer`：调用 `createFiberRoot`、挂接初始 context、安排首帧渲染及 hydration 调度。
+- [ ] 实现 `updateContainerImpl` 及同步/异步更新入口，整合 `requestUpdateLane`、`scheduleUpdateOnFiber`、`entangleTransitions` 等工具。
+- [ ] 补齐调度入口导出：`batchedUpdates`、`deferredUpdates`、`flushSyncFromReconciler` 等函数需与 `ReactFiberWorkLoop` 保持一一对应。
+- [ ] 实现 `injectIntoDevTools` 及 DEV-only 覆写函数，复用 `ReactFiberDevToolsHook` 注入逻辑。
+- [ ] 连接 hydration 支持：`attemptSynchronousHydration`、`attemptContinuousHydration`、`attemptHydrationAtCurrentPriority`。
+
+#### `ReactFiberRoot.cpp`
+
+- [ ] 补齐 `FiberRoot` 字段初始化，对齐 JS 版本的 `FiberRootNode` 构造流程。
+- [ ] 连接 cache 初始化逻辑：`createCache`/`retainCache` 以及 `pooledCache` 管理。
+- [ ] 处理 feature flag 分支：`disableLegacyMode`、`enableSuspenseCallback`、`enableTransitionTracing` 等。
+- [ ] 实现 update queue 初始化和 `HostRoot` fiber 建立（`createHostRootFiber`、`initializeUpdateQueue`）。
+- [ ] 将 hydration 回调、transition callbacks、错误处理器等动态 host config 参数挂载到 `FiberRoot`。
+
+#### `ReactFiberChild.cpp`
+
+- [ ] Context consumer 分支：补齐 profiler/context state node 追踪、DEV 警告。
+- [ ] 多 renderer fragment：验证 keyed diff 与 JS 版本一致。
+- [ ] Thenable 索引：补齐与 `ReactFiberThenable` 的同步测试。
+
+#### `ReactFiberBeginWork.cpp`
+
+- [ ] `beginWork` 中的 `getCurrentPriorityLevel`/`setCurrentRenderingPriorityLevel` 仍缺；核对优先级上下文。
+- [ ] `completeWork` 未完全翻译的 hydration / Offscreen / HostResource 分支登记 TODO。
+
+#### `ReactFiberNewContext.cpp`
+
+- [ ] `lazilyPropagateParentContextChanges`：实现 HostTransition、多 renderer DEV 限制逻辑。
+- [ ] `propagateContextChange`：确认 `forcePropagateEntireTree` 变体符合 JS。
+
+#### `ReactFiberRootScheduler.cpp`
+
+- [ ] `flushSyncWorkAcrossRoots`：补齐 `flushPendingEffects(true)` 及 continuation 返回值。
+- [ ] `performWorkOnRootViaSchedulerTask`：核实 `shouldYieldToHost` 检查与 JS 分支一致。
+- [ ] `scheduleCallback`：实现 Scheduler continuation 语义（返回下一个任务）。
+
+#### 其他文件
+
+- `ReactFiberHooks.cpp`
+  - [ ] 翻译 `useMutableSource`、`useSyncExternalStore`、DEV 诊断。
+  - [ ] `resetHooksOnUnwind`：比照 JS 版本确认 render-phase update cleanup。
+- `ReactFiberThenable.cpp`
+  - [ ] DEV `_debugInfo`、`trackUsedThenable` 记录与 JS 行为对齐。
+- `ReactFiberHydrationContext.cpp`
+  - [ ] `resetHydrationState`/`enterHydrationState` 的宿主接口调用顺序核对。
+- `ReactFiberCommitEffects.cpp`
+  - [ ] Transition tracing / Cache / Profiler effect 分支尚未覆盖。
 
 #### `ReactFiberThenable`
 

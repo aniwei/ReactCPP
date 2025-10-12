@@ -5,19 +5,27 @@
 
 #include "shared/ReactFeatureFlags.h"
 #include "ReactReconciler/ReactRootTags.h"
-#include "scheduler/Scheduler.h"
-#include "scheduler/Scheduler.h"
+#include "ReactScheduler/Scheduler.h"
+#include "jsi/jsi.h"
 
 #include <array>
 #include <atomic>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+namespace facebook {
+namespace jsi {
+class Runtime;
+class Value;
+} // namespace jsi
+} // namespace facebook
 
 namespace react {
 
@@ -27,7 +35,54 @@ using Lanes = std::uint32_t;
 class FiberNode;
 struct FiberRoot;
 class Wakeable;
-struct Transition {};
+class ReactRuntime;
+struct Transition {
+	std::shared_ptr<facebook::jsi::Value> value{};
+	std::string name{};
+	double startTime{-1.0};
+};
+struct SuspenseHydrationCallbacks {
+	std::function<void(void*)> onHydrated{};
+	std::function<void(void*)> onDeleted{};
+};
+
+struct TransitionPendingInfo {
+	std::optional<std::string> name{};
+};
+
+struct TransitionDeletionInfo {
+	std::string type{};
+	std::optional<std::string> name{};
+	double endTime{0.0};
+};
+
+struct TransitionTracingCallbacks {
+	std::function<void(const std::string&, double)> onTransitionStart{};
+	std::function<void(
+		const std::string&,
+		double,
+		double,
+		const std::vector<TransitionPendingInfo>&)> onTransitionProgress{};
+	std::function<void(
+		const std::string&,
+		double,
+		const std::vector<TransitionDeletionInfo>&)> onTransitionIncomplete{};
+	std::function<void(const std::string&, double, double)> onTransitionComplete{};
+	std::function<void(
+		const std::string&,
+		const std::string&,
+		double,
+		double,
+		const std::vector<TransitionPendingInfo>&)> onMarkerProgress{};
+	std::function<void(
+		const std::string&,
+		const std::string&,
+		double,
+		const std::vector<TransitionDeletionInfo>&)> onMarkerIncomplete{};
+	std::function<void(const std::string&, const std::string&, double, double)> onMarkerComplete{};
+};
+struct SuspenseHydrationCallbacks;
+struct TransitionTracingCallbacks;
 
 struct UncaughtErrorInfo {
 	std::string componentStack{};
@@ -549,6 +604,8 @@ enum class LanePriority : std::uint8_t {
 }
 
 struct FiberRoot {
+	ReactRuntime* runtime{nullptr};
+	facebook::jsi::Runtime* jsRuntime{nullptr};
 	FiberNode* current{nullptr};
 	FiberRoot* next{nullptr};
 	TaskHandle callbackNode{};
@@ -578,13 +635,19 @@ struct FiberRoot {
 	std::unordered_map<const Wakeable*, std::unordered_set<Lanes>> pingCache{};
 	std::function<void(void*, const UncaughtErrorInfo&)> onUncaughtError{};
 	std::function<void(void*, const CaughtErrorInfo&)> onCaughtError{};
+	std::function<void(void*, const UncaughtErrorInfo&)> onRecoverableError{};
 	std::function<std::function<void()>()> onDefaultTransitionIndicator{};
 	std::function<void()> pendingIndicator{};
 	void* pooledCache{nullptr};
 	Lanes pooledCacheLanes{NoLanes};
 	void* containerInfo{nullptr};
+	void* pendingChildren{nullptr};
 	void* pendingContext{nullptr};
 	void* context{nullptr};
+	std::string identifierPrefix{};
+	facebook::jsi::Value* formState{nullptr};
+	SuspenseHydrationCallbacks* hydrationCallbacks{nullptr};
+	TransitionTracingCallbacks* transitionCallbacks{nullptr};
 	struct HostRootState {
 		bool isDehydrated{false};
 	} hostRootState{};

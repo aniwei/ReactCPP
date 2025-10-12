@@ -2,19 +2,37 @@
 #include "ReactReconciler/ReactFiberAsyncAction.h"
 #include "ReactReconciler/ReactFiberConcurrentUpdates.h"
 #include "ReactReconciler/ReactFiberFlags.h"
+#include "ReactReconciler/ReactFiberHostRootState.h"
+#include "ReactReconciler/ReactWorkTags.h"
 #include "ReactReconciler/ReactFiberWorkLoop.h"
 #include "ReactRuntime/ReactRuntime.h"
 
 #include "jsi/jsi.h"
 
+#include <memory>
 #include <stdexcept>
 #include <utility>
 
 namespace react {
-namespace {
 
 using facebook::jsi::Runtime;
 using facebook::jsi::Value;
+
+namespace {
+
+void destroyUpdatePayload(Update& update) {
+  switch (update.payloadType) {
+    case UpdatePayloadType::HostRoot: {
+      auto* payload = static_cast<HostRootUpdatePayload*>(update.payload);
+      delete payload;
+      break;
+    }
+    case UpdatePayloadType::None:
+      break;
+  }
+  update.payload = nullptr;
+  update.payloadType = UpdatePayloadType::None;
+}
 
 Update* getNext(Update* update) {
   return update != nullptr ? static_cast<Update*>(update->next) : nullptr;
@@ -24,8 +42,17 @@ Update* cloneUpdateNode(UpdateQueue& queue, const Update& source) {
   auto clone = std::make_unique<Update>();
   clone->lane = source.lane;
   clone->tag = source.tag;
-  clone->payloadValue = source.payloadValue;
-  clone->payload = clone->payloadValue ? clone->payloadValue.get() : source.payload;
+  clone->payloadType = source.payloadType;
+  if (source.payloadType == UpdatePayloadType::HostRoot && source.payload != nullptr) {
+    auto* sourcePayload = static_cast<const HostRootUpdatePayload*>(source.payload);
+    auto clonedPayload = std::make_unique<HostRootUpdatePayload>();
+    if (sourcePayload->element != nullptr) {
+      clonedPayload->element = std::make_unique<Value>(*sourcePayload->element);
+    }
+    clone->payload = clonedPayload.release();
+  } else {
+    clone->payload = source.payload;
+  }
   clone->callback = source.callback;
   clone->next = nullptr;
 
@@ -93,8 +120,17 @@ UpdateQueue* cloneUpdateQueueInternal(const UpdateQueue& source) {
     auto clone = std::make_unique<Update>();
     clone->lane = current->lane;
     clone->tag = current->tag;
-  clone->payloadValue = current->payloadValue;
-  clone->payload = clone->payloadValue ? clone->payloadValue.get() : current->payload;
+    clone->payloadType = current->payloadType;
+    if (current->payloadType == UpdatePayloadType::HostRoot && current->payload != nullptr) {
+      auto* sourcePayload = static_cast<const HostRootUpdatePayload*>(current->payload);
+      auto clonedPayload = std::make_unique<HostRootUpdatePayload>();
+      if (sourcePayload->element != nullptr) {
+        clonedPayload->element = std::make_unique<Value>(*sourcePayload->element);
+      }
+      clone->payload = clonedPayload.release();
+    } else {
+      clone->payload = current->payload;
+    }
     clone->callback = current->callback;
     clone->next = nullptr;
 
@@ -140,6 +176,7 @@ std::unique_ptr<Update> createUpdate(Lane lane) {
   auto update = std::make_unique<Update>();
   update->lane = lane;
   update->tag = UpdateTag::UpdateState;
+  update->payloadType = UpdatePayloadType::None;
   update->payload = nullptr;
   update->callback = nullptr;
   update->next = nullptr;
@@ -230,6 +267,7 @@ std::unique_ptr<Update> createRootErrorUpdate(
   auto update = std::make_unique<Update>();
   update->lane = lane;
   update->tag = UpdateTag::CaptureUpdate;
+  update->payloadType = UpdatePayloadType::None;
   update->payload = nullptr;
   update->callback = [&root, captured = errorInfo]() mutable {
     logUncaughtError(root, captured);
@@ -242,6 +280,7 @@ std::unique_ptr<Update> createClassErrorUpdate(Lane lane) {
   auto update = std::make_unique<Update>();
   update->lane = lane;
   update->tag = UpdateTag::CaptureUpdate;
+  update->payloadType = UpdatePayloadType::None;
   update->payload = nullptr;
   update->callback = nullptr;
   update->next = nullptr;
@@ -283,8 +322,17 @@ void enqueueCapturedUpdate(FiberNode& fiber, std::unique_ptr<Update> update) {
           auto clone = std::make_unique<Update>();
           clone->lane = base->lane;
           clone->tag = base->tag;
-          clone->payloadValue = base->payloadValue;
-          clone->payload = clone->payloadValue ? clone->payloadValue.get() : base->payload;
+          clone->payloadType = base->payloadType;
+          if (base->payloadType == UpdatePayloadType::HostRoot && base->payload != nullptr) {
+            auto* sourcePayload = static_cast<const HostRootUpdatePayload*>(base->payload);
+            auto clonedPayload = std::make_unique<HostRootUpdatePayload>();
+            if (sourcePayload->element != nullptr) {
+              clonedPayload->element = std::make_unique<Value>(*sourcePayload->element);
+            }
+            clone->payload = clonedPayload.release();
+          } else {
+            clone->payload = base->payload;
+          }
           clone->callback = nullptr;
           clone->next = nullptr;
 
@@ -338,6 +386,22 @@ void* getStateFromUpdate(
     const Value& /*props*/,
     const Value& /*instanceValue*/,
     AsyncActionState::UpdateQueueFlags& queueFlags) {
+  if (update.payloadType == UpdatePayloadType::HostRoot) {
+    auto* hostState = prevState != nullptr
+        ? static_cast<HostRootMemoizedState*>(prevState)
+        : new HostRootMemoizedState();
+    auto* payload = static_cast<HostRootUpdatePayload*>(update.payload);
+    if (payload != nullptr) {
+      if (payload->element != nullptr) {
+        hostState->element = std::make_unique<Value>(*payload->element);
+      } else {
+        hostState->element.reset();
+      }
+      destroyUpdatePayload(update);
+    }
+    return hostState;
+  }
+
   switch (update.tag) {
     case UpdateTag::ReplaceState: {
       return update.payload != nullptr ? update.payload : nullptr;
@@ -592,6 +656,10 @@ void commitCallbacks(UpdateQueue& queue) {
   for (auto& callback : callbacks) {
     callCallback(callback);
   }
+}
+
+Update::~Update() {
+  destroyUpdatePayload(*this);
 }
 
 } // namespace react

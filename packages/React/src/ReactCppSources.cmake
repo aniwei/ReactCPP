@@ -19,8 +19,11 @@ set(REACT_CPP_SOURCE_FILES
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberSuspenseContext.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberHydrationContext.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberHydrationContext_ext.cpp
+    ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberRoot.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberThenable.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberThrow.cpp
+    ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberReconciler.cpp
+    ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberCompleteWork.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactProfilerTimer.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberRootScheduler.cpp
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberChild.cpp
@@ -31,6 +34,7 @@ set(REACT_CPP_SOURCE_FILES
     ${_REACT_CPP_SRC_DIR}/ReactReconciler/ReactFiberWorkLoop.cpp
     ${_REACT_CPP_SRC_DIR}/ReactRuntime/ReactHostInterface.cpp
     ${_REACT_CPP_SRC_DIR}/ReactRuntime/ReactJSXRuntime.cpp
+    ${_REACT_CPP_SRC_DIR}/ReactRuntime/ReactRuntimeContext.cpp
     ${_REACT_CPP_SRC_DIR}/ReactRuntime/ReactRuntime.cpp
     ${_REACT_CPP_SRC_DIR}/ReactRuntime/ReactWasmBridge.cpp
     ${_REACT_CPP_SRC_DIR}/shared/ReactOwnerStackReset.cpp

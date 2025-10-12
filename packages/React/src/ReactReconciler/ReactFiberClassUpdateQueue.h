@@ -30,10 +30,22 @@ enum class UpdateTag : std::uint8_t {
   CaptureUpdate = 3,
 };
 
+enum class UpdatePayloadType : std::uint8_t {
+  None = 0,
+  HostRoot = 1,
+};
+
+struct HostRootUpdatePayload {
+  std::unique_ptr<facebook::jsi::Value> element{};
+};
+
 struct Update : ConcurrentUpdate {
   UpdateTag tag{UpdateTag::UpdateState};
+  UpdatePayloadType payloadType{UpdatePayloadType::None};
   void* payload{nullptr};
   std::function<void()> callback{};
+
+  ~Update();
 };
 
 struct SharedQueue : ConcurrentUpdateQueue {

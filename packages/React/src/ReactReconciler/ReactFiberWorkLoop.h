@@ -123,6 +123,28 @@ void markSpawnedRetryLane(ReactRuntime& runtime, Lane lane);
 bool isAlreadyFailedLegacyErrorBoundary(void* instance);
 void markLegacyErrorBoundaryAsFailed(void* instance);
 
+Lane requestUpdateLane(ReactRuntime& runtime, FiberNode& fiber);
+Lane requestRetryLane(ReactRuntime& runtime, FiberNode& fiber);
+Lane requestDeferredLane(ReactRuntime& runtime);
+Lane peekDeferredLane(ReactRuntime& runtime);
+
+void scheduleUpdateOnFiber(
+	ReactRuntime& runtime,
+	facebook::jsi::Runtime& jsRuntime,
+	FiberRoot& root,
+	FiberNode& fiber,
+	Lane lane);
+void scheduleInitialHydrationOnRoot(
+	ReactRuntime& runtime,
+	facebook::jsi::Runtime& jsRuntime,
+	FiberRoot& root,
+	Lane lane);
+void flushRoot(
+	ReactRuntime& runtime,
+	facebook::jsi::Runtime& jsRuntime,
+	FiberRoot& root,
+	Lanes lanes);
+
 SuspendedReason getWorkInProgressSuspendedReason(ReactRuntime& runtime);
 void setWorkInProgressSuspendedReason(ReactRuntime& runtime, SuspendedReason reason);
 

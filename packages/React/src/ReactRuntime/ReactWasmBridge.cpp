@@ -1,6 +1,7 @@
 #include "ReactWasmBridge.h"
 #include "ReactRuntime/ReactHostInterface.h"
 #include "ReactRuntime.h"
+#include "ReactRuntime/ReactRuntimeContext.h"
 #include "ReactWasmLayout.h"
 #include "jsi/jsi.h"
 #include <cstdlib>
@@ -244,6 +245,7 @@ extern "C" {
 
   void react_attach_jsi_runtime(jsi::Runtime* runtime) {
     G_JsiRuntime = runtime;
+    setCurrentJsiRuntime(runtime);
     if (runtime != nullptr && G_ReactRuntime != nullptr) {
       G_ReactRuntime->setHostInterface(G_HostInterface);
       G_ReactRuntime->bindHostInterface(*runtime);
@@ -252,6 +254,7 @@ extern "C" {
 
   void react_attach_runtime(ReactRuntime* runtime) {
     G_ReactRuntime = runtime;
+    setCurrentReactRuntime(runtime);
     if (!G_ReactRuntime) {
       return;
     }
@@ -265,6 +268,8 @@ extern "C" {
     if (G_ReactRuntime) {
       G_ReactRuntime->reset();
     }
+    setCurrentReactRuntime(nullptr);
+    setCurrentJsiRuntime(nullptr);
     G_ReactRuntime = nullptr;
     G_JsiRuntime = nullptr;
     G_RootContainers.clear();
