@@ -6,7 +6,9 @@
   "license": "MIT",
   "scripts": {
     "translate-react": "node scripts/translate-react.js",
-    "check-parity": "node scripts/check-parity.js"
+    "check-parity": "node scripts/check-parity.js",
+    "generate-mapping": "node scripts/translate-react.js --out docs/reactcpp/generated",
+    "check-line-parity": "node scripts/check-line-parity.js"
   },
   "devDependencies": {
     "@babel/parser": "^7.25.0",

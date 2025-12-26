@@ -41,6 +41,12 @@ set(REACT_CPP_SOURCE_FILES
     ${_REACT_CPP_SRC_DIR}/shared/ReactGlobalError.cpp
     ${_REACT_CPP_SRC_DIR}/shared/ReactSharedInternals.cpp
     ${_REACT_CPP_SRC_DIR}/shared/ReactSymbols.cpp
+    ${_REACT_CPP_SRC_DIR}/transpiled/ReactFiberHooks_areHookInputsEqual.cpp
+    ${_REACT_CPP_SRC_DIR}/transpiled/ReactFiberHooks_throwInvalidHookError.cpp
+    ${_REACT_CPP_SRC_DIR}/transpiled/ReactFiberHooks_warnOnUseFormStateInDev.cpp
+    ${_REACT_CPP_SRC_DIR}/transpiled/ReactFiberHooks_warnIfAsyncClientComponent.cpp
+    ${_REACT_CPP_SRC_DIR}/transpiled/ReactFiberHooks_checkDepsAreArrayDev.cpp
+    ${_REACT_CPP_SRC_DIR}/transpiled/ReactFiberHooks_warnOnHookMismatchInDev.cpp
     ${_REACT_CPP_SRC_DIR}/../../jsi/jsi/jsi.cpp
     ${_REACT_CPP_SRC_DIR}/../../jsi/jsi/jsilib-posix.cpp
 )

@@ -7,6 +7,7 @@ add_executable(react_cpp_runtime_tests
     ReactFiberWorkLoopStateTests.cpp
     ReactFiberAsyncActionTests.cpp
     ReactFiberRootSchedulerTests.cpp
+    ReactFiberHooksTranspiledTests.cpp
     ReactSharedConstantsTests.cpp
     ReactJSXRuntimeTests.cpp
     ReactRuntimeHostInterfaceTests.cpp

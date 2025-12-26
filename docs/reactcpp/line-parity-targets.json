@@ -1,0 +1,10 @@
+{
+  "targets": [
+    {
+      "jsFile": "reactjs/packages/react-reconciler/src/ReactFiberHooks.js",
+      "functionName": "areHookInputsEqual",
+      "cppFile": "packages/React/transpiled/ReactFiberHooks_areHookInputsEqual.cpp",
+      "cppFunctionName": "areHookInputsEqual"
+    }
+  ]
+}

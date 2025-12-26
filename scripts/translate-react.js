@@ -1,452 +1,378 @@
 #!/usr/bin/env node
+/*
+ * translate-react.js
+ *
+ * 当前阶段职责（Phase A）：
+ * - 扫描 reactjs/ 源码
+ * - 生成“模块/函数对照表（精确到函数）”到 docs/reactcpp/generated/
+ *
+ * 后续阶段可扩展：
+ * - 生成 C++ 骨架文件（.h/.cpp）
+ * - 输出更强的 AST parity 描述
+ */
+
+'use strict';
 
 const fs = require('fs');
 const path = require('path');
+
 const parser = require('@babel/parser');
 const traverse = require('@babel/traverse').default;
 
-const ROOT_DIR = path.resolve(__dirname, '..');
-const DEFAULT_OUT_DIR = path.join(ROOT_DIR, 'packages', 'ReactCpp', 'src');
-const PREFERRED_REACT_MAIN_DIR = path.join(ROOT_DIR, 'vendor', 'react-main');
-const LEGACY_REACT_MAIN_DIR = path.join(ROOT_DIR, 'react-main');
-
-/**
- * Minimal CLI parsing helper.
- */
 function parseArgs(argv) {
-  const result = {
-    source: null,
-    outDir: DEFAULT_OUT_DIR,
-    force: false,
-    dryRun: false,
-    verbose: false,
+  const args = {
+    jsRoot: 'reactjs',
+    outDir: 'docs/reactcpp/generated',
+    includePattern: /reactjs\/packages\/.+\/(src|shared)\/.+\.(js|jsx)$/,
   };
 
-  for (let i = 2; i < argv.length; ++i) {
-    const arg = argv[i];
-    if (!arg.startsWith('--')) {
-      continue;
-    }
-
-    if (arg === '--force') {
-      result.force = true;
-      continue;
-    }
-    if (arg === '--dry-run') {
-      result.dryRun = true;
-      continue;
-    }
-    if (arg === '--verbose') {
-      result.verbose = true;
-      continue;
-    }
-
-    const [key, value] = arg.split('=');
-    if (!value) {
-      continue;
-    }
-    switch (key) {
-      case '--source':
-        result.source = path.resolve(ROOT_DIR, value);
-        break;
-      case '--outDir':
-        result.outDir = path.resolve(ROOT_DIR, value);
-        break;
-      default:
-        break;
+  for (let i = 2; i < argv.length; i++) {
+    const token = argv[i];
+    if (token === '--js-root') {
+      args.jsRoot = argv[++i];
+    } else if (token === '--out') {
+      args.outDir = argv[++i];
+    } else if (token === '--help' || token === '-h') {
+      args.help = true;
+    } else {
+      // ignore unknown flags for forward-compat
     }
   }
 
-  return result;
+  return args;
 }
 
-function die(message) {
-  console.error(`translate-react: ${message}`);
-  process.exitCode = 1;
-  process.exit();
+function ensureDir(dirPath) {
+  fs.mkdirSync(dirPath, {recursive: true});
 }
 
-function ensureReactMainRelative(sourcePath) {
-  const candidates = [PREFERRED_REACT_MAIN_DIR, LEGACY_REACT_MAIN_DIR].filter(fs.existsSync);
-  if (candidates.length === 0) {
-    die('react-main mirror not found. Expected directory: vendor/react-main/ (or legacy react-main/)');
-  }
+function listFilesRecursive(rootDir) {
+  const results = [];
+  const stack = [rootDir];
 
-  for (const reactMainDir of candidates) {
-    const normalizedDir = path.resolve(reactMainDir) + path.sep;
-    const normalizedSource = path.resolve(sourcePath);
-    if (!normalizedSource.startsWith(normalizedDir)) {
-      continue;
+  while (stack.length) {
+    const currentDir = stack.pop();
+    const entries = fs.readdirSync(currentDir, {withFileTypes: true});
+
+    for (const entry of entries) {
+      const fullPath = path.join(currentDir, entry.name);
+      if (entry.isDirectory()) {
+        // Skip huge/irrelevant dirs
+        if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === 'build') {
+          continue;
+        }
+        stack.push(fullPath);
+      } else if (entry.isFile()) {
+        results.push(fullPath);
+      }
     }
-    const relative = path.relative(reactMainDir, sourcePath);
-    return { reactMainDir, relative };
   }
 
-  die(`source must live under react-main/. Received: ${sourcePath}`);
+  return results;
 }
 
-function computeCppPaths(relativeSource, outDir) {
-  const parts = relativeSource.split(path.sep);
-  const pkgIndex = parts.indexOf('packages');
-  const srcIndex = parts.indexOf('src');
+function parseJsModule(filePath, sourceText) {
+  // Some ReactJS files use Flow-only syntax that @babel/parser doesn't support
+  // (e.g. typed catch binding). For our purposes (module/function index), it's
+  // safe to strip these annotations before parsing.
+  const preprocessedSourceText = sourceText
+    // Flow typed catch binding: `catch (e: mixed)` -> `catch (e)`
+    .replace(/\bcatch\s*\(\s*([A-Za-z_$][\w$]*)\s*:\s*[^)]+\)/g, 'catch ($1)');
 
-  if (pkgIndex === -1 || pkgIndex === parts.length - 1) {
-    die(`cannot infer package/src layout from: ${relativeSource}`);
+  // Flow component syntax in devtools type-only files isn't needed for runtime
+  // function mapping. Treat as a type-only module with no functions.
+  if (/\bexport\s+type\s+\w+\s*=\s*component\s*\(/m.test(preprocessedSourceText)) {
+    return {
+      exports: {named: [], hasDefault: false},
+      functions: [],
+    };
   }
 
-  const packageName = parts[pkgIndex + 1];
-  let subPathParts;
-  if (srcIndex !== -1 && srcIndex > pkgIndex + 1) {
-    subPathParts = parts.slice(srcIndex + 1);
-  } else {
-    subPathParts = parts.slice(pkgIndex + 2);
-  }
-
-  if (subPathParts.length === 0) {
-    die(`missing file segment after package root: ${relativeSource}`);
-  }
-
-  const fileName = subPathParts.pop();
-  const baseName = fileName
-    .replace(/\.(jsx?|ts|tsx)$/i, '')
-    .replace(/\.new$/i, '');
-
-  const destDir = path.join(outDir, packageName, ...subPathParts);
-  const headerPath = path.join(destDir, `${baseName}.h`);
-  const sourcePath = path.join(destDir, `${baseName}.cpp`);
-  const snapshotPath = path.join(destDir, `${baseName}.expect.json`);
-
-  return { destDir, headerPath, sourcePath, snapshotPath, baseName, packageName, subPath: subPathParts, fileName };
-}
-
-function parseReactSource(sourceCode, sourceFilename) {
-  const ast = parser.parse(sourceCode, {
-    sourceType: 'module',
-    sourceFilename,
-    allowReturnOutsideFunction: true,
-    plugins: [
+  let ast;
+  try {
+    const commonPlugins = [
       'jsx',
-      'flow',
-      'flowComments',
       'classProperties',
-      'classPrivateMethods',
       'classPrivateProperties',
-      'dynamicImport',
+      'classPrivateMethods',
       'optionalChaining',
       'nullishCoalescingOperator',
-      'numericSeparator',
+      'objectRestSpread',
+      'dynamicImport',
+      'exportDefaultFrom',
       'exportNamespaceFrom',
-      'logicalAssignment',
       'topLevelAwait',
-    ],
-  });
+      'importAttributes',
+    ];
 
-  const declarations = new Map();
+    // Prefer Flow first (React repo majority)
+    try {
+      ast = parser.parse(preprocessedSourceText, {
+        sourceType: 'module',
+        plugins: [["flow", {"all": true}], 'flowComments', ...commonPlugins],
+        errorRecovery: true,
+        ranges: false,
+      });
+    } catch (flowErr) {
+      // Fallback to TS for a small number of .js files using TS-like syntax
+      ast = parser.parse(preprocessedSourceText, {
+        sourceType: 'module',
+        plugins: ['typescript', ...commonPlugins],
+        errorRecovery: true,
+        ranges: false,
+      });
+    }
+  } catch (err) {
+    const message = err && err.message ? err.message : String(err);
+    const wrapped = new Error(`[translate-react] parse failed: ${filePath}: ${message}`);
+    wrapped.cause = err;
+    throw wrapped;
+  }
+
+  const functions = [];
+  const exports = {
+    named: new Set(),
+    hasDefault: false,
+  };
+
+  function pushFunction(kind, name, loc, isExported) {
+    if (!name || !loc) return;
+    functions.push({
+      kind,
+      name,
+      loc: {
+        start: {line: loc.start.line, column: loc.start.column},
+        end: {line: loc.end.line, column: loc.end.column},
+      },
+      exported: Boolean(isExported),
+    });
+  }
 
   traverse(ast, {
-    Program(path) {
-      path.get('body').forEach(child => {
-        const node = child.node;
-        if (node.type === 'FunctionDeclaration' && node.id) {
-          declarations.set(node.id.name, {
-            kind: 'function',
-            loc: node.loc,
-          });
+    Program(programPath) {
+      // Only top-level bindings
+      for (const nodePath of programPath.get('body')) {
+        const node = nodePath.node;
+
+        if (node.type === 'ExportDefaultDeclaration') {
+          exports.hasDefault = true;
         }
+
+        if (node.type === 'ExportNamedDeclaration') {
+          if (node.declaration) {
+            if (node.declaration.type === 'FunctionDeclaration') {
+              const fn = node.declaration;
+              exports.named.add(fn.id ? fn.id.name : '');
+              pushFunction('function', fn.id ? fn.id.name : null, fn.loc, true);
+            } else if (node.declaration.type === 'VariableDeclaration') {
+              for (const decl of node.declaration.declarations) {
+                if (!decl.id || decl.id.type !== 'Identifier') continue;
+                const name = decl.id.name;
+                exports.named.add(name);
+                if (
+                  decl.init &&
+                  (decl.init.type === 'FunctionExpression' || decl.init.type === 'ArrowFunctionExpression')
+                ) {
+                  pushFunction(
+                    decl.init.type === 'ArrowFunctionExpression' ? 'arrow' : 'functionExpression',
+                    name,
+                    decl.init.loc,
+                    true,
+                  );
+                }
+              }
+            } else if (node.declaration.type === 'ClassDeclaration') {
+              const cls = node.declaration;
+              if (cls.id && cls.id.name) {
+                exports.named.add(cls.id.name);
+              }
+              // Class methods as functions
+              for (const bodyEl of cls.body.body) {
+                if (bodyEl.type === 'ClassMethod' || bodyEl.type === 'ClassPrivateMethod') {
+                  const methodName =
+                    bodyEl.key && bodyEl.key.type === 'Identifier'
+                      ? bodyEl.key.name
+                      : bodyEl.key && bodyEl.key.type === 'StringLiteral'
+                        ? bodyEl.key.value
+                        : null;
+                  pushFunction('classMethod', `${cls.id ? cls.id.name : 'AnonymousClass'}.${methodName}`, bodyEl.loc, true);
+                }
+              }
+            }
+          }
+
+          if (node.specifiers && node.specifiers.length) {
+            for (const spec of node.specifiers) {
+              if (spec.exported && spec.exported.type === 'Identifier') {
+                exports.named.add(spec.exported.name);
+              }
+            }
+          }
+        }
+
+        // Non-exported top-level functions
+        if (node.type === 'FunctionDeclaration') {
+          const name = node.id ? node.id.name : null;
+          const isExported = exports.named.has(name);
+          pushFunction('function', name, node.loc, isExported);
+        }
+
         if (node.type === 'VariableDeclaration') {
-          node.declarations.forEach(declarator => {
-            if (declarator.id.type !== 'Identifier') {
-              return;
-            }
-            const name = declarator.id.name;
-            const init = declarator.init;
-            if (!init) {
-              declarations.set(name, {
-                kind: 'variable',
-                loc: declarator.loc,
-              });
-              return;
-            }
+          for (const decl of node.declarations) {
+            if (!decl.id || decl.id.type !== 'Identifier') continue;
+            const name = decl.id.name;
             if (
-              init.type === 'FunctionExpression' ||
-              init.type === 'ArrowFunctionExpression'
+              decl.init &&
+              (decl.init.type === 'FunctionExpression' || decl.init.type === 'ArrowFunctionExpression')
             ) {
-              declarations.set(name, {
-                kind: 'function',
-                loc: declarator.loc ?? init.loc,
-              });
-            } else {
-              declarations.set(name, {
-                kind: 'variable',
-                loc: declarator.loc,
-              });
+              const isExported = exports.named.has(name);
+              pushFunction(
+                decl.init.type === 'ArrowFunctionExpression' ? 'arrow' : 'functionExpression',
+                name,
+                decl.init.loc,
+                isExported,
+              );
             }
-          });
+          }
         }
-        if (node.type === 'ClassDeclaration' && node.id) {
-          declarations.set(node.id.name, {
-            kind: 'class',
-            loc: node.loc,
-          });
+
+        if (node.type === 'ClassDeclaration') {
+          const cls = node;
+          const className = cls.id ? cls.id.name : 'AnonymousClass';
+          for (const bodyEl of cls.body.body) {
+            if (bodyEl.type === 'ClassMethod' || bodyEl.type === 'ClassPrivateMethod') {
+              const methodName =
+                bodyEl.key && bodyEl.key.type === 'Identifier'
+                  ? bodyEl.key.name
+                  : bodyEl.key && bodyEl.key.type === 'StringLiteral'
+                    ? bodyEl.key.value
+                    : null;
+              pushFunction('classMethod', `${className}.${methodName}`, bodyEl.loc, false);
+            }
+          }
         }
-      });
+      }
     },
   });
 
-  const exports = [];
-  const notes = [];
+  // De-dup by (kind+name+startLine)
+  const dedup = new Map();
+  for (const fn of functions) {
+    const key = `${fn.kind}:${fn.name}:${fn.loc.start.line}`;
+    if (!dedup.has(key)) dedup.set(key, fn);
+  }
 
-  traverse(ast, {
-    ExportNamedDeclaration(path) {
-      const { declaration, specifiers } = path.node;
-      if (declaration) {
-        if (declaration.type === 'FunctionDeclaration' && declaration.id) {
-          exports.push({
-            name: declaration.id.name,
-            kind: 'function',
-            loc: declaration.loc,
-          });
-          return;
-        }
-        if (declaration.type === 'VariableDeclaration') {
-          declaration.declarations.forEach(declarator => {
-            if (declarator.id.type !== 'Identifier') {
-              return;
-            }
-            const name = declarator.id.name;
-            const init = declarator.init;
-            const kind = init && (init.type === 'FunctionExpression' || init.type === 'ArrowFunctionExpression')
-              ? 'function'
-              : 'variable';
-            exports.push({ name, kind, loc: declarator.loc });
-          });
-          return;
-        }
-        if (declaration.type === 'ClassDeclaration' && declaration.id) {
-          exports.push({ name: declaration.id.name, kind: 'class', loc: declaration.loc });
-          return;
-        }
-      }
-
-      specifiers.forEach(specifier => {
-        const exportedName = specifier.exported.name;
-        const localName = specifier.local.name;
-        const decl = declarations.get(localName);
-        if (decl) {
-          exports.push({ name: exportedName, kind: decl.kind, loc: decl.loc });
-        } else {
-          notes.push(`Unable to locate declaration for exported symbol ${exportedName}`);
-        }
-      });
+  return {
+    exports: {
+      named: Array.from(exports.named).filter(Boolean).sort(),
+      hasDefault: exports.hasDefault,
     },
-    ExportDefaultDeclaration(path) {
-      const { node } = path;
-      let name = 'default';
-      let kind = 'unknown';
-      if (node.declaration.type === 'Identifier') {
-        name = node.declaration.name;
-        const decl = declarations.get(name);
-        if (decl) {
-          kind = decl.kind;
-        }
-      } else if (
-        node.declaration.type === 'FunctionDeclaration' &&
-        node.declaration.id
-      ) {
-        name = node.declaration.id.name;
-        kind = 'function';
-      } else if (
-        node.declaration.type === 'ClassDeclaration' &&
-        node.declaration.id
-      ) {
-        name = node.declaration.id.name;
-        kind = 'class';
-      }
-      exports.push({ name, kind, loc: node.loc, isDefault: true });
-    },
-  });
-
-  return { exports, notes };
-}
-
-function formatLocation(loc) {
-  if (!loc) {
-    return 'lines ?-?';
-  }
-  return `lines ${loc.start.line}-${loc.end.line}`;
-}
-
-function buildHeader(baseName, sourceRelative, exportSummaries) {
-  const exports = exportSummaries.filter(item => item.kind === 'function');
-  const others = exportSummaries.filter(item => item.kind !== 'function');
-
-  const lines = [];
-  lines.push('#pragma once');
-  lines.push('');
-  lines.push('// Auto-generated by scripts/translate-react.js');
-  lines.push(`// Source: react-main/${sourceRelative}`);
-  lines.push('');
-  lines.push('namespace react {');
-  lines.push('');
-
-  if (exports.length === 0) {
-    lines.push(`// TODO: No function exports detected in ${baseName}.`);
-  } else {
-    exports.forEach(entry => {
-      const comment = formatLocation(entry.loc);
-      lines.push(`// ${comment}`);
-      if (entry.isDefault) {
-        lines.push('// NOTE: Default export translated as free function stub.');
-      }
-      lines.push(`void ${entry.name}();`);
-      lines.push('');
-    });
-  }
-
-  if (others.length > 0) {
-    lines.push('// TODO: The following exports require manual translation:');
-    others.forEach(entry => {
-      lines.push(`// - ${entry.name} (${entry.kind}, ${formatLocation(entry.loc)})`);
-    });
-    lines.push('');
-  }
-
-  lines.push('} // namespace react');
-  lines.push('');
-  return lines.join('\n');
-}
-
-function buildSource(baseName, headerPath, sourceRelative, exportSummaries) {
-  const exports = exportSummaries.filter(item => item.kind === 'function');
-  const lines = [];
-  lines.push(`#include "${path.basename(headerPath)}"`);
-  lines.push('');
-  lines.push('// Auto-generated by scripts/translate-react.js');
-  lines.push(`// Source: react-main/${sourceRelative}`);
-  lines.push('');
-  lines.push('namespace react {');
-  lines.push('');
-
-  if (exports.length === 0) {
-    lines.push(`// TODO: Populate ${baseName}.cpp with translated logic.`);
-  } else {
-    exports.forEach(entry => {
-      const comment = formatLocation(entry.loc);
-      if (entry.isDefault) {
-        lines.push('// NOTE: Default export translated as free function stub.');
-      }
-      lines.push(`// ${comment}`);
-      lines.push(`void ${entry.name}() {`);
-      lines.push('  // TODO: Translate implementation.');
-      lines.push('}');
-      lines.push('');
-    });
-  }
-
-  lines.push('} // namespace react');
-  lines.push('');
-  return lines.join('\n');
-}
-
-function writeFileIfNeeded(targetPath, contents, options) {
-  const { dryRun, force, verbose } = options;
-  const exists = fs.existsSync(targetPath);
-  if (exists && !force) {
-    if (verbose) {
-      console.log(`➡️  skip existing ${path.relative(ROOT_DIR, targetPath)}`);
-    }
-    return;
-  }
-
-  if (dryRun) {
-    console.log(`--- ${path.relative(ROOT_DIR, targetPath)} ---`);
-    console.log(contents);
-    console.log('--- end ---');
-    return;
-  }
-
-  fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-  fs.writeFileSync(targetPath, contents);
-  if (verbose) {
-    console.log(`✅ wrote ${path.relative(ROOT_DIR, targetPath)}`);
-  }
-}
-
-function writeSnapshot(snapshotPath, payload, options) {
-  const { dryRun, force, verbose } = options;
-  const exists = fs.existsSync(snapshotPath);
-  if (exists && !force) {
-    if (verbose) {
-      console.log(`➡️  skip existing ${path.relative(ROOT_DIR, snapshotPath)}`);
-    }
-    return;
-  }
-  const json = JSON.stringify(payload, null, 2);
-  if (dryRun) {
-    console.log(`--- ${path.relative(ROOT_DIR, snapshotPath)} ---`);
-    console.log(json);
-    console.log('--- end ---');
-    return;
-  }
-  fs.mkdirSync(path.dirname(snapshotPath), { recursive: true });
-  fs.writeFileSync(snapshotPath, `${json}\n`);
-  if (verbose) {
-    console.log(`✅ wrote ${path.relative(ROOT_DIR, snapshotPath)}`);
-  }
+    functions: Array.from(dedup.values()).sort((a, b) => {
+      if (a.loc.start.line !== b.loc.start.line) return a.loc.start.line - b.loc.start.line;
+      return a.name.localeCompare(b.name);
+    }),
+  };
 }
 
 function main() {
   const args = parseArgs(process.argv);
 
-  if (!args.source) {
-    die('missing --source=<path to react-main file>');
+  if (args.help) {
+    process.stdout.write(
+      [
+        'Usage: node scripts/translate-react.js [--js-root reactjs] [--out docs/reactcpp/generated]',
+        '',
+        'Outputs:',
+        '  - reactjs-module-index.json',
+        '  - reactjs-function-map.json',
+        '',
+      ].join('\n'),
+    );
+    process.exit(0);
   }
 
-  if (!fs.existsSync(args.source)) {
-    die(`source file does not exist: ${args.source}`);
+  const repoRoot = process.cwd();
+  const jsRootAbs = path.resolve(repoRoot, args.jsRoot);
+  const outDirAbs = path.resolve(repoRoot, args.outDir);
+
+  if (!fs.existsSync(jsRootAbs)) {
+    console.error(`[translate-react] jsRoot not found: ${jsRootAbs}`);
+    process.exit(1);
   }
 
-  const { relative: sourceRelative } = ensureReactMainRelative(args.source);
-  const { destDir, headerPath, sourcePath, snapshotPath, baseName } = computeCppPaths(
-    sourceRelative,
-    args.outDir,
+  ensureDir(outDirAbs);
+
+  const allFiles = listFilesRecursive(jsRootAbs);
+  const jsFiles = allFiles.filter((p) => args.includePattern.test(p.replace(/\\/g, '/')));
+
+  const modules = [];
+  const functions = [];
+  const parseErrors = [];
+
+  for (const absPath of jsFiles) {
+    const relPath = path.relative(repoRoot, absPath).replace(/\\/g, '/');
+    let sourceText;
+    try {
+      sourceText = fs.readFileSync(absPath, 'utf8');
+    } catch (e) {
+      continue;
+    }
+
+    let parsed;
+    try {
+      parsed = parseJsModule(absPath, sourceText);
+    } catch (e) {
+      parseErrors.push({
+        file: relPath,
+        message: e && e.message ? e.message : String(e),
+      });
+      continue;
+    }
+
+    modules.push({
+      module: relPath,
+      exports: parsed.exports,
+      functionCount: parsed.functions.length,
+    });
+
+    for (const fn of parsed.functions) {
+      functions.push({
+        module: relPath,
+        name: fn.name,
+        kind: fn.kind,
+        exported: fn.exported,
+        js_loc: fn.loc,
+      });
+    }
+  }
+
+  modules.sort((a, b) => a.module.localeCompare(b.module));
+  functions.sort((a, b) => {
+    if (a.module !== b.module) return a.module.localeCompare(b.module);
+    if (a.js_loc.start.line !== b.js_loc.start.line) return a.js_loc.start.line - b.js_loc.start.line;
+    return a.name.localeCompare(b.name);
+  });
+
+  const moduleIndexPath = path.join(outDirAbs, 'reactjs-module-index.json');
+  const functionMapPath = path.join(outDirAbs, 'reactjs-function-map.json');
+
+  fs.writeFileSync(
+    moduleIndexPath,
+    JSON.stringify({generatedAt: new Date().toISOString(), modules, parseErrors}, null, 2),
+  );
+  fs.writeFileSync(
+    functionMapPath,
+    JSON.stringify({generatedAt: new Date().toISOString(), functions, parseErrors}, null, 2),
   );
 
-  const sourceCode = fs.readFileSync(args.source, 'utf8');
-  const { exports, notes } = parseReactSource(sourceCode, sourceRelative);
+  process.stdout.write(
+    `[translate-react] modules=${modules.length} functions=${functions.length} parseErrors=${parseErrors.length}\n` +
+      `[translate-react] wrote: ${path.relative(repoRoot, moduleIndexPath)}\n` +
+      `[translate-react] wrote: ${path.relative(repoRoot, functionMapPath)}\n`,
+  );
 
-  const headerContents = buildHeader(baseName, sourceRelative, exports);
-  const sourceContents = buildSource(baseName, headerPath, sourceRelative, exports);
-  const snapshotPayload = {
-    source: `react-main/${sourceRelative}`,
-    generatedAt: new Date().toISOString(),
-    exports: exports.map(entry => ({
-      name: entry.name,
-      kind: entry.kind,
-      isDefault: Boolean(entry.isDefault),
-      loc: entry.loc
-        ? {
-            start: { line: entry.loc.start.line, column: entry.loc.start.column },
-            end: { line: entry.loc.end.line, column: entry.loc.end.column },
-          }
-        : null,
-    })),
-    notes,
-  };
-
-  if (args.verbose) {
-    console.log('translate-react summary:', snapshotPayload);
-  }
-
-  writeFileIfNeeded(headerPath, headerContents, args);
-  writeFileIfNeeded(sourcePath, sourceContents, args);
-  writeSnapshot(snapshotPath, snapshotPayload, args);
-
-  if (!args.dryRun) {
-    console.log(`✨ Generated stubs for react-main/${sourceRelative}`);
-    console.log(`    → ${path.relative(ROOT_DIR, headerPath)}`);
-    console.log(`    → ${path.relative(ROOT_DIR, sourcePath)}`);
-    console.log(`    → ${path.relative(ROOT_DIR, snapshotPath)}`);
+  if (parseErrors.length > 0) {
+    process.exitCode = 2;
   }
 }
 

@@ -1,0 +1,270 @@
+# ReactJS ➜ C++ 转译进度记录（每次迭代必须追加一条）
+#
+# 约定：
+# - upstream_base: 指向本仓库 reactjs/ 的基准 commit（或 tag）
+# - scope: 本次迭代承诺的模块/函数范围（尽量小）
+# - parity_summary: 记录脚本输出的关键数字，便于趋势追踪
+# - tests: 记录跑了哪些测试（必要时必须补）
+#
+# 说明：此文件是“过程控制”而非最终报告；最终报告可由 CI 产物生成。
+
+iterations:
+	- id: 2025-12-26-01
+		date: 2025-12-26
+		upstream_base:
+			reactjs_commit: "(workspace reactjs snapshot)"
+		scope:
+			modules:
+				- reactjs/packages/react-reconciler/src/ReactInternalTypes.js
+			fields:
+				- type: Fiber
+					cpp_struct: FiberNode
+					cpp_file: packages/React/test/reconciler/FiberNode.h
+		work:
+			added_docs:
+				- docs/reactcpp/reactjs-cpp-transpilation.md
+				- docs/reactcpp/reactjs-cpp-transpilation-plan.md
+			added_tools:
+				- scripts/translate-react.js
+				- scripts/check-parity.js
+			modified_cpp_files:
+				- packages/React/test/reconciler/FiberNode.h
+		parity_summary:
+			fiber_missing_fields: 0
+			notes: "check-parity 支持 return->returnFiber 映射；Fiber 字段已 1:1 对齐（含 profiler/dev 字段）。"
+		tests:
+			ran:
+				- "npm run check-parity"
+			added_or_updated: []
+		notes: "建立自动生成模块/函数对照表（5204 functions）与 Fiber 字段 parity 门禁。"
+
+	- id: 2025-12-26-02
+		date: 2025-12-26
+		upstream_base:
+			reactjs_commit: "(workspace reactjs snapshot)"
+		scope:
+			modules:
+				- reactjs/packages/react-reconciler/src/ReactInternalTypes.js
+			fields:
+				- type: FiberRoot
+					cpp_struct: FiberRootNode
+					cpp_file: packages/React/test/reconciler/FiberRootNode.h
+		work:
+			added_cpp_files:
+				- packages/React/test/reconciler/FiberRootNode.h
+			modified_tools:
+				- scripts/check-parity.js
+		parity_summary:
+			fiber_missing_fields: 0
+			fiberRoot_missing_fields: 0
+			notes: "check-parity 支持 Flow 展开（...spread/交叉类型/别名），新增 FiberRoot 字段 parity 门禁。"
+		tests:
+			ran:
+				- "npm run check-parity"
+			added_or_updated: []
+		notes: "完成 FiberRoot 字段 1:1 基线；下一步可对 Dependencies/UpdateQueue 做同类校验。"
+
+	- id: 2025-12-26-03
+		date: 2025-12-26
+		upstream_base:
+			reactjs_commit: "(workspace reactjs snapshot)"
+		scope:
+			modules:
+				- reactjs/packages/react-reconciler/src/ReactInternalTypes.js
+			fields:
+				- type: ContextDependency
+					cpp_struct: ContextDependencyNode
+					cpp_file: packages/React/test/reconciler/ReactInternalTypesNodes.h
+				- type: Dependencies
+					cpp_struct: DependenciesNode
+					cpp_file: packages/React/test/reconciler/ReactInternalTypesNodes.h
+		work:
+			added_cpp_files:
+				- packages/React/test/reconciler/ReactInternalTypesNodes.h
+			modified_tools:
+				- scripts/check-parity.js
+		parity_summary:
+			fiber_missing_fields: 0
+			fiberRoot_missing_fields: 0
+			dependencies_missing_fields: 0
+			contextDependency_missing_fields: 0
+		tests:
+			ran:
+				- "npm run check-parity"
+			added_or_updated: []
+		notes: "将 ContextDependency/Dependencies 纳入字段 1:1 parity 门禁。"
+
+	- id: 2025-12-26-04
+		date: 2025-12-26
+		upstream_base:
+			reactjs_commit: "(workspace reactjs snapshot)"
+		scope:
+			modules:
+				- reactjs/packages/react-reconciler/src/ReactInternalTypes.js
+			fields:
+				- type: MemoCache
+					cpp_struct: MemoCacheNode
+					cpp_file: packages/React/test/reconciler/ReactInternalTypesNodes.h
+		work:
+			modified_cpp_files:
+				- packages/React/test/reconciler/ReactInternalTypesNodes.h
+			modified_tools:
+				- scripts/check-parity.js
+		parity_summary:
+			memoCache_missing_fields: 0
+		tests:
+			ran:
+				- "npm run check-parity"
+			added_or_updated: []
+		notes: "将 MemoCache 纳入字段 1:1 parity 门禁。"
+
+	- id: 2025-12-26-05
+		date: 2025-12-26
+		upstream_base:
+			reactjs_commit: "(workspace reactjs snapshot)"
+		scope:
+			modules:
+				- reactjs/packages/react-reconciler/src/ReactFiberHooks.js
+			fields:
+				- type: Update
+					cpp_struct: UpdateNode
+					cpp_file: packages/React/test/reconciler/ReactInternalTypesNodes.h
+				- type: UpdateQueue
+					cpp_struct: UpdateQueueNode
+					cpp_file: packages/React/test/reconciler/ReactInternalTypesNodes.h
+				- type: Hook
+					cpp_struct: HookNode
+					cpp_file: packages/React/test/reconciler/ReactInternalTypesNodes.h
+		work:
+			modified_cpp_files:
+				- packages/React/test/reconciler/ReactInternalTypesNodes.h
+			modified_tools:
+				- scripts/check-parity.js
+		parity_summary:
+			update_missing_fields: 0
+			updateQueue_missing_fields: 0
+			hook_missing_fields: 0
+		tests:
+			ran:
+				- "npm run check-parity"
+			added_or_updated: []
+		notes: "将 Hooks 关键结构（Hook/Update/UpdateQueue）纳入字段 1:1 parity 门禁。"
+
+	- id: 2025-12-26-06
+		date: 2025-12-26
+		upstream_base:
+			reactjs_commit: "(workspace reactjs snapshot)"
+		scope:
+			modules:
+				- reactjs/packages/react-reconciler/src/ReactFiberHooks.js
+			fields:
+				- type: EffectInstance
+					cpp_struct: EffectInstanceNode
+					cpp_file: packages/React/test/reconciler/ReactInternalTypesNodes.h
+				- type: Effect
+					cpp_struct: EffectNode
+					cpp_file: packages/React/test/reconciler/ReactInternalTypesNodes.h
+				- type: StoreInstance
+					cpp_struct: StoreInstanceNode
+					cpp_file: packages/React/test/reconciler/ReactInternalTypesNodes.h
+				- type: StoreConsistencyCheck
+					cpp_struct: StoreConsistencyCheckNode
+					cpp_file: packages/React/test/reconciler/ReactInternalTypesNodes.h
+				- type: FunctionComponentUpdateQueue
+					cpp_struct: FunctionComponentUpdateQueueNode
+					cpp_file: packages/React/test/reconciler/ReactInternalTypesNodes.h
+		work:
+			modified_cpp_files:
+				- packages/React/test/reconciler/ReactInternalTypesNodes.h
+			modified_tools:
+				- scripts/check-parity.js
+		parity_summary:
+			effectInstance_missing_fields: 0
+			effect_missing_fields: 0
+			storeInstance_missing_fields: 0
+			storeConsistencyCheck_missing_fields: 0
+			functionComponentUpdateQueue_missing_fields: 0
+		tests:
+			ran:
+				- "npm run check-parity"
+			added_or_updated: []
+		notes: "将 Hooks effect/store/updateQueue 相关类型纳入字段 1:1 parity 门禁。"
+
+	- id: 2025-12-26-07
+		date: 2025-12-26
+		upstream_base:
+			reactjs_commit: "(workspace reactjs snapshot)"
+		scope:
+			modules:
+				- reactjs/packages/react-reconciler/src/ReactFiberHooks.js
+			fields:
+				- type: EventFunctionPayload
+					cpp_struct: EventFunctionPayloadNode
+					cpp_file: packages/React/test/reconciler/ReactInternalTypesNodes.h
+				- type: EventFunctionPayload.ref
+					cpp_struct: EventFunctionPayloadRefNode
+					cpp_file: packages/React/test/reconciler/ReactInternalTypesNodes.h
+		work:
+			modified_cpp_files:
+				- packages/React/test/reconciler/ReactInternalTypesNodes.h
+			modified_tools:
+				- scripts/check-parity.js
+		parity_summary:
+			eventFunctionPayload_missing_fields: 0
+			eventFunctionPayloadRef_missing_fields: 0
+		tests:
+			ran:
+				- "npm run check-parity"
+			added_or_updated: []
+		notes: "将 EventFunctionPayload（含 ref 嵌套对象字段）纳入字段 1:1 parity 门禁。"
+
+	- id: 2025-12-26-08
+		date: 2025-12-26
+		upstream_base:
+			reactjs_commit: "(workspace reactjs snapshot)"
+		scope:
+			modules:
+				- reactjs/packages/react-reconciler/src/ReactFiberHooks.js
+			functions:
+				- module: reactjs/packages/react-reconciler/src/ReactFiberHooks.js
+					name: areHookInputsEqual
+					cpp_file: packages/React/transpiled/ReactFiberHooks_areHookInputsEqual.cpp
+		work:
+			added_tools:
+				- scripts/check-line-parity.js
+			added_files:
+				- docs/reactcpp/line-parity-targets.json
+				- packages/React/transpiled/ReactFiberHooks_areHookInputsEqual.cpp
+		parity_summary:
+			line_parity_targets: 1
+		tests:
+			ran:
+				- "npm run check-line-parity"
+			added_or_updated: []
+		notes: "建立行级 1:1 门禁（JS 函数 vs C++ 转译函数行数），并落地首个函数 areHookInputsEqual。"
+
+# 示例（提交时请删除示例或保留但不要修改语义）：
+# iterations:
+#   - id: 2025-12-26-01
+#     date: 2025-12-26
+#     upstream_base:
+#       reactjs_commit: "<git sha>"
+#     scope:
+#       modules:
+#         - reactjs/packages/react-reconciler/src/ReactInternalTypes.js
+#       functions:
+#         - module: reactjs/packages/react-reconciler/src/ReactFiberLane.js
+#           name: getHighestPriorityLanes
+#     work:
+#       added_cpp_files: []
+#       modified_cpp_files: []
+#     parity_summary:
+#       missing_fields:
+#         Fiber: 12
+#       missing_functions_total: 120
+#     tests:
+#       ran:
+#         - "ctest -R react_cpp_runtime_tests"
+#       added_or_updated:
+#         - packages/React/test/ReactFiberLaneTests.cpp
+#     notes: "补齐 Fiber 的 lanes/flags 等字段，新增 lane 选择测试。"

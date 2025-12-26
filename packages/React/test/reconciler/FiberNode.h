@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace react {
@@ -32,9 +33,23 @@ struct FiberNode {
       memoizedProps(facebook::jsi::Value::undefined()),
       updateQueue(nullptr),
       memoizedState(facebook::jsi::Value::undefined()),
+      dependencies(nullptr),
+      mode(0),
       flags(NoFlags),
       subtreeFlags(NoFlags),
+      lanes(0),
+      childLanes(0),
       alternate(nullptr),
+      actualDuration(std::nullopt),
+      actualStartTime(std::nullopt),
+      selfBaseDuration(std::nullopt),
+      treeBaseDuration(std::nullopt),
+      _debugInfo(facebook::jsi::Value::undefined()),
+      _debugOwner(facebook::jsi::Value::undefined()),
+      _debugStack(facebook::jsi::Value::undefined()),
+      _debugTask(facebook::jsi::Value::undefined()),
+      _debugNeedsRemount(false),
+      _debugHookTypes(facebook::jsi::Value::undefined()),
       updatePayload(facebook::jsi::Value::undefined()) {}
 
   WorkTag tag;
@@ -56,11 +71,36 @@ struct FiberNode {
   void* updateQueue;
   facebook::jsi::Value memoizedState;
 
+  // Matches ReactJS `dependencies: Dependencies | null`
+  void* dependencies;
+
+  // Matches ReactJS `mode: TypeOfMode`
+  std::uint32_t mode;
+
   FiberFlags flags;
   FiberFlags subtreeFlags;
   std::vector<std::shared_ptr<FiberNode>> deletions;
 
+  // Matches ReactJS `lanes: Lanes` / `childLanes: Lanes`
+  std::uint32_t lanes;
+  std::uint32_t childLanes;
+
   std::shared_ptr<FiberNode> alternate;
+
+  // Profiler fields (optional in ReactJS types)
+  std::optional<double> actualDuration;
+  std::optional<double> actualStartTime;
+  std::optional<double> selfBaseDuration;
+  std::optional<double> treeBaseDuration;
+
+  // DEV-only fields in ReactJS types (kept unconditionally here to satisfy 1:1 field parity)
+  facebook::jsi::Value _debugInfo;
+  facebook::jsi::Value _debugOwner;
+  facebook::jsi::Value _debugStack;
+  facebook::jsi::Value _debugTask;
+  bool _debugNeedsRemount;
+  facebook::jsi::Value _debugHookTypes;
+
   facebook::jsi::Value updatePayload;
 };
 
