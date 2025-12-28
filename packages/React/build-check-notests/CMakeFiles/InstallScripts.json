@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/cmake_install.cmake",
+		"/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/jsi/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

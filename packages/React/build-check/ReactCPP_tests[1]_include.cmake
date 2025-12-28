@@ -1,0 +1,5 @@
+if(EXISTS "/Users/aniwei/Desktop/ReactCPP/packages/React/build-check/ReactCPP_tests[1]_tests.cmake")
+  include("/Users/aniwei/Desktop/ReactCPP/packages/React/build-check/ReactCPP_tests[1]_tests.cmake")
+else()
+  add_test(ReactCPP_tests_NOT_BUILT ReactCPP_tests_NOT_BUILT)
+endif()

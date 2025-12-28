@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/jsi",
+  "command": "/usr/bin/c++ -DDEV=1 -I/Users/aniwei/Desktop/ReactCPP/packages/jsi/jsi/.. -g -std=c++17 -arch arm64 -Wall -Wextra -Wpedantic -g -O0 -Wno-non-virtual-dtor -o CMakeFiles/jsi.dir/jsi.cpp.o -c /Users/aniwei/Desktop/ReactCPP/packages/jsi/jsi/jsi.cpp",
+  "file": "/Users/aniwei/Desktop/ReactCPP/packages/jsi/jsi/jsi.cpp",
+  "output": "jsi/CMakeFiles/jsi.dir/jsi.cpp.o"
+}
+]

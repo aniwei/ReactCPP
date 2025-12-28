@@ -1,0 +1,13 @@
+/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/CMakeFiles/edit_cache.dir
+/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/CMakeFiles/rebuild_cache.dir
+/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/CMakeFiles/list_install_components.dir
+/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/CMakeFiles/install.dir
+/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/CMakeFiles/install/local.dir
+/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/CMakeFiles/install/strip.dir
+/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/jsi/CMakeFiles/jsi.dir
+/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/jsi/CMakeFiles/edit_cache.dir
+/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/jsi/CMakeFiles/rebuild_cache.dir
+/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/jsi/CMakeFiles/list_install_components.dir
+/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/jsi/CMakeFiles/install.dir
+/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/jsi/CMakeFiles/install/local.dir
+/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/jsi/CMakeFiles/install/strip.dir

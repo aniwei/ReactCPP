@@ -1,0 +1,2 @@
+/usr/bin/ar qc libjsi.a CMakeFiles/jsi.dir/jsi.cpp.o
+/usr/bin/ranlib libjsi.a
