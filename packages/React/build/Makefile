@@ -65,16 +65,6 @@ CMAKE_BINARY_DIR = /Users/aniwei/Desktop/ReactCPP/packages/React/build
 #=============================================================================
 # Targets provided globally by CMake.
 
-# Special rule for the target test
-test:
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/opt/homebrew/bin/ctest $(ARGS)
-.PHONY : test
-
-# Special rule for the target test
-test/fast: test
-.PHONY : test/fast
-
 # Special rule for the target edit_cache
 edit_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake cache editor..."
@@ -97,7 +87,7 @@ rebuild_cache/fast: rebuild_cache
 
 # Special rule for the target list_install_components
 list_install_components:
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Available install components are: \"Unspecified\" \"gmock\" \"gtest\""
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Available install components are: \"Unspecified\""
 .PHONY : list_install_components
 
 # Special rule for the target list_install_components
@@ -168,34 +158,22 @@ preinstall/fast:
 
 # clear depends
 depend:
+	$(CMAKE_COMMAND) -P /Users/aniwei/Desktop/ReactCPP/packages/React/build/CMakeFiles/VerifyGlobs.cmake
 	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named ReactCPP_tests
+# Target rules for targets named ReactCPP
 
 # Build rule for target.
-ReactCPP_tests: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ReactCPP_tests
-.PHONY : ReactCPP_tests
+ReactCPP: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ReactCPP
+.PHONY : ReactCPP
 
 # fast build rule for target.
-ReactCPP_tests/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/build
-.PHONY : ReactCPP_tests/fast
-
-#=============================================================================
-# Target rules for targets named run_tests
-
-# Build rule for target.
-run_tests: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 run_tests
-.PHONY : run_tests
-
-# fast build rule for target.
-run_tests/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/run_tests.dir/build.make CMakeFiles/run_tests.dir/build
-.PHONY : run_tests/fast
+ReactCPP/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/build
+.PHONY : ReactCPP/fast
 
 #=============================================================================
 # Target rules for targets named jsi
@@ -210,345 +188,269 @@ jsi/fast:
 	$(MAKE) $(MAKESILENT) -f jsi/CMakeFiles/jsi.dir/build.make jsi/CMakeFiles/jsi.dir/build
 .PHONY : jsi/fast
 
-#=============================================================================
-# Target rules for targets named gmock
-
-# Build rule for target.
-gmock: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gmock
-.PHONY : gmock
-
-# fast build rule for target.
-gmock/fast:
-	$(MAKE) $(MAKESILENT) -f _deps/googletest-build/googlemock/CMakeFiles/gmock.dir/build.make _deps/googletest-build/googlemock/CMakeFiles/gmock.dir/build
-.PHONY : gmock/fast
-
-#=============================================================================
-# Target rules for targets named gmock_main
-
-# Build rule for target.
-gmock_main: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gmock_main
-.PHONY : gmock_main
-
-# fast build rule for target.
-gmock_main/fast:
-	$(MAKE) $(MAKESILENT) -f _deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/build.make _deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/build
-.PHONY : gmock_main/fast
-
-#=============================================================================
-# Target rules for targets named gtest
-
-# Build rule for target.
-gtest: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gtest
-.PHONY : gtest
-
-# fast build rule for target.
-gtest/fast:
-	$(MAKE) $(MAKESILENT) -f _deps/googletest-build/googletest/CMakeFiles/gtest.dir/build.make _deps/googletest-build/googletest/CMakeFiles/gtest.dir/build
-.PHONY : gtest/fast
-
-#=============================================================================
-# Target rules for targets named gtest_main
-
-# Build rule for target.
-gtest_main: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gtest_main
-.PHONY : gtest_main
-
-# fast build rule for target.
-gtest_main/fast:
-	$(MAKE) $(MAKESILENT) -f _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/build.make _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/build
-.PHONY : gtest_main/fast
-
-src/reconciler/__tests__/ReactBeginCompleteWorkTests.o: src/reconciler/__tests__/ReactBeginCompleteWorkTests.cpp.o
-.PHONY : src/reconciler/__tests__/ReactBeginCompleteWorkTests.o
+src/reconciler/ReactChildFiber.o: src/reconciler/ReactChildFiber.cpp.o
+.PHONY : src/reconciler/ReactChildFiber.o
 
 # target to build an object file
-src/reconciler/__tests__/ReactBeginCompleteWorkTests.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactBeginCompleteWorkTests.cpp.o
-.PHONY : src/reconciler/__tests__/ReactBeginCompleteWorkTests.cpp.o
+src/reconciler/ReactChildFiber.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactChildFiber.cpp.o
+.PHONY : src/reconciler/ReactChildFiber.cpp.o
 
-src/reconciler/__tests__/ReactBeginCompleteWorkTests.i: src/reconciler/__tests__/ReactBeginCompleteWorkTests.cpp.i
-.PHONY : src/reconciler/__tests__/ReactBeginCompleteWorkTests.i
+src/reconciler/ReactChildFiber.i: src/reconciler/ReactChildFiber.cpp.i
+.PHONY : src/reconciler/ReactChildFiber.i
 
 # target to preprocess a source file
-src/reconciler/__tests__/ReactBeginCompleteWorkTests.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactBeginCompleteWorkTests.cpp.i
-.PHONY : src/reconciler/__tests__/ReactBeginCompleteWorkTests.cpp.i
+src/reconciler/ReactChildFiber.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactChildFiber.cpp.i
+.PHONY : src/reconciler/ReactChildFiber.cpp.i
 
-src/reconciler/__tests__/ReactBeginCompleteWorkTests.s: src/reconciler/__tests__/ReactBeginCompleteWorkTests.cpp.s
-.PHONY : src/reconciler/__tests__/ReactBeginCompleteWorkTests.s
+src/reconciler/ReactChildFiber.s: src/reconciler/ReactChildFiber.cpp.s
+.PHONY : src/reconciler/ReactChildFiber.s
 
 # target to generate assembly for a file
-src/reconciler/__tests__/ReactBeginCompleteWorkTests.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactBeginCompleteWorkTests.cpp.s
-.PHONY : src/reconciler/__tests__/ReactBeginCompleteWorkTests.cpp.s
+src/reconciler/ReactChildFiber.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactChildFiber.cpp.s
+.PHONY : src/reconciler/ReactChildFiber.cpp.s
 
-src/reconciler/__tests__/ReactChildFiberTests.o: src/reconciler/__tests__/ReactChildFiberTests.cpp.o
-.PHONY : src/reconciler/__tests__/ReactChildFiberTests.o
+src/reconciler/ReactFiber.o: src/reconciler/ReactFiber.cpp.o
+.PHONY : src/reconciler/ReactFiber.o
 
 # target to build an object file
-src/reconciler/__tests__/ReactChildFiberTests.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactChildFiberTests.cpp.o
-.PHONY : src/reconciler/__tests__/ReactChildFiberTests.cpp.o
+src/reconciler/ReactFiber.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiber.cpp.o
+.PHONY : src/reconciler/ReactFiber.cpp.o
 
-src/reconciler/__tests__/ReactChildFiberTests.i: src/reconciler/__tests__/ReactChildFiberTests.cpp.i
-.PHONY : src/reconciler/__tests__/ReactChildFiberTests.i
+src/reconciler/ReactFiber.i: src/reconciler/ReactFiber.cpp.i
+.PHONY : src/reconciler/ReactFiber.i
 
 # target to preprocess a source file
-src/reconciler/__tests__/ReactChildFiberTests.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactChildFiberTests.cpp.i
-.PHONY : src/reconciler/__tests__/ReactChildFiberTests.cpp.i
+src/reconciler/ReactFiber.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiber.cpp.i
+.PHONY : src/reconciler/ReactFiber.cpp.i
 
-src/reconciler/__tests__/ReactChildFiberTests.s: src/reconciler/__tests__/ReactChildFiberTests.cpp.s
-.PHONY : src/reconciler/__tests__/ReactChildFiberTests.s
+src/reconciler/ReactFiber.s: src/reconciler/ReactFiber.cpp.s
+.PHONY : src/reconciler/ReactFiber.s
 
 # target to generate assembly for a file
-src/reconciler/__tests__/ReactChildFiberTests.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactChildFiberTests.cpp.s
-.PHONY : src/reconciler/__tests__/ReactChildFiberTests.cpp.s
+src/reconciler/ReactFiber.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiber.cpp.s
+.PHONY : src/reconciler/ReactFiber.cpp.s
 
-src/reconciler/__tests__/ReactCommitTests.o: src/reconciler/__tests__/ReactCommitTests.cpp.o
-.PHONY : src/reconciler/__tests__/ReactCommitTests.o
+src/reconciler/ReactFiberBeginWork.o: src/reconciler/ReactFiberBeginWork.cpp.o
+.PHONY : src/reconciler/ReactFiberBeginWork.o
 
 # target to build an object file
-src/reconciler/__tests__/ReactCommitTests.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactCommitTests.cpp.o
-.PHONY : src/reconciler/__tests__/ReactCommitTests.cpp.o
+src/reconciler/ReactFiberBeginWork.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberBeginWork.cpp.o
+.PHONY : src/reconciler/ReactFiberBeginWork.cpp.o
 
-src/reconciler/__tests__/ReactCommitTests.i: src/reconciler/__tests__/ReactCommitTests.cpp.i
-.PHONY : src/reconciler/__tests__/ReactCommitTests.i
+src/reconciler/ReactFiberBeginWork.i: src/reconciler/ReactFiberBeginWork.cpp.i
+.PHONY : src/reconciler/ReactFiberBeginWork.i
 
 # target to preprocess a source file
-src/reconciler/__tests__/ReactCommitTests.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactCommitTests.cpp.i
-.PHONY : src/reconciler/__tests__/ReactCommitTests.cpp.i
+src/reconciler/ReactFiberBeginWork.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberBeginWork.cpp.i
+.PHONY : src/reconciler/ReactFiberBeginWork.cpp.i
 
-src/reconciler/__tests__/ReactCommitTests.s: src/reconciler/__tests__/ReactCommitTests.cpp.s
-.PHONY : src/reconciler/__tests__/ReactCommitTests.s
+src/reconciler/ReactFiberBeginWork.s: src/reconciler/ReactFiberBeginWork.cpp.s
+.PHONY : src/reconciler/ReactFiberBeginWork.s
 
 # target to generate assembly for a file
-src/reconciler/__tests__/ReactCommitTests.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactCommitTests.cpp.s
-.PHONY : src/reconciler/__tests__/ReactCommitTests.cpp.s
+src/reconciler/ReactFiberBeginWork.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberBeginWork.cpp.s
+.PHONY : src/reconciler/ReactFiberBeginWork.cpp.s
 
-src/reconciler/__tests__/ReactErrorHandlingTests.o: src/reconciler/__tests__/ReactErrorHandlingTests.cpp.o
-.PHONY : src/reconciler/__tests__/ReactErrorHandlingTests.o
+src/reconciler/ReactFiberClassUpdateQueue.o: src/reconciler/ReactFiberClassUpdateQueue.cpp.o
+.PHONY : src/reconciler/ReactFiberClassUpdateQueue.o
 
 # target to build an object file
-src/reconciler/__tests__/ReactErrorHandlingTests.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactErrorHandlingTests.cpp.o
-.PHONY : src/reconciler/__tests__/ReactErrorHandlingTests.cpp.o
+src/reconciler/ReactFiberClassUpdateQueue.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberClassUpdateQueue.cpp.o
+.PHONY : src/reconciler/ReactFiberClassUpdateQueue.cpp.o
 
-src/reconciler/__tests__/ReactErrorHandlingTests.i: src/reconciler/__tests__/ReactErrorHandlingTests.cpp.i
-.PHONY : src/reconciler/__tests__/ReactErrorHandlingTests.i
+src/reconciler/ReactFiberClassUpdateQueue.i: src/reconciler/ReactFiberClassUpdateQueue.cpp.i
+.PHONY : src/reconciler/ReactFiberClassUpdateQueue.i
 
 # target to preprocess a source file
-src/reconciler/__tests__/ReactErrorHandlingTests.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactErrorHandlingTests.cpp.i
-.PHONY : src/reconciler/__tests__/ReactErrorHandlingTests.cpp.i
+src/reconciler/ReactFiberClassUpdateQueue.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberClassUpdateQueue.cpp.i
+.PHONY : src/reconciler/ReactFiberClassUpdateQueue.cpp.i
 
-src/reconciler/__tests__/ReactErrorHandlingTests.s: src/reconciler/__tests__/ReactErrorHandlingTests.cpp.s
-.PHONY : src/reconciler/__tests__/ReactErrorHandlingTests.s
+src/reconciler/ReactFiberClassUpdateQueue.s: src/reconciler/ReactFiberClassUpdateQueue.cpp.s
+.PHONY : src/reconciler/ReactFiberClassUpdateQueue.s
 
 # target to generate assembly for a file
-src/reconciler/__tests__/ReactErrorHandlingTests.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactErrorHandlingTests.cpp.s
-.PHONY : src/reconciler/__tests__/ReactErrorHandlingTests.cpp.s
+src/reconciler/ReactFiberClassUpdateQueue.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberClassUpdateQueue.cpp.s
+.PHONY : src/reconciler/ReactFiberClassUpdateQueue.cpp.s
 
-src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.o: src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.cpp.o
-.PHONY : src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.o
+src/reconciler/ReactFiberCommitEffects.o: src/reconciler/ReactFiberCommitEffects.cpp.o
+.PHONY : src/reconciler/ReactFiberCommitEffects.o
 
 # target to build an object file
-src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.cpp.o
-.PHONY : src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.cpp.o
+src/reconciler/ReactFiberCommitEffects.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberCommitEffects.cpp.o
+.PHONY : src/reconciler/ReactFiberCommitEffects.cpp.o
 
-src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.i: src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.cpp.i
-.PHONY : src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.i
+src/reconciler/ReactFiberCommitEffects.i: src/reconciler/ReactFiberCommitEffects.cpp.i
+.PHONY : src/reconciler/ReactFiberCommitEffects.i
 
 # target to preprocess a source file
-src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.cpp.i
-.PHONY : src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.cpp.i
+src/reconciler/ReactFiberCommitEffects.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberCommitEffects.cpp.i
+.PHONY : src/reconciler/ReactFiberCommitEffects.cpp.i
 
-src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.s: src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.cpp.s
-.PHONY : src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.s
+src/reconciler/ReactFiberCommitEffects.s: src/reconciler/ReactFiberCommitEffects.cpp.s
+.PHONY : src/reconciler/ReactFiberCommitEffects.s
 
 # target to generate assembly for a file
-src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.cpp.s
-.PHONY : src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.cpp.s
+src/reconciler/ReactFiberCommitEffects.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberCommitEffects.cpp.s
+.PHONY : src/reconciler/ReactFiberCommitEffects.cpp.s
 
-src/reconciler/__tests__/ReactFiberTests.o: src/reconciler/__tests__/ReactFiberTests.cpp.o
-.PHONY : src/reconciler/__tests__/ReactFiberTests.o
+src/reconciler/ReactFiberCommitWork.o: src/reconciler/ReactFiberCommitWork.cpp.o
+.PHONY : src/reconciler/ReactFiberCommitWork.o
 
 # target to build an object file
-src/reconciler/__tests__/ReactFiberTests.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactFiberTests.cpp.o
-.PHONY : src/reconciler/__tests__/ReactFiberTests.cpp.o
+src/reconciler/ReactFiberCommitWork.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberCommitWork.cpp.o
+.PHONY : src/reconciler/ReactFiberCommitWork.cpp.o
 
-src/reconciler/__tests__/ReactFiberTests.i: src/reconciler/__tests__/ReactFiberTests.cpp.i
-.PHONY : src/reconciler/__tests__/ReactFiberTests.i
+src/reconciler/ReactFiberCommitWork.i: src/reconciler/ReactFiberCommitWork.cpp.i
+.PHONY : src/reconciler/ReactFiberCommitWork.i
 
 # target to preprocess a source file
-src/reconciler/__tests__/ReactFiberTests.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactFiberTests.cpp.i
-.PHONY : src/reconciler/__tests__/ReactFiberTests.cpp.i
+src/reconciler/ReactFiberCommitWork.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberCommitWork.cpp.i
+.PHONY : src/reconciler/ReactFiberCommitWork.cpp.i
 
-src/reconciler/__tests__/ReactFiberTests.s: src/reconciler/__tests__/ReactFiberTests.cpp.s
-.PHONY : src/reconciler/__tests__/ReactFiberTests.s
+src/reconciler/ReactFiberCommitWork.s: src/reconciler/ReactFiberCommitWork.cpp.s
+.PHONY : src/reconciler/ReactFiberCommitWork.s
 
 # target to generate assembly for a file
-src/reconciler/__tests__/ReactFiberTests.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactFiberTests.cpp.s
-.PHONY : src/reconciler/__tests__/ReactFiberTests.cpp.s
+src/reconciler/ReactFiberCommitWork.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberCommitWork.cpp.s
+.PHONY : src/reconciler/ReactFiberCommitWork.cpp.s
 
-src/reconciler/__tests__/ReactSuspenseTests.o: src/reconciler/__tests__/ReactSuspenseTests.cpp.o
-.PHONY : src/reconciler/__tests__/ReactSuspenseTests.o
+src/reconciler/ReactFiberCompleteWork.o: src/reconciler/ReactFiberCompleteWork.cpp.o
+.PHONY : src/reconciler/ReactFiberCompleteWork.o
 
 # target to build an object file
-src/reconciler/__tests__/ReactSuspenseTests.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactSuspenseTests.cpp.o
-.PHONY : src/reconciler/__tests__/ReactSuspenseTests.cpp.o
+src/reconciler/ReactFiberCompleteWork.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberCompleteWork.cpp.o
+.PHONY : src/reconciler/ReactFiberCompleteWork.cpp.o
 
-src/reconciler/__tests__/ReactSuspenseTests.i: src/reconciler/__tests__/ReactSuspenseTests.cpp.i
-.PHONY : src/reconciler/__tests__/ReactSuspenseTests.i
+src/reconciler/ReactFiberCompleteWork.i: src/reconciler/ReactFiberCompleteWork.cpp.i
+.PHONY : src/reconciler/ReactFiberCompleteWork.i
 
 # target to preprocess a source file
-src/reconciler/__tests__/ReactSuspenseTests.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactSuspenseTests.cpp.i
-.PHONY : src/reconciler/__tests__/ReactSuspenseTests.cpp.i
+src/reconciler/ReactFiberCompleteWork.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberCompleteWork.cpp.i
+.PHONY : src/reconciler/ReactFiberCompleteWork.cpp.i
 
-src/reconciler/__tests__/ReactSuspenseTests.s: src/reconciler/__tests__/ReactSuspenseTests.cpp.s
-.PHONY : src/reconciler/__tests__/ReactSuspenseTests.s
+src/reconciler/ReactFiberCompleteWork.s: src/reconciler/ReactFiberCompleteWork.cpp.s
+.PHONY : src/reconciler/ReactFiberCompleteWork.s
 
 # target to generate assembly for a file
-src/reconciler/__tests__/ReactSuspenseTests.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactSuspenseTests.cpp.s
-.PHONY : src/reconciler/__tests__/ReactSuspenseTests.cpp.s
+src/reconciler/ReactFiberCompleteWork.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberCompleteWork.cpp.s
+.PHONY : src/reconciler/ReactFiberCompleteWork.cpp.s
 
-src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.o: src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.cpp.o
-.PHONY : src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.o
+src/reconciler/ReactFiberHooks.o: src/reconciler/ReactFiberHooks.cpp.o
+.PHONY : src/reconciler/ReactFiberHooks.o
 
 # target to build an object file
-src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.cpp.o
-.PHONY : src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.cpp.o
+src/reconciler/ReactFiberHooks.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberHooks.cpp.o
+.PHONY : src/reconciler/ReactFiberHooks.cpp.o
 
-src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.i: src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.cpp.i
-.PHONY : src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.i
+src/reconciler/ReactFiberHooks.i: src/reconciler/ReactFiberHooks.cpp.i
+.PHONY : src/reconciler/ReactFiberHooks.i
 
 # target to preprocess a source file
-src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.cpp.i
-.PHONY : src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.cpp.i
+src/reconciler/ReactFiberHooks.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberHooks.cpp.i
+.PHONY : src/reconciler/ReactFiberHooks.cpp.i
 
-src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.s: src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.cpp.s
-.PHONY : src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.s
+src/reconciler/ReactFiberHooks.s: src/reconciler/ReactFiberHooks.cpp.s
+.PHONY : src/reconciler/ReactFiberHooks.s
 
 # target to generate assembly for a file
-src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.cpp.s
-.PHONY : src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.cpp.s
+src/reconciler/ReactFiberHooks.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberHooks.cpp.s
+.PHONY : src/reconciler/ReactFiberHooks.cpp.s
 
-src/scheduler/__tests__/SchedulerTests.o: src/scheduler/__tests__/SchedulerTests.cpp.o
-.PHONY : src/scheduler/__tests__/SchedulerTests.o
+src/reconciler/ReactFiberRoot.o: src/reconciler/ReactFiberRoot.cpp.o
+.PHONY : src/reconciler/ReactFiberRoot.o
 
 # target to build an object file
-src/scheduler/__tests__/SchedulerTests.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/scheduler/__tests__/SchedulerTests.cpp.o
-.PHONY : src/scheduler/__tests__/SchedulerTests.cpp.o
+src/reconciler/ReactFiberRoot.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberRoot.cpp.o
+.PHONY : src/reconciler/ReactFiberRoot.cpp.o
 
-src/scheduler/__tests__/SchedulerTests.i: src/scheduler/__tests__/SchedulerTests.cpp.i
-.PHONY : src/scheduler/__tests__/SchedulerTests.i
+src/reconciler/ReactFiberRoot.i: src/reconciler/ReactFiberRoot.cpp.i
+.PHONY : src/reconciler/ReactFiberRoot.i
 
 # target to preprocess a source file
-src/scheduler/__tests__/SchedulerTests.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/scheduler/__tests__/SchedulerTests.cpp.i
-.PHONY : src/scheduler/__tests__/SchedulerTests.cpp.i
+src/reconciler/ReactFiberRoot.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberRoot.cpp.i
+.PHONY : src/reconciler/ReactFiberRoot.cpp.i
 
-src/scheduler/__tests__/SchedulerTests.s: src/scheduler/__tests__/SchedulerTests.cpp.s
-.PHONY : src/scheduler/__tests__/SchedulerTests.s
+src/reconciler/ReactFiberRoot.s: src/reconciler/ReactFiberRoot.cpp.s
+.PHONY : src/reconciler/ReactFiberRoot.s
 
 # target to generate assembly for a file
-src/scheduler/__tests__/SchedulerTests.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/scheduler/__tests__/SchedulerTests.cpp.s
-.PHONY : src/scheduler/__tests__/SchedulerTests.cpp.s
+src/reconciler/ReactFiberRoot.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberRoot.cpp.s
+.PHONY : src/reconciler/ReactFiberRoot.cpp.s
 
-src/shared/__tests__/ReactFeatureFlagsTests.o: src/shared/__tests__/ReactFeatureFlagsTests.cpp.o
-.PHONY : src/shared/__tests__/ReactFeatureFlagsTests.o
+src/reconciler/ReactFiberThrow.o: src/reconciler/ReactFiberThrow.cpp.o
+.PHONY : src/reconciler/ReactFiberThrow.o
 
 # target to build an object file
-src/shared/__tests__/ReactFeatureFlagsTests.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/shared/__tests__/ReactFeatureFlagsTests.cpp.o
-.PHONY : src/shared/__tests__/ReactFeatureFlagsTests.cpp.o
+src/reconciler/ReactFiberThrow.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberThrow.cpp.o
+.PHONY : src/reconciler/ReactFiberThrow.cpp.o
 
-src/shared/__tests__/ReactFeatureFlagsTests.i: src/shared/__tests__/ReactFeatureFlagsTests.cpp.i
-.PHONY : src/shared/__tests__/ReactFeatureFlagsTests.i
+src/reconciler/ReactFiberThrow.i: src/reconciler/ReactFiberThrow.cpp.i
+.PHONY : src/reconciler/ReactFiberThrow.i
 
 # target to preprocess a source file
-src/shared/__tests__/ReactFeatureFlagsTests.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/shared/__tests__/ReactFeatureFlagsTests.cpp.i
-.PHONY : src/shared/__tests__/ReactFeatureFlagsTests.cpp.i
+src/reconciler/ReactFiberThrow.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberThrow.cpp.i
+.PHONY : src/reconciler/ReactFiberThrow.cpp.i
 
-src/shared/__tests__/ReactFeatureFlagsTests.s: src/shared/__tests__/ReactFeatureFlagsTests.cpp.s
-.PHONY : src/shared/__tests__/ReactFeatureFlagsTests.s
+src/reconciler/ReactFiberThrow.s: src/reconciler/ReactFiberThrow.cpp.s
+.PHONY : src/reconciler/ReactFiberThrow.s
 
 # target to generate assembly for a file
-src/shared/__tests__/ReactFeatureFlagsTests.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/src/shared/__tests__/ReactFeatureFlagsTests.cpp.s
-.PHONY : src/shared/__tests__/ReactFeatureFlagsTests.cpp.s
+src/reconciler/ReactFiberThrow.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberThrow.cpp.s
+.PHONY : src/reconciler/ReactFiberThrow.cpp.s
 
-tests/ReactFiberWorkLoopTests.o: tests/ReactFiberWorkLoopTests.cpp.o
-.PHONY : tests/ReactFiberWorkLoopTests.o
+src/reconciler/ReactFiberWorkLoop.o: src/reconciler/ReactFiberWorkLoop.cpp.o
+.PHONY : src/reconciler/ReactFiberWorkLoop.o
 
 # target to build an object file
-tests/ReactFiberWorkLoopTests.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/tests/ReactFiberWorkLoopTests.cpp.o
-.PHONY : tests/ReactFiberWorkLoopTests.cpp.o
+src/reconciler/ReactFiberWorkLoop.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberWorkLoop.cpp.o
+.PHONY : src/reconciler/ReactFiberWorkLoop.cpp.o
 
-tests/ReactFiberWorkLoopTests.i: tests/ReactFiberWorkLoopTests.cpp.i
-.PHONY : tests/ReactFiberWorkLoopTests.i
-
-# target to preprocess a source file
-tests/ReactFiberWorkLoopTests.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/tests/ReactFiberWorkLoopTests.cpp.i
-.PHONY : tests/ReactFiberWorkLoopTests.cpp.i
-
-tests/ReactFiberWorkLoopTests.s: tests/ReactFiberWorkLoopTests.cpp.s
-.PHONY : tests/ReactFiberWorkLoopTests.s
-
-# target to generate assembly for a file
-tests/ReactFiberWorkLoopTests.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/tests/ReactFiberWorkLoopTests.cpp.s
-.PHONY : tests/ReactFiberWorkLoopTests.cpp.s
-
-tests/ReactHooksTests.o: tests/ReactHooksTests.cpp.o
-.PHONY : tests/ReactHooksTests.o
-
-# target to build an object file
-tests/ReactHooksTests.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/tests/ReactHooksTests.cpp.o
-.PHONY : tests/ReactHooksTests.cpp.o
-
-tests/ReactHooksTests.i: tests/ReactHooksTests.cpp.i
-.PHONY : tests/ReactHooksTests.i
+src/reconciler/ReactFiberWorkLoop.i: src/reconciler/ReactFiberWorkLoop.cpp.i
+.PHONY : src/reconciler/ReactFiberWorkLoop.i
 
 # target to preprocess a source file
-tests/ReactHooksTests.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/tests/ReactHooksTests.cpp.i
-.PHONY : tests/ReactHooksTests.cpp.i
+src/reconciler/ReactFiberWorkLoop.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberWorkLoop.cpp.i
+.PHONY : src/reconciler/ReactFiberWorkLoop.cpp.i
 
-tests/ReactHooksTests.s: tests/ReactHooksTests.cpp.s
-.PHONY : tests/ReactHooksTests.s
+src/reconciler/ReactFiberWorkLoop.s: src/reconciler/ReactFiberWorkLoop.cpp.s
+.PHONY : src/reconciler/ReactFiberWorkLoop.s
 
 # target to generate assembly for a file
-tests/ReactHooksTests.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP_tests.dir/build.make CMakeFiles/ReactCPP_tests.dir/tests/ReactHooksTests.cpp.s
-.PHONY : tests/ReactHooksTests.cpp.s
+src/reconciler/ReactFiberWorkLoop.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiberWorkLoop.cpp.s
+.PHONY : src/reconciler/ReactFiberWorkLoop.cpp.s
 
 # Help Target
 help:
@@ -562,50 +464,41 @@ help:
 	@echo "... install/strip"
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
-	@echo "... test"
-	@echo "... run_tests"
-	@echo "... ReactCPP_tests"
-	@echo "... gmock"
-	@echo "... gmock_main"
-	@echo "... gtest"
-	@echo "... gtest_main"
+	@echo "... ReactCPP"
 	@echo "... jsi"
-	@echo "... src/reconciler/__tests__/ReactBeginCompleteWorkTests.o"
-	@echo "... src/reconciler/__tests__/ReactBeginCompleteWorkTests.i"
-	@echo "... src/reconciler/__tests__/ReactBeginCompleteWorkTests.s"
-	@echo "... src/reconciler/__tests__/ReactChildFiberTests.o"
-	@echo "... src/reconciler/__tests__/ReactChildFiberTests.i"
-	@echo "... src/reconciler/__tests__/ReactChildFiberTests.s"
-	@echo "... src/reconciler/__tests__/ReactCommitTests.o"
-	@echo "... src/reconciler/__tests__/ReactCommitTests.i"
-	@echo "... src/reconciler/__tests__/ReactCommitTests.s"
-	@echo "... src/reconciler/__tests__/ReactErrorHandlingTests.o"
-	@echo "... src/reconciler/__tests__/ReactErrorHandlingTests.i"
-	@echo "... src/reconciler/__tests__/ReactErrorHandlingTests.s"
-	@echo "... src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.o"
-	@echo "... src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.i"
-	@echo "... src/reconciler/__tests__/ReactFiberClassUpdateQueueTests.s"
-	@echo "... src/reconciler/__tests__/ReactFiberTests.o"
-	@echo "... src/reconciler/__tests__/ReactFiberTests.i"
-	@echo "... src/reconciler/__tests__/ReactFiberTests.s"
-	@echo "... src/reconciler/__tests__/ReactSuspenseTests.o"
-	@echo "... src/reconciler/__tests__/ReactSuspenseTests.i"
-	@echo "... src/reconciler/__tests__/ReactSuspenseTests.s"
-	@echo "... src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.o"
-	@echo "... src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.i"
-	@echo "... src/reconciler/__tests__/ReactWorkTagsAndFlagsTests.s"
-	@echo "... src/scheduler/__tests__/SchedulerTests.o"
-	@echo "... src/scheduler/__tests__/SchedulerTests.i"
-	@echo "... src/scheduler/__tests__/SchedulerTests.s"
-	@echo "... src/shared/__tests__/ReactFeatureFlagsTests.o"
-	@echo "... src/shared/__tests__/ReactFeatureFlagsTests.i"
-	@echo "... src/shared/__tests__/ReactFeatureFlagsTests.s"
-	@echo "... tests/ReactFiberWorkLoopTests.o"
-	@echo "... tests/ReactFiberWorkLoopTests.i"
-	@echo "... tests/ReactFiberWorkLoopTests.s"
-	@echo "... tests/ReactHooksTests.o"
-	@echo "... tests/ReactHooksTests.i"
-	@echo "... tests/ReactHooksTests.s"
+	@echo "... src/reconciler/ReactChildFiber.o"
+	@echo "... src/reconciler/ReactChildFiber.i"
+	@echo "... src/reconciler/ReactChildFiber.s"
+	@echo "... src/reconciler/ReactFiber.o"
+	@echo "... src/reconciler/ReactFiber.i"
+	@echo "... src/reconciler/ReactFiber.s"
+	@echo "... src/reconciler/ReactFiberBeginWork.o"
+	@echo "... src/reconciler/ReactFiberBeginWork.i"
+	@echo "... src/reconciler/ReactFiberBeginWork.s"
+	@echo "... src/reconciler/ReactFiberClassUpdateQueue.o"
+	@echo "... src/reconciler/ReactFiberClassUpdateQueue.i"
+	@echo "... src/reconciler/ReactFiberClassUpdateQueue.s"
+	@echo "... src/reconciler/ReactFiberCommitEffects.o"
+	@echo "... src/reconciler/ReactFiberCommitEffects.i"
+	@echo "... src/reconciler/ReactFiberCommitEffects.s"
+	@echo "... src/reconciler/ReactFiberCommitWork.o"
+	@echo "... src/reconciler/ReactFiberCommitWork.i"
+	@echo "... src/reconciler/ReactFiberCommitWork.s"
+	@echo "... src/reconciler/ReactFiberCompleteWork.o"
+	@echo "... src/reconciler/ReactFiberCompleteWork.i"
+	@echo "... src/reconciler/ReactFiberCompleteWork.s"
+	@echo "... src/reconciler/ReactFiberHooks.o"
+	@echo "... src/reconciler/ReactFiberHooks.i"
+	@echo "... src/reconciler/ReactFiberHooks.s"
+	@echo "... src/reconciler/ReactFiberRoot.o"
+	@echo "... src/reconciler/ReactFiberRoot.i"
+	@echo "... src/reconciler/ReactFiberRoot.s"
+	@echo "... src/reconciler/ReactFiberThrow.o"
+	@echo "... src/reconciler/ReactFiberThrow.i"
+	@echo "... src/reconciler/ReactFiberThrow.s"
+	@echo "... src/reconciler/ReactFiberWorkLoop.o"
+	@echo "... src/reconciler/ReactFiberWorkLoop.i"
+	@echo "... src/reconciler/ReactFiberWorkLoop.s"
 .PHONY : help
 
 
@@ -617,6 +510,7 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
+	$(CMAKE_COMMAND) -P /Users/aniwei/Desktop/ReactCPP/packages/React/build/CMakeFiles/VerifyGlobs.cmake
 	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

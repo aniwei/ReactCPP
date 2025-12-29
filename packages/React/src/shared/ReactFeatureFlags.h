@@ -17,9 +17,9 @@
 
 namespace react::shared {
 
-// =============================================================================
+
 // 编译期配置宏
-// =============================================================================
+
 
 // 定义构建模式
 #ifndef REACT_PROFILE
@@ -39,23 +39,23 @@ namespace react::shared {
 #define __EXPERIMENTAL__ REACT_EXPERIMENTAL
 #define __DEV__ REACT_DEV
 
-// =============================================================================
+
 // Killswitch - 可回滚的开关
-// =============================================================================
+
 
 // @source:24 - enableHydrationLaneScheduling
 constexpr bool enableHydrationLaneScheduling = true;
 
-// =============================================================================
+
 // Land or remove (moderate effort)
-// =============================================================================
+
 
 // @source:33 - disableSchedulerTimeoutInWorkLoop
 constexpr bool disableSchedulerTimeoutInWorkLoop = false;
 
-// =============================================================================
+
 // Slated for removal in the future
-// =============================================================================
+
 
 // @source:48 - enableSuspenseCallback
 constexpr bool enableSuspenseCallback = false;
@@ -69,9 +69,9 @@ constexpr bool enableCreateEventHandleAPI = false;
 // @source:57 - enableLegacyFBSupport
 constexpr bool enableLegacyFBSupport = false;
 
-// =============================================================================
+
 // Ongoing experiments
-// =============================================================================
+
 
 // @source:66 - enableYieldingBeforePassive
 constexpr bool enableYieldingBeforePassive = false;
@@ -172,9 +172,9 @@ constexpr bool enableInfiniteRenderLoopDetection = false;
 // @source:148 - enableFragmentRefs
 constexpr bool enableFragmentRefs = __EXPERIMENTAL__;
 
-// =============================================================================
+
 // Ready for next major
-// =============================================================================
+
 
 // @source:161 - renameElementSymbol
 constexpr bool renameElementSymbol = true;
@@ -200,9 +200,9 @@ constexpr bool enableReactTestRendererWarning = true;
 // @source:189 - disableLegacyMode
 constexpr bool disableLegacyMode = true;
 
-// =============================================================================
+
 // React DOM Chopping Block
-// =============================================================================
+
 
 // @source:211 - disableCommentsAsDOMContainers
 constexpr bool disableCommentsAsDOMContainers = true;
@@ -216,9 +216,9 @@ constexpr bool disableInputAttributeSyncing = false;
 // @source:221 - disableTextareaChildren
 constexpr bool disableTextareaChildren = false;
 
-// =============================================================================
+
 // Debugging and DevTools
-// =============================================================================
+
 
 // @source:228 - enableProfilerTimer
 constexpr bool enableProfilerTimer = __PROFILE__;

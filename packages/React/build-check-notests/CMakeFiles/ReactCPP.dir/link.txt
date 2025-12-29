@@ -1,0 +1,2 @@
+/usr/bin/ar qc libReactCPP.a CMakeFiles/ReactCPP.dir/src/reconciler/ReactChildFiber.cpp.o CMakeFiles/ReactCPP.dir/src/reconciler/ReactFiber.cpp.o
+/usr/bin/ranlib libReactCPP.a

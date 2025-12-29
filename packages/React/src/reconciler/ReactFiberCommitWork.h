@@ -37,10 +37,10 @@ using HostContainer = ::react::ReactDOMContainer*;
 // 前向声明
 class ReactFiberWorkLoop;
 
-// =============================================================================
+
 // Commit 阶段类型定义
 // @source ReactFiberCommitWork.js
-// =============================================================================
+
 
 /**
  * Commit 阶段枚举
@@ -52,10 +52,10 @@ enum class CommitPhase : uint8_t {
   PassivePhase = 3     // 被动效果 (useEffect)
 };
 
-// =============================================================================
+
 // Update Queue (用于 Class 组件)
 // @source reactjs/packages/react-reconciler/src/ReactFiberClassUpdateQueue.js
-// =============================================================================
+
 
 struct ClassUpdateQueue {
   std::any baseState;
@@ -65,10 +65,10 @@ struct ClassUpdateQueue {
   std::vector<std::function<void()>> callbacks;
 };
 
-// =============================================================================
+
 // HostConfig 接口 (Commit 阶段使用)
 // @source reactjs/packages/react-reconciler/src/ReactFiberConfig.js
-// =============================================================================
+
 
 struct CommitHostConfig {
     // =========================================================================
@@ -209,10 +209,10 @@ struct CommitHostConfig {
     bool supportsPersistence = false;
 };
 
-// =============================================================================
+
 // ReactFiberCommitWork 类
 // @source reactjs/packages/react-reconciler/src/ReactFiberCommitWork.js
-// =============================================================================
+
 
 class ReactFiberCommitWork {
 public:
@@ -467,9 +467,7 @@ public:
     /**
      * 设置 HostConfig
      */
-    void setHostConfig(CommitHostConfig config) {
-        hostConfig_ = std::move(config);
-    }
+    void setHostConfig(CommitHostConfig config);
     
     /**
      * 获取 Host 父节点
@@ -486,16 +484,12 @@ public:
     /**
      * 判断是否需要应该触发 afterActiveInstanceBlur
      */
-    bool shouldFireAfterActiveInstanceBlur() const {
-        return shouldFireAfterActiveInstanceBlur_;
-    }
+    bool shouldFireAfterActiveInstanceBlur() const;
     
     /**
      * 重置 afterActiveInstanceBlur 标志
      */
-    void resetAfterActiveInstanceBlur() {
-        shouldFireAfterActiveInstanceBlur_ = false;
-    }
+    void resetAfterActiveInstanceBlur();
 
 private:
     // Host 配置
@@ -603,9 +597,9 @@ private:
     void commitHostComponentMount(FiberRef finishedWork);
 };
 
-// =============================================================================
+
 // 便捷函数 - DEV 模式下的效果调用
-// =============================================================================
+
 
 #ifdef __DEV__
 
@@ -631,9 +625,9 @@ void invokePassiveEffectUnmountInDEV(FiberRef fiber);
 
 #endif
 
-// =============================================================================
+
 // Suspense 提交相关
-// =============================================================================
+
 
 /**
  * 累积 Suspensey Commit

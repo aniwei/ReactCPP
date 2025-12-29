@@ -23,9 +23,9 @@
 
 namespace react::reconciler::testing {
 
-// =============================================================================
+
 // 测试辅助工具
-// =============================================================================
+
 
 /**
  * 创建一个简单的父 Fiber
@@ -63,9 +63,9 @@ void linkSiblings(const std::vector<FiberRef>& fibers) {
     }
 }
 
-// =============================================================================
+
 // ReactChildFiberReconciler 基础测试
-// =============================================================================
+
 
 class ChildFiberReconcilerTest : public ::testing::Test {
 protected:
@@ -102,9 +102,9 @@ TEST_F(ChildFiberReconcilerTest, GetMountChildFibers_ReturnsSameInstance) {
     EXPECT_EQ(&m1, &m2);
 }
 
-// =============================================================================
+
 // 删除操作测试
-// =============================================================================
+
 
 class ChildFiberDeletionTest : public ::testing::Test {
 protected:
@@ -158,9 +158,9 @@ TEST_F(ChildFiberDeletionTest, DeleteRemainingChildren_HandleNullChild) {
     EXPECT_TRUE(returnFiber->deletions.empty());
 }
 
-// =============================================================================
+
 // 单个节点协调测试
-// =============================================================================
+
 
 class ChildFiberSingleNodeTest : public ::testing::Test {
 protected:
@@ -232,9 +232,9 @@ TEST_F(ChildFiberSingleNodeTest, ReconcileSinglePortal_CreatesNewPortalFiber) {
     EXPECT_EQ(result->tag, HostPortal);
 }
 
-// =============================================================================
+
 // 数组协调测试
-// =============================================================================
+
 
 class ChildFiberArrayTest : public ::testing::Test {
 protected:
@@ -312,9 +312,9 @@ TEST_F(ChildFiberArrayTest, ReconcileChildrenArray_SameLength_UpdatesInPlace) {
     EXPECT_EQ(count, 2);
 }
 
-// =============================================================================
+
 // 位置放置测试
-// =============================================================================
+
 
 class ChildFiberPlacementTest : public ::testing::Test {
 protected:
@@ -381,9 +381,9 @@ TEST_F(ChildFiberPlacementTest, PlaceChild_NoMoveNeeded) {
     EXPECT_EQ(result, 3); // 返回 oldIndex
 }
 
-// =============================================================================
+
 // Fiber 复用测试
-// =============================================================================
+
 
 class ChildFiberReuseTest : public ::testing::Test {
 protected:
@@ -417,9 +417,9 @@ TEST_F(ChildFiberReuseTest, UseFiber_SetsAlternate) {
     EXPECT_EQ(original->getAlternate(), clone);
 }
 
-// =============================================================================
+
 // 映射剩余子节点测试
-// =============================================================================
+
 
 class ChildFiberMapTest : public ::testing::Test {
 protected:
@@ -452,9 +452,9 @@ TEST_F(ChildFiberMapTest, MapRemainingChildren_EmptyForNull) {
     EXPECT_TRUE(map.empty());
 }
 
-// =============================================================================
+
 // 文本节点更新测试
-// =============================================================================
+
 
 class ChildFiberTextUpdateTest : public ::testing::Test {
 protected:
@@ -497,9 +497,9 @@ TEST_F(ChildFiberTextUpdateTest, UpdateTextNode_ReusesExisting_WhenCurrentIsText
     EXPECT_EQ(result->getAlternate(), current);
 }
 
-// =============================================================================
+
 // 顶层协调 API 测试
-// =============================================================================
+
 
 class ChildFiberReconcileAPITest : public ::testing::Test {
 protected:
@@ -538,9 +538,9 @@ TEST_F(ChildFiberReconcileAPITest, MountChildFibers_DoesNotTrackDeletions) {
     EXPECT_TRUE(returnFiber->deletions.empty());
 }
 
-// =============================================================================
+
 // 辅助函数测试
-// =============================================================================
+
 
 class ChildFiberHelperTest : public ::testing::Test {
 protected:
@@ -576,9 +576,9 @@ TEST_F(ChildFiberHelperTest, GetElementKey_ReturnsNulloptForNonElement) {
     EXPECT_FALSE(key.has_value());
 }
 
-// =============================================================================
+
 // 边界情况测试
-// =============================================================================
+
 
 class ChildFiberEdgeCaseTest : public ::testing::Test {
 protected:
@@ -627,9 +627,9 @@ TEST_F(ChildFiberEdgeCaseTest, HandleLargeSiblingList) {
     EXPECT_EQ(count, 100);
 }
 
-// =============================================================================
+
 // createChild 测试
-// =============================================================================
+
 
 class ChildFiberCreateChildTest : public ::testing::Test {
 protected:
@@ -683,9 +683,9 @@ TEST_F(ChildFiberCreateChildTest, CreateChild_Number_CreatesTextFiber) {
     EXPECT_EQ(result->tag, HostText);
 }
 
-// =============================================================================
+
 // placeSingleChild 工具函数测试
-// =============================================================================
+
 
 class PlaceSingleChildHelperTest : public ::testing::Test {
 protected:
@@ -719,9 +719,9 @@ TEST_F(PlaceSingleChildHelperTest, PlaceSingleChild_NoPlacement_WhenHasAlternate
     EXPECT_FALSE((fiber->flags & Placement) != 0);
 }
 
-// =============================================================================
+
 // cloneChildFibers 测试
-// =============================================================================
+
 
 class CloneChildFibersTest : public ::testing::Test {
 protected:
@@ -774,9 +774,9 @@ TEST_F(CloneChildFibersTest, CloneChildFibers_ClonesAllSiblings) {
     EXPECT_EQ(count, 3);
 }
 
-// =============================================================================
+
 // resetChildReconcilerOnUnwind 测试
-// =============================================================================
+
 
 TEST(ResetChildReconcilerTest, ResetChildReconcilerOnUnwind_NoThrow) {
     // 简单测试不抛出异常

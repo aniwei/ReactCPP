@@ -35,9 +35,9 @@ using HostContainer = ::react::ReactDOMContainer*;
 // 前向声明
 class ReactFiberWorkLoop;
 
-// =============================================================================
+
 // CompleteWork 结果类型
-// =============================================================================
+
 
 /**
  * completeWork 返回值
@@ -45,10 +45,10 @@ class ReactFiberWorkLoop;
  */
 using CompleteWorkResult = FiberRef;
 
-// =============================================================================
+
 // HostContext 接口
 // @source reactjs/packages/react-reconciler/src/ReactFiberHostContext.js
-// =============================================================================
+
 
 struct HostContext {
     std::any rootInstance;
@@ -56,10 +56,10 @@ struct HostContext {
     std::any namespace_;
 };
 
-// =============================================================================
+
 // HostConfig 接口扩展 (completeWork 使用的部分)
 // @source reactjs/packages/react-reconciler/src/ReactFiberConfig.js
-// =============================================================================
+
 
 struct CompleteHostConfig {
     // =========================================================================
@@ -179,10 +179,10 @@ struct CompleteHostConfig {
     bool supportsSingletons = false;
 };
 
-// =============================================================================
+
 // ReactFiberCompleteWork 类
 // @source reactjs/packages/react-reconciler/src/ReactFiberCompleteWork.js
-// =============================================================================
+
 
 class ReactFiberCompleteWork {
 public:
@@ -343,23 +343,17 @@ public:
     /**
      * 设置 HostConfig
      */
-    void setHostConfig(CompleteHostConfig config) {
-        hostConfig_ = std::move(config);
-    }
+    void setHostConfig(CompleteHostConfig config);
     
     /**
      * 设置 Host Context
      */
-    void setHostContext(HostContext context) {
-        hostContext_ = std::move(context);
-    }
+    void setHostContext(HostContext context);
     
     /**
      * 获取 Host Context
      */
-    const HostContext& getHostContext() const {
-        return hostContext_;
-    }
+    const HostContext& getHostContext() const;
 
 private:
     // Host 配置
@@ -461,9 +455,9 @@ private:
     std::any getContextForHost(FiberRef fiber);
 };
 
-// =============================================================================
+
 // Suspense 相关辅助函数
-// =============================================================================
+
 
 /**
  * 查找第一个挂起的组件
@@ -476,9 +470,9 @@ FiberRef findFirstSuspended(FiberRef row);
  */
 bool isSuspenseBoundaryBeingHidden(FiberRef current, FiberRef finishedWork);
 
-// =============================================================================
+
 // Hydration 相关辅助函数
-// =============================================================================
+
 
 /**
  * 弹出 Hydration 状态

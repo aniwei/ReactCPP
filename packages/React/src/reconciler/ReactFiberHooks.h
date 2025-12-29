@@ -9,7 +9,6 @@
 
 #pragma once
 
-#include <jsi/jsi.h>
 #include <memory>
 #include <functional>
 #include <optional>
@@ -21,86 +20,86 @@
 #include "ReactFiberFlags.h"
 #include "ReactHookEffectTags.h"
 
+namespace react {
+class ReactHostRuntime;
+} // namespace react
+
 namespace react::reconciler {
 
 // 前向声明
 class ReactFiberWorkLoop;
-struct Effect;
 struct EffectInstance;
 
-// =============================================================================
-// Effect 相关类型定义 (完整定义在 ReactFiberCommitEffects.h)
-// =============================================================================
+struct Effect {
+  HookFlags tag = HookNoFlags;
+  std::function<std::function<void()>()> create = nullptr;
+  std::any inst;
+    std::vector<std::any> deps;
+  std::shared_ptr<Effect> next = nullptr;
+};
 
-// 前向声明 Effect 和 FunctionComponentUpdateQueue (在 ReactFiberCommitEffects.h 中定义)
-struct Effect;
-struct EffectInstance;
-struct FunctionComponentUpdateQueue;
+struct FunctionComponentUpdateQueue {
+  std::shared_ptr<Effect> lastEffect = nullptr;
+};
 
 using EffectRef = std::shared_ptr<Effect>;
 using HookEffectRef = std::shared_ptr<Effect>;
 using FunctionComponentUpdateQueueRef = std::shared_ptr<FunctionComponentUpdateQueue>;
 
-// =============================================================================
+
 // Hook 类型枚举
 // @source:types HookType
-// =============================================================================
+
 
 enum class HookType {
-    UseState,
-    UseReducer,
-    UseEffect,
-    UseLayoutEffect,
-    UseInsertionEffect,
-    UseMemo,
-    UseCallback,
-    UseRef,
-    UseContext,
-    UseImperativeHandle,
-    UseDebugValue,
-    UseDeferredValue,
-    UseTransition,
-    UseId,
-    UseOptimistic,
-    UseFormStatus,
-    UseActionState,
-    Use,
-    UseMemoCache
+  UseState,
+  UseReducer,
+  UseEffect,
+  UseLayoutEffect,
+  UseInsertionEffect,
+  UseMemo,
+  UseCallback,
+  UseRef,
+  UseContext,
+  UseImperativeHandle,
+  UseDebugValue,
+  UseDeferredValue,
+  UseTransition,
+  UseId,
+  UseOptimistic,
+  UseFormStatus,
+  UseActionState,
+  Use,
+  UseMemoCache
 };
 
-// =============================================================================
-// HookUpdate 结构 (用于 useState/useReducer)
-// @source:164-173 Update
-// =============================================================================
 
+// HookUpdate 结构 (用于 useState/useReducer)
 template<typename S, typename A>
 struct HookUpdate {
-    Lane lane = NoLane;
-    Lane revertLane = NoLane;
-    A action;
-    bool hasEagerState = false;
-    std::optional<S> eagerState = std::nullopt;
-    std::shared_ptr<HookUpdate<S, A>> next = nullptr;
+  Lane lane = NoLane;
+  Lane revertLane = NoLane;
+  A action;
+  bool hasEagerState = false;
+  std::optional<S> eagerState = std::nullopt;
+  std::shared_ptr<HookUpdate<S, A>> next = nullptr;
 };
 
-// =============================================================================
-// HookUpdateQueue 结构 (用于 useState/useReducer)
-// @source:175-182 UpdateQueue
-// =============================================================================
 
+// HookUpdateQueue 结构 (用于 useState/useReducer)
 template<typename S, typename A>
 struct HookUpdateQueue {
-    std::shared_ptr<HookUpdate<S, A>> pending = nullptr;
-    Lanes lanes = NoLanes;
-    std::function<void(A)> dispatch = nullptr;
-    std::function<S(S, A)> lastRenderedReducer = nullptr;
-    std::optional<S> lastRenderedState = std::nullopt;
+  std::shared_ptr<HookUpdate<S, A>> pending = nullptr;
+  Lanes lanes = NoLanes;
+  std::function<void(A)> dispatch = nullptr;
+  std::function<S(S, A)> lastRenderedReducer = nullptr;
+  std::optional<S> lastRenderedState = std::nullopt;
 };
 
-// =============================================================================
+
 // Hook 结构
 // @source:186-193 Hook
-// =============================================================================
+
 
 struct Hook {
   std::any memoizedState;
@@ -112,233 +111,218 @@ struct Hook {
 
 using HookRef = std::shared_ptr<Hook>;
 
-// =============================================================================
-// Dispatcher 接口
-// @source reactjs/packages/react-reconciler/src/ReactInternalTypes.js
-// =============================================================================
 
+// Dispatcher 接口
 struct Dispatcher {
-    // =========================================================================
-    // 状态 Hooks
-    // =========================================================================
-    
-    /**
-     * useState
-     * @source:hook useState
-     */
-    std::function<std::pair<std::any, std::function<void(std::any)>>(std::any initialState)> useState;
-    
-    /**
-     * useReducer
-     * @source:hook useReducer
-     */
-    std::function<std::pair<std::any, std::function<void(std::any)>>(
-        std::function<std::any(std::any, std::any)> reducer,
-        std::any initialArg,
-        std::optional<std::function<std::any(std::any)>> init
-    )> useReducer;
-    
-    // =========================================================================
-    // 副作用 Hooks
-    // =========================================================================
-    
-    /**
-     * useEffect
-     * @source:hook useEffect
-     */
-    std::function<void(
-        std::function<std::function<void()>()> create,
-        std::optional<std::vector<std::any>> deps
-    )> useEffect;
-    
-    /**
-     * useLayoutEffect
-     * @source:hook useLayoutEffect
-     */
-    std::function<void(
-        std::function<std::function<void()>()> create,
-        std::optional<std::vector<std::any>> deps
-    )> useLayoutEffect;
-    
-    /**
-     * useInsertionEffect
-     * @source:hook useInsertionEffect
-     */
-    std::function<void(
-        std::function<std::function<void()>()> create,
-        std::optional<std::vector<std::any>> deps
-    )> useInsertionEffect;
-    
-    // =========================================================================
-    // 记忆化 Hooks
-    // =========================================================================
-    
-    /**
-     * useMemo
-     * @source:hook useMemo
-     */
-    std::function<std::any(
-        std::function<std::any()> create,
-        std::optional<std::vector<std::any>> deps
-    )> useMemo;
-    
-    /**
-     * useCallback
-     * @source:hook useCallback
-     */
-    std::function<std::any(
-        std::any callback,
-        std::vector<std::any> deps
-    )> useCallback;
-    
-    // =========================================================================
-    // 引用 Hooks
-    // =========================================================================
-    
-    /**
-     * useRef
-     * @source:hook useRef
-     */
-    std::function<std::shared_ptr<std::any>(std::any initialValue)> useRef;
-    
-    /**
-     * useImperativeHandle
-     * @source:hook useImperativeHandle
-     */
-    std::function<void(
-        std::any ref,
-        std::function<std::any()> create,
-        std::optional<std::vector<std::any>> deps
-    )> useImperativeHandle;
-    
-    // =========================================================================
-    // 上下文 Hooks
-    // =========================================================================
-    
-    /**
-     * useContext
-     * @source:hook useContext
-     */
-    std::function<std::any(std::any context)> useContext;
-    
-    // =========================================================================
-    // 并发 Hooks
-    // =========================================================================
-    
-    /**
-     * useTransition
-     * @source:hook useTransition
-     */
-    std::function<std::pair<bool, std::function<void(std::function<void()>)>>()> useTransition;
-    
-    /**
-     * useDeferredValue
-     * @source:hook useDeferredValue
-     */
-    std::function<std::any(std::any value, std::optional<std::any> initialValue)> useDeferredValue;
-    
-    // =========================================================================
-    // 其他 Hooks
-    // =========================================================================
-    
-    /**
-     * useId
-     * @source:hook useId
-     */
-    std::function<std::string()> useId;
-    
-    /**
-     * useDebugValue
-     * @source:hook useDebugValue
-     */
-    std::function<void(std::any value, std::optional<std::function<std::any(std::any)>> format)> useDebugValue;
-    
-    /**
-     * use
-     * @source:hook use
-     */
-    std::function<std::any(std::any usable)> use;
-    
-    /**
-     * useOptimistic
-     * @source:hook useOptimistic
-     */
-    std::function<std::pair<std::any, std::function<void(std::any)>>(
-        std::any passthrough,
-        std::optional<std::function<std::any(std::any, std::any)>> reducer
-    )> useOptimistic;
-    
-    /**
-     * useActionState
-     * @source:hook useActionState
-     */
-    std::function<std::tuple<std::any, std::function<void(std::any)>, bool>(
-        std::function<std::any(std::any, std::any)> action,
-        std::any initialState,
-        std::optional<std::string> permalink
-    )> useActionState;
-    
-    /**
-     * useMemoCache
-     * @source:hook useMemoCache
-     */
-    std::function<std::vector<std::any>(size_t size)> useMemoCache;
+  // useState
+  std::function<std::pair<std::any, std::function<void(std::any)>>(std::any initialState)> useState;
+  
+  // useReducer
+  std::function<std::pair<std::any, std::function<void(std::any)>>(
+    std::function<std::any(std::any, std::any)> reducer,
+    std::any initialArg,
+    std::optional<std::function<std::any(std::any)>> init
+  )> useReducer;
+  
+  // 副作用 Hooks
+  
+  /**
+   * useEffect
+   * @source:hook useEffect
+   */
+  std::function<void(
+      std::function<std::function<void()>()> create,
+      std::optional<std::vector<std::any>> deps
+  )> useEffect;
+  
+  /**
+   * useLayoutEffect
+   * @source:hook useLayoutEffect
+   */
+  std::function<void(
+      std::function<std::function<void()>()> create,
+      std::optional<std::vector<std::any>> deps
+  )> useLayoutEffect;
+  
+  /**
+   * useInsertionEffect
+   * @source:hook useInsertionEffect
+   */
+  std::function<void(
+      std::function<std::function<void()>()> create,
+      std::optional<std::vector<std::any>> deps
+  )> useInsertionEffect;
+  
+  // =========================================================================
+  // 记忆化 Hooks
+  // =========================================================================
+  
+  /**
+   * useMemo
+   * @source:hook useMemo
+   */
+  std::function<std::any(
+      std::function<std::any()> create,
+      std::optional<std::vector<std::any>> deps
+  )> useMemo;
+  
+  /**
+   * useCallback
+   * @source:hook useCallback
+   */
+  std::function<std::any(
+      std::any callback,
+      std::vector<std::any> deps
+  )> useCallback;
+  
+  // =========================================================================
+  // 引用 Hooks
+  // =========================================================================
+  
+  /**
+   * useRef
+   * @source:hook useRef
+   */
+  std::function<std::shared_ptr<std::any>(std::any initialValue)> useRef;
+  
+  /**
+   * useImperativeHandle
+   * @source:hook useImperativeHandle
+   */
+  std::function<void(
+      std::any ref,
+      std::function<std::any()> create,
+      std::optional<std::vector<std::any>> deps
+  )> useImperativeHandle;
+  
+  // =========================================================================
+  // 上下文 Hooks
+  // =========================================================================
+  
+  /**
+   * useContext
+   * @source:hook useContext
+   */
+  std::function<std::any(std::any context)> useContext;
+  
+  // =========================================================================
+  // 并发 Hooks
+  // =========================================================================
+  
+  /**
+   * useTransition
+   * @source:hook useTransition
+   */
+  std::function<std::pair<bool, std::function<void(std::function<void()>)>>()> useTransition;
+  
+  /**
+   * useDeferredValue
+   * @source:hook useDeferredValue
+   */
+  std::function<std::any(std::any value, std::optional<std::any> initialValue)> useDeferredValue;
+  
+  // =========================================================================
+  // 其他 Hooks
+  // =========================================================================
+  
+  /**
+   * useId
+   * @source:hook useId
+   */
+  std::function<std::string()> useId;
+  
+  /**
+   * useDebugValue
+   * @source:hook useDebugValue
+   */
+  std::function<void(std::any value, std::optional<std::function<std::any(std::any)>> format)> useDebugValue;
+  
+  /**
+   * use
+   * @source:hook use
+   */
+  std::function<std::any(std::any usable)> use;
+  
+  /**
+   * useOptimistic
+   * @source:hook useOptimistic
+   */
+  std::function<std::pair<std::any, std::function<void(std::any)>>(
+      std::any passthrough,
+      std::optional<std::function<std::any(std::any, std::any)>> reducer
+  )> useOptimistic;
+  
+  /**
+   * useActionState
+   * @source:hook useActionState
+   */
+  std::function<std::tuple<std::any, std::function<void(std::any)>, bool>(
+      std::function<std::any(std::any, std::any)> action,
+      std::any initialState,
+      std::optional<std::string> permalink
+  )> useActionState;
+  
+  /**
+   * useMemoCache
+   * @source:hook useMemoCache
+   */
+  std::function<std::vector<std::any>(size_t size)> useMemoCache;
 };
 
-// =============================================================================
+
 // Hooks 上下文状态
 // @source:220-280 ReactFiberHooks.js globals
-// =============================================================================
+
 
 struct HooksContext {
-    // @source:230 当前正在渲染的 Fiber
-    FiberRef currentlyRenderingFiber = nullptr;
-    
-    // @source:235 当前 Hook
-    HookRef currentHook = nullptr;
-    
-    // @source:238 工作中的 Hook
-    HookRef workInProgressHook = nullptr;
-    
-    // @source:242 是否在重新渲染期间
-    bool didScheduleRenderPhaseUpdate = false;
-    
-    // @source:245 是否在重新渲染期间有更新
-    bool didScheduleRenderPhaseUpdateDuringThisPass = false;
-    
-    // @source:248 渲染阶段更新计数
-    int renderPhaseUpdateCount = 0;
-    
-    // @source:252 Thenable 状态
-    std::any thenableState;
-    
-    // @source:255 Thenable 索引计数
-    int thenableIndexCounter = 0;
-    
-    /**
-     * 重置上下文
-     */
-    void reset() {
-        currentlyRenderingFiber = nullptr;
-        currentHook = nullptr;
-        workInProgressHook = nullptr;
-        didScheduleRenderPhaseUpdate = false;
-        didScheduleRenderPhaseUpdateDuringThisPass = false;
-        renderPhaseUpdateCount = 0;
-        thenableState = std::any{};
-        thenableIndexCounter = 0;
-    }
+  // @source:230 当前正在渲染的 Fiber
+  FiberRef currentlyRenderingFiber = nullptr;
+  
+  // @source:235 当前 Hook
+  HookRef currentHook = nullptr;
+  
+  // @source:238 工作中的 Hook
+  HookRef workInProgressHook = nullptr;
+  
+  // @source:242 是否在重新渲染期间
+  bool didScheduleRenderPhaseUpdate = false;
+  
+  // @source:245 是否在重新渲染期间有更新
+  bool didScheduleRenderPhaseUpdateDuringThisPass = false;
+  
+  // @source:248 渲染阶段更新计数
+  int renderPhaseUpdateCount = 0;
+  
+  // @source:252 Thenable 状态
+  std::any thenableState;
+  
+  // @source:255 Thenable 索引计数
+  int thenableIndexCounter = 0;
+  
+  /**
+   * 重置上下文
+   */
+  void reset() {
+    currentlyRenderingFiber = nullptr;
+    currentHook = nullptr;
+    workInProgressHook = nullptr;
+    didScheduleRenderPhaseUpdate = false;
+    didScheduleRenderPhaseUpdateDuringThisPass = false;
+    renderPhaseUpdateCount = 0;
+    thenableState = std::any{};
+    thenableIndexCounter = 0;
+  }
 };
 
-// =============================================================================
+
 // ReactFiberHooks 类
 // @source reactjs/packages/react-reconciler/src/ReactFiberHooks.js
-// =============================================================================
+
 
 class ReactFiberHooks {
 public:
     ReactFiberHooks() = default;
-    ~ReactFiberHooks() = default;
+    virtual ~ReactFiberHooks() = default;
     
     // =========================================================================
     // 核心渲染 API
@@ -348,47 +332,47 @@ public:
      * 使用 Hooks 渲染组件
      * @source:520-650 renderWithHooks
      */
-    std::any renderWithHooks(
+    virtual std::any renderWithHooks(
         FiberRef current,
         FiberRef workInProgress,
         std::any Component,
         std::any props,
         std::any secondArg,
         Lanes nextRenderLanes
-    );
+    ) = 0;
     
     /**
      * 退出 Hooks 渲染
      * @source:655-720 finishRenderingHooks
      */
-    void finishRenderingHooks(FiberRef current, FiberRef workInProgress);
+    virtual void finishRenderingHooks(FiberRef current, FiberRef workInProgress) = 0;
     
     /**
      * 重新渲染 (处理渲染阶段更新)
      * @source:725-850 rerender
      */
-    std::any renderWithHooksAgain(
+    virtual std::any renderWithHooksAgain(
         FiberRef workInProgress,
         std::any Component,
         std::any props,
         std::any secondArg
-    );
+    ) = 0;
     
     /**
      * bailout Hooks
      * @source:855-920 bailoutHooks
      */
-    void bailoutHooks(
+    virtual void bailoutHooks(
         FiberRef current,
         FiberRef workInProgress,
         Lanes lanes
-    );
+    ) = 0;
     
     /**
      * 检查是否收到更新
      * @source:925-945 checkDidRenderIdHook
      */
-    bool checkDidRenderIdHook();
+    virtual bool checkDidRenderIdHook() = 0;
     
     // =========================================================================
     // 错误处理
@@ -398,13 +382,13 @@ public:
      * 抛出后重置 Hooks
      * @source:950-1020 resetHooksAfterThrow
      */
-    void resetHooksAfterThrow();
+    virtual void resetHooksAfterThrow() = 0;
     
     /**
      * 在展开时重置 Hooks
      * @source:1025-1090 resetHooksOnUnwind
      */
-    void resetHooksOnUnwind(FiberRef workInProgress);
+    virtual void resetHooksOnUnwind(FiberRef workInProgress) = 0;
     
     // =========================================================================
     // Dispatcher 管理
@@ -413,7 +397,7 @@ public:
     /**
      * 获取当前 Dispatcher
      */
-    Dispatcher& getCurrentDispatcher();
+    virtual Dispatcher& getCurrentDispatcher() = 0;
     
     /**
      * 获取 Mount Dispatcher
@@ -457,7 +441,7 @@ public:
         return context_.currentlyRenderingFiber;
     }
 
-private:
+protected:
     // Hooks 上下文
     HooksContext context_;
     
@@ -475,18 +459,18 @@ private:
      * 挂载工作中的 Hook
      * @source:1095-1140 mountWorkInProgressHook
      */
-    HookRef mountWorkInProgressHook();
+    virtual HookRef mountWorkInProgressHook() = 0;
     
     /**
      * 更新工作中的 Hook
      * @source:1145-1220 updateWorkInProgressHook
      */
-    HookRef updateWorkInProgressHook();
+    virtual HookRef updateWorkInProgressHook() = 0;
     
     /**
      * 创建 Function Component 更新队列
      */
-    FunctionComponentUpdateQueueRef createFunctionComponentUpdateQueue();
+    virtual FunctionComponentUpdateQueueRef createFunctionComponentUpdateQueue() = 0;
     
     // =========================================================================
     // Mount 实现
@@ -495,50 +479,50 @@ private:
     /**
      * mountState
      */
-    std::pair<std::any, std::function<void(std::any)>> mountState(std::any initialState);
+    virtual std::pair<std::any, std::function<void(std::any)>> mountState(std::any initialState) = 0;
     
     /**
      * mountReducer
      */
-    std::pair<std::any, std::function<void(std::any)>> mountReducer(
+    virtual std::pair<std::any, std::function<void(std::any)>> mountReducer(
         std::function<std::any(std::any, std::any)> reducer,
         std::any initialArg,
         std::optional<std::function<std::any(std::any)>> init
-    );
+    ) = 0;
     
     /**
      * mountEffect
      */
-    void mountEffect(
+    virtual void mountEffect(
         std::function<std::function<void()>()> create,
         std::optional<std::vector<std::any>> deps
-    );
+    ) = 0;
     
     /**
      * mountLayoutEffect
      */
-    void mountLayoutEffect(
+    virtual void mountLayoutEffect(
         std::function<std::function<void()>()> create,
         std::optional<std::vector<std::any>> deps
-    );
+    ) = 0;
     
     /**
      * mountMemo
      */
-    std::any mountMemo(
+    virtual std::any mountMemo(
         std::function<std::any()> create,
         std::optional<std::vector<std::any>> deps
-    );
+    ) = 0;
     
     /**
      * mountCallback
      */
-    std::any mountCallback(std::any callback, std::vector<std::any> deps);
+    virtual std::any mountCallback(std::any callback, std::vector<std::any> deps) = 0;
     
     /**
      * mountRef
      */
-    std::shared_ptr<std::any> mountRef(std::any initialValue);
+    virtual std::shared_ptr<std::any> mountRef(std::any initialValue) = 0;
     
     // =========================================================================
     // Update 实现
@@ -547,50 +531,50 @@ private:
     /**
      * updateState
      */
-    std::pair<std::any, std::function<void(std::any)>> updateState(std::any initialState);
+    virtual std::pair<std::any, std::function<void(std::any)>> updateState(std::any initialState) = 0;
     
     /**
      * updateReducer
      */
-    std::pair<std::any, std::function<void(std::any)>> updateReducer(
+    virtual std::pair<std::any, std::function<void(std::any)>> updateReducer(
         std::function<std::any(std::any, std::any)> reducer,
         std::any initialArg,
         std::optional<std::function<std::any(std::any)>> init
-    );
+    ) = 0;
     
     /**
      * updateEffect
      */
-    void updateEffect(
+    virtual void updateEffect(
         std::function<std::function<void()>()> create,
         std::optional<std::vector<std::any>> deps
-    );
+    ) = 0;
     
     /**
      * updateLayoutEffect
      */
-    void updateLayoutEffect(
+    virtual void updateLayoutEffect(
         std::function<std::function<void()>()> create,
         std::optional<std::vector<std::any>> deps
-    );
+    ) = 0;
     
     /**
      * updateMemo
      */
-    std::any updateMemo(
+    virtual std::any updateMemo(
         std::function<std::any()> create,
         std::optional<std::vector<std::any>> deps
-    );
+    ) = 0;
     
     /**
      * updateCallback
      */
-    std::any updateCallback(std::any callback, std::vector<std::any> deps);
+    virtual std::any updateCallback(std::any callback, std::vector<std::any> deps) = 0;
     
     /**
      * updateRef
      */
-    std::shared_ptr<std::any> updateRef(std::any initialValue);
+    virtual std::shared_ptr<std::any> updateRef(std::any initialValue) = 0;
     
     // =========================================================================
     // 辅助方法
@@ -599,71 +583,71 @@ private:
     /**
      * 推送 Effect
      */
-    HookEffectRef pushEffect(
+    virtual HookEffectRef pushEffect(
         HookFlags tag,
         std::function<std::function<void()>()> create,
         std::any inst,
         std::optional<std::vector<std::any>> deps
-    );
+    ) = 0;
     
     /**
      * 检查依赖是否变化
      */
-    bool areHookInputsEqual(
+    virtual bool areHookInputsEqual(
         const std::vector<std::any>& nextDeps,
         const std::vector<std::any>& prevDeps
-    );
+    ) = 0;
     
     /**
      * dispatch Action
      */
-    void dispatchAction(
+    virtual void dispatchAction(
         FiberRef fiber,
         std::shared_ptr<void> queue,
         std::any action
-    );
+    ) = 0;
     
     /**
      * dispatch Set State Action
      */
-    void dispatchSetState(
+    virtual void dispatchSetState(
         FiberRef fiber,
         std::shared_ptr<void> queue,
         std::any action
-    );
+    ) = 0;
     
     /**
      * dispatch Reducer Action
      */
-    void dispatchReducerAction(
+    virtual void dispatchReducerAction(
         FiberRef fiber,
         std::shared_ptr<void> queue,
         std::any action
-    );
+    ) = 0;
     
     /**
      * 初始化 Dispatchers
      */
-    void initializeDispatchers();
+    virtual void initializeDispatchers() = 0;
 };
 
-// =============================================================================
+
 // 全局 Hooks 实例
-// =============================================================================
+
 
 /**
  * 获取全局 Hooks 实例
  */
-ReactFiberHooks& getHooks();
+ReactFiberHooks& getHooks(react::ReactHostRuntime& hostRuntime);
 
 /**
  * 设置全局 Hooks 实例
  */
-void setHooks(std::shared_ptr<ReactFiberHooks> hooks);
+void setHooks(react::ReactHostRuntime& hostRuntime, std::shared_ptr<ReactFiberHooks> hooks);
 
-// =============================================================================
+
 // 便捷函数
-// =============================================================================
+
 
 /**
  * 比较 Hook 输入是否相等

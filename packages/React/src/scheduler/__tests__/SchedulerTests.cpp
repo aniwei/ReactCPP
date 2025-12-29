@@ -15,9 +15,9 @@
 
 namespace react::scheduler::tests {
 
-// =============================================================================
+
 // SchedulerPriorities 测试
-// =============================================================================
+
 
 TEST(SchedulerPrioritiesTest, PriorityValues) {
     // @source:10-15 验证优先级数值
@@ -47,9 +47,9 @@ TEST(SchedulerPrioritiesTest, GetPriorityName) {
     EXPECT_STREQ(getPriorityName(99), "Unknown");
 }
 
-// =============================================================================
+
 // SchedulerMinHeap 测试
-// =============================================================================
+
 
 // 测试用任务结构
 struct Task {
@@ -180,9 +180,9 @@ TEST(SchedulerMinHeapTest, LargeHeap) {
     }
 }
 
-// =============================================================================
+
 // MinHeap 与 JS 行为一致性测试
-// =============================================================================
+
 
 TEST(SchedulerMinHeapTest, PeekDoesNotRemove) {
     // @source:17 peek 方法不应该移除元素
@@ -247,9 +247,9 @@ TEST(SchedulerMinHeapTest, HeapPropertyAfterOperations) {
     EXPECT_EQ(heap.pop()->sortIndex, 50.0);
 }
 
-// =============================================================================
+
 // 模拟 Scheduler 任务调度场景
-// =============================================================================
+
 
 struct SchedulerTask {
     int id;

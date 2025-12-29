@@ -12,17 +12,17 @@
 
 namespace react::reconciler {
 
-// =============================================================================
+
 // Hook Flags 类型定义
 // @source ReactHookEffectTags.js:10
-// =============================================================================
+
 
 using HookFlags = uint8_t;
 
-// =============================================================================
+
 // Hook Effect Tags 常量
 // @source ReactHookEffectTags.js:12-20
-// =============================================================================
+
 
 // @source:12 - 无标志
 constexpr HookFlags HookNoFlags = /*       */ 0b0000;
@@ -39,9 +39,9 @@ constexpr HookFlags HookLayout = /*        */ 0b0100;
 // @source:20 - Passive 阶段效果 (useEffect)
 constexpr HookFlags HookPassive = /*       */ 0b1000;
 
-// =============================================================================
+
 // 工具函数
-// =============================================================================
+
 
 /**
  * 检查是否有指定的效果标志
@@ -67,11 +67,6 @@ inline constexpr HookFlags removeHookFlags(HookFlags flags, HookFlags toRemove) 
 /**
  * 获取 Hook 效果的名称 (用于调试)
  */
-inline const char* getHookEffectName(HookFlags flags) {
-  if (flags & HookLayout) return "useLayoutEffect";
-  if (flags & HookInsertion) return "useInsertionEffect";
-  if (flags & HookPassive) return "useEffect";
-  return "unknown";
-}
+const char* getHookEffectName(HookFlags flags);
 
 } // namespace react::reconciler

@@ -19,10 +19,10 @@
 
 namespace react::reconciler {
 
-// =============================================================================
+
 // Thenable 状态枚举
 // @source shared/ReactTypes.js
-// =============================================================================
+
 
 enum class ThenableStatus {
   Pending,
@@ -30,10 +30,10 @@ enum class ThenableStatus {
   Rejected
 };
 
-// =============================================================================
+
 // Thenable 类型定义
 // @source shared/ReactTypes.js
-// =============================================================================
+
 
 /**
  * Thenable 是一个类似 Promise 的对象
@@ -60,10 +60,10 @@ struct Thenable<void> {
 template<typename T>
 using ThenableRef = std::shared_ptr<Thenable<T>>;
 
-// =============================================================================
+
 // PendingThenable
 // @source shared/ReactTypes.js
-// =============================================================================
+
 
 template<typename T>
 struct PendingThenable : Thenable<T> {
@@ -72,10 +72,10 @@ struct PendingThenable : Thenable<T> {
   }
 };
 
-// =============================================================================
+
 // FulfilledThenable
 // @source shared/ReactTypes.js
-// =============================================================================
+
 
 template<typename T>
 struct FulfilledThenable : Thenable<T> {
@@ -85,10 +85,10 @@ struct FulfilledThenable : Thenable<T> {
   }
 };
 
-// =============================================================================
+
 // RejectedThenable
 // @source shared/ReactTypes.js
-// =============================================================================
+
 
 template<typename T>
 struct RejectedThenable : Thenable<T> {
@@ -98,10 +98,10 @@ struct RejectedThenable : Thenable<T> {
   }
 };
 
-// =============================================================================
+
 // ThenableState 类型
 // @source:30-35 ThenableState
-// =============================================================================
+
 
 struct ThenableState {
   std::vector<std::shared_ptr<Thenable<std::any>>> thenables;
@@ -110,10 +110,10 @@ struct ThenableState {
 
 using ThenableStateRef = std::shared_ptr<ThenableState>;
 
-// =============================================================================
+
 // Suspense 异常
 // @source:47-67
-// =============================================================================
+
 
 /**
  * SuspenseException - 用于触发 Suspense 的异常
@@ -160,35 +160,26 @@ public:
   }
 };
 
-// =============================================================================
+
 // noop Suspense commit thenable
 // @source:69-79
-// =============================================================================
+
 
 /**
  * 空操作 thenable，用于触发 fallback
  */
-inline std::shared_ptr<Thenable<void>> noopSuspenseyCommitThenable() {
-  auto thenable = std::make_shared<Thenable<void>>();
-  thenable->status = ThenableStatus::Pending;
-  thenable->then = [](auto, auto) {
-    // noop
-  };
-  return thenable;
-}
+std::shared_ptr<Thenable<void>> noopSuspenseyCommitThenable();
 
-// =============================================================================
+
 // 工具函数
 // @source:81-100
-// =============================================================================
+
 
 /**
  * 创建 ThenableState
  * @source:81-92 createThenableState
  */
-inline ThenableStateRef createThenableState() {
-  return std::make_shared<ThenableState>();
-}
+ThenableStateRef createThenableState();
 
 /**
  * 检查 Thenable 是否已解析
@@ -244,14 +235,11 @@ inline T trackUsedThenable(
  * 获取当前 Suspense 处理器抛出的 Thenable
  * @source:300+ getSuspendedThenable
  */
-inline std::shared_ptr<Thenable<std::any>> getSuspendedThenable() {
-  // 简化实现 - 实际需要从 work loop 状态获取
-  return nullptr;
-}
+std::shared_ptr<Thenable<std::any>> getSuspendedThenable();
 
-// =============================================================================
+
 // Thenable 辅助函数
-// =============================================================================
+
 
 /**
  * 创建一个已 fulfilled 的 Thenable

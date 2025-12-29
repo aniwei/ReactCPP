@@ -1,0 +1,2401 @@
+[
+  {
+    "sourceFile": "reactjs/packages/react/src/BadMapPolyfill.js",
+    "exports": [
+      "hasBadMapPolyfill"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactAct.js",
+    "exports": [
+      "act"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactBaseClasses.js",
+    "exports": [
+      "Component",
+      "PureComponent"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactCacheClient.js",
+    "exports": [
+      "cache",
+      "cacheSignal"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactCacheImpl.js",
+    "exports": [
+      "cache",
+      "cacheSignal"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactCacheServer.js",
+    "exports": [
+      "cache",
+      "cacheSignal"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactChildren.js",
+    "exports": [
+      "forEach",
+      "map",
+      "count",
+      "only",
+      "toArray"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactClient.js",
+    "exports": [
+      "Children",
+      "createRef",
+      "Component",
+      "PureComponent",
+      "createContext",
+      "forwardRef",
+      "lazy",
+      "memo",
+      "cache",
+      "cacheSignal",
+      "unstable_postpone",
+      "useCallback",
+      "useContext",
+      "useEffect",
+      "experimental_useEffectEvent",
+      "useImperativeHandle",
+      "useDebugValue",
+      "useInsertionEffect",
+      "useLayoutEffect",
+      "useMemo",
+      "useOptimistic",
+      "useActionState",
+      "useSyncExternalStore",
+      "useReducer",
+      "useRef",
+      "useState",
+      "Fragment",
+      "Profiler",
+      "StrictMode",
+      "Suspense",
+      "createElement",
+      "cloneElement",
+      "isValidElement",
+      "version",
+      "__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE",
+      "__COMPILER_RUNTIME",
+      "useTransition",
+      "startTransition",
+      "useDeferredValue",
+      "unstable_SuspenseList",
+      "unstable_LegacyHidden",
+      "unstable_Activity",
+      "unstable_getCacheForType",
+      "unstable_useCacheRefresh",
+      "use",
+      "unstable_Scope",
+      "unstable_TracingMarker",
+      "unstable_ViewTransition",
+      "unstable_addTransitionType",
+      "unstable_startGestureTransition",
+      "useId",
+      "act",
+      "captureOwnerStack"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactCompilerRuntime.js",
+    "exports": [
+      "c"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactContext.js",
+    "exports": [
+      "createContext"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactCreateRef.js",
+    "exports": [
+      "createRef"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactForwardRef.js",
+    "exports": [
+      "forwardRef"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactHooks.js",
+    "exports": [
+      "getCacheForType",
+      "useContext",
+      "useState",
+      "useReducer",
+      "useRef",
+      "useEffect",
+      "useInsertionEffect",
+      "useLayoutEffect",
+      "useCallback",
+      "useMemo",
+      "useImperativeHandle",
+      "useDebugValue",
+      "useTransition",
+      "useDeferredValue",
+      "useId",
+      "useSyncExternalStore",
+      "useCacheRefresh",
+      "use",
+      "useMemoCache",
+      "useEffectEvent",
+      "useOptimistic",
+      "useActionState"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactLazy.js",
+    "exports": [
+      "LazyComponent",
+      "lazy"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactMemo.js",
+    "exports": [
+      "memo"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactNoopUpdateQueue.js",
+    "exports": [
+      "ReactNoopUpdateQueue"
+    ],
+    "hasDefaultExport": true,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactOwnerStack.js",
+    "exports": [
+      "captureOwnerStack"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactPostpone.js",
+    "exports": [
+      "Postpone",
+      "postpone"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactServer.experimental.development.js",
+    "exports": [
+      "__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE",
+      "experimental_taintUniqueValue",
+      "experimental_taintObjectReference",
+      "Children",
+      "Fragment",
+      "Profiler",
+      "StrictMode",
+      "Suspense",
+      "cloneElement",
+      "createElement",
+      "createRef",
+      "use",
+      "forwardRef",
+      "isValidElement",
+      "lazy",
+      "memo",
+      "cache",
+      "cacheSignal",
+      "startTransition",
+      "unstable_getCacheForType",
+      "unstable_postpone",
+      "useId",
+      "useCallback",
+      "useDebugValue",
+      "useMemo",
+      "version",
+      "unstable_SuspenseList",
+      "unstable_ViewTransition",
+      "captureOwnerStack"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactServer.experimental.js",
+    "exports": [
+      "__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE",
+      "experimental_taintUniqueValue",
+      "experimental_taintObjectReference",
+      "Children",
+      "Fragment",
+      "Profiler",
+      "StrictMode",
+      "Suspense",
+      "cloneElement",
+      "createElement",
+      "createRef",
+      "use",
+      "forwardRef",
+      "isValidElement",
+      "lazy",
+      "memo",
+      "cache",
+      "cacheSignal",
+      "startTransition",
+      "unstable_getCacheForType",
+      "unstable_postpone",
+      "useId",
+      "useCallback",
+      "useDebugValue",
+      "useMemo",
+      "version",
+      "unstable_SuspenseList",
+      "unstable_ViewTransition",
+      "unstable_Activity"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactServer.fb.js",
+    "exports": [
+      "__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE",
+      "Children",
+      "Fragment",
+      "Profiler",
+      "StrictMode",
+      "Suspense",
+      "cloneElement",
+      "createElement",
+      "createRef",
+      "use",
+      "forwardRef",
+      "isValidElement",
+      "lazy",
+      "memo",
+      "cache",
+      "cacheSignal",
+      "useId",
+      "useCallback",
+      "useDebugValue",
+      "useMemo",
+      "version",
+      "captureOwnerStack"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactServer.js",
+    "exports": [
+      "__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE",
+      "Children",
+      "Fragment",
+      "Profiler",
+      "StrictMode",
+      "Suspense",
+      "cloneElement",
+      "createElement",
+      "createRef",
+      "use",
+      "forwardRef",
+      "isValidElement",
+      "lazy",
+      "memo",
+      "cache",
+      "cacheSignal",
+      "useId",
+      "useCallback",
+      "useDebugValue",
+      "useMemo",
+      "version",
+      "captureOwnerStack"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactSharedInternalsClient.js",
+    "exports": [
+      "SharedStateClient",
+      "RendererTask",
+      "ReactSharedInternals"
+    ],
+    "hasDefaultExport": true,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactSharedInternalsServer.js",
+    "exports": [
+      "SharedStateServer",
+      "RendererTask",
+      "ReactSharedInternals"
+    ],
+    "hasDefaultExport": true,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactStartTransition.js",
+    "exports": [
+      "Transition",
+      "startTransition",
+      "startGestureTransition"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactTaint.js",
+    "exports": [
+      "taintUniqueValue",
+      "taintObjectReference"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactTaintRegistry.js",
+    "exports": [
+      "Reference",
+      "TaintEntry",
+      "TaintRegistryObjects",
+      "TaintRegistryValues",
+      "TaintRegistryByteLengths",
+      "RequestCleanupQueue",
+      "TaintRegistryPendingRequests"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/ReactTransitionType.js",
+    "exports": [
+      "TransitionTypes",
+      "addTransitionType"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/jsx/ReactJSX.js",
+    "exports": [
+      "Fragment",
+      "jsx",
+      "jsxs",
+      "jsxDEV"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/jsx/ReactJSXElement.js",
+    "exports": [
+      "jsxProd",
+      "jsxProdSignatureRunningInDevWithDynamicChildren",
+      "jsxProdSignatureRunningInDevWithStaticChildren",
+      "jsxDEV",
+      "createElement",
+      "cloneAndReplaceKey",
+      "cloneElement",
+      "isValidElement"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react/src/jsx/ReactJSXServer.js",
+    "exports": [
+      "Fragment",
+      "jsx",
+      "jsxs",
+      "jsxDEV"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactCapturedValue.js",
+    "exports": [
+      "CapturedValue",
+      "createCapturedValueAtFiber",
+      "createCapturedValueFromError"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactChildFiber.js",
+    "exports": [
+      "reconcileChildFibers",
+      "mountChildFibers",
+      "resetChildReconcilerOnUnwind",
+      "cloneChildFibers",
+      "resetChildFibers",
+      "validateSuspenseListChildren"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactCurrentFiber.js",
+    "exports": [
+      "current",
+      "isRendering",
+      "getCurrentFiberOwnerNameInDevOrNull",
+      "runWithFiberInDEV",
+      "resetCurrentFiber",
+      "setCurrentFiber",
+      "setIsRendering",
+      "getIsRendering"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactEventPriorities.js",
+    "exports": [
+      "EventPriority",
+      "NoEventPriority",
+      "DiscreteEventPriority",
+      "ContinuousEventPriority",
+      "DefaultEventPriority",
+      "IdleEventPriority",
+      "higherEventPriority",
+      "lowerEventPriority",
+      "isHigherEventPriority",
+      "eventPriorityToLane",
+      "lanesToEventPriority"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiber.js",
+    "exports": [
+      "Fiber",
+      "isSimpleFunctionComponent",
+      "isFunctionClassComponent",
+      "createWorkInProgress",
+      "resetWorkInProgress",
+      "createHostRootFiber",
+      "createFiberFromTypeAndProps",
+      "createFiberFromElement",
+      "createFiberFromFragment",
+      "createFiberFromSuspense",
+      "createFiberFromSuspenseList",
+      "createFiberFromOffscreen",
+      "createFiberFromActivity",
+      "createFiberFromViewTransition",
+      "createFiberFromLegacyHidden",
+      "createFiberFromTracingMarker",
+      "createFiberFromText",
+      "createFiberFromDehydratedFragment",
+      "createFiberFromPortal",
+      "createFiberFromThrow"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberAct.js",
+    "exports": [
+      "isLegacyActEnvironment",
+      "isConcurrentActEnvironment"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberActivityComponent.js",
+    "exports": [
+      "ActivityState"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberApplyGesture.js",
+    "exports": [
+      "insertDestinationClones",
+      "applyDepartureTransitions",
+      "startGestureAnimations"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberAsyncAction.js",
+    "exports": [
+      "entangleAsyncAction",
+      "chainThenableValue",
+      "peekEntangledActionLane",
+      "peekEntangledActionThenable",
+      "registerDefaultIndicator",
+      "startIsomorphicDefaultIndicatorIfNeeded",
+      "hasOngoingIsomorphicIndicator",
+      "retainIsomorphicIndicator",
+      "markIsomorphicIndicatorHandled"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberAsyncDispatcher.js",
+    "exports": [
+      "DefaultAsyncDispatcher"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberBeginWork.js",
+    "exports": [
+      "SelectiveHydrationException",
+      "didWarnAboutReassigningProps",
+      "reconcileChildren",
+      "replayFunctionComponent",
+      "markWorkInProgressReceivedUpdate",
+      "checkIfWorkInProgressReceivedUpdate",
+      "beginWork"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberCacheComponent.js",
+    "exports": [
+      "Cache",
+      "CacheComponentState",
+      "SpawnedCachePool",
+      "CacheContext",
+      "createCache",
+      "retainCache",
+      "releaseCache",
+      "pushCacheProvider",
+      "popCacheProvider"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberCallUserSpace.js",
+    "exports": [
+      "callComponentInDEV",
+      "callRenderInDEV",
+      "callComponentDidMountInDEV",
+      "callComponentDidUpdateInDEV",
+      "callComponentDidCatchInDEV",
+      "callComponentWillUnmountInDEV",
+      "callCreateInDEV",
+      "callDestroyInDEV",
+      "callLazyInitInDEV"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberClassComponent.js",
+    "exports": [
+      "resolveClassComponentProps",
+      "constructClassInstance",
+      "mountClassInstance",
+      "resumeMountClassInstance",
+      "updateClassInstance"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberClassUpdateQueue.js",
+    "exports": [
+      "Update",
+      "SharedQueue",
+      "UpdateQueue",
+      "UpdateState",
+      "ReplaceState",
+      "ForceUpdate",
+      "CaptureUpdate",
+      "resetCurrentlyProcessingQueue",
+      "initializeUpdateQueue",
+      "cloneUpdateQueue",
+      "createUpdate",
+      "enqueueUpdate",
+      "entangleTransitions",
+      "enqueueCapturedUpdate",
+      "suspendIfUpdateReadFromEntangledAsyncAction",
+      "processUpdateQueue",
+      "resetHasForceUpdateBeforeProcessing",
+      "checkHasForceUpdateAfterProcessing",
+      "deferHiddenCallbacks",
+      "commitHiddenCallbacks",
+      "commitCallbacks"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberCommitEffects.js",
+    "exports": [
+      "commitHookLayoutEffects",
+      "commitHookLayoutUnmountEffects",
+      "commitHookEffectListMount",
+      "commitHookEffectListUnmount",
+      "commitHookPassiveMountEffects",
+      "commitHookPassiveUnmountEffects",
+      "commitClassLayoutLifecycles",
+      "commitClassDidMount",
+      "commitClassCallbacks",
+      "commitClassHiddenCallbacks",
+      "commitRootCallbacks",
+      "commitClassSnapshot",
+      "safelyCallComponentWillUnmount",
+      "safelyAttachRef",
+      "safelyDetachRef",
+      "commitProfilerUpdate",
+      "commitProfilerPostCommit"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberCommitHostEffects.js",
+    "exports": [
+      "commitHostMount",
+      "commitHostHydratedInstance",
+      "commitHostUpdate",
+      "commitHostTextUpdate",
+      "commitHostResetTextContent",
+      "commitShowHideSuspenseBoundary",
+      "commitShowHideHostInstance",
+      "commitShowHideHostTextInstance",
+      "commitNewChildToFragmentInstances",
+      "commitFragmentInstanceInsertionEffects",
+      "commitFragmentInstanceDeletionEffects",
+      "commitHostPlacement",
+      "commitHostRemoveChildFromContainer",
+      "commitHostRemoveChild",
+      "commitHostRootContainerChildren",
+      "commitHostPortalContainerChildren",
+      "commitHostHydratedContainer",
+      "commitHostHydratedActivity",
+      "commitHostHydratedSuspense",
+      "commitHostSingletonAcquisition",
+      "commitHostSingletonRelease"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberCommitViewTransitions.js",
+    "exports": [
+      "shouldStartViewTransition",
+      "resetShouldStartViewTransition",
+      "appearingViewTransitions",
+      "resetAppearingViewTransitions",
+      "trackAppearingViewTransition",
+      "trackEnterViewTransitions",
+      "viewTransitionCancelableChildren",
+      "pushViewTransitionCancelableScope",
+      "popViewTransitionCancelableScope",
+      "applyViewTransitionToHostInstances",
+      "commitEnterViewTransitions",
+      "commitExitViewTransitions",
+      "commitBeforeUpdateViewTransition",
+      "commitNestedViewTransitions",
+      "restoreEnterOrExitViewTransitions",
+      "restoreUpdateViewTransition",
+      "restoreUpdateViewTransitionForGesture",
+      "restoreNestedViewTransitions",
+      "measureViewTransitionHostInstances",
+      "measureUpdateViewTransition",
+      "measureNestedViewTransitions"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberCommitWork.js",
+    "exports": [
+      "shouldFireAfterActiveInstanceBlur",
+      "commitBeforeMutationEffects",
+      "commitMutationEffects",
+      "commitAfterMutationEffects",
+      "commitLayoutEffects",
+      "disappearLayoutEffects",
+      "reappearLayoutEffects",
+      "commitPassiveMountEffects",
+      "reconnectPassiveEffects",
+      "commitPassiveUnmountEffects",
+      "accumulateSuspenseyCommit",
+      "disconnectPassiveEffect",
+      "invokeLayoutEffectMountInDEV",
+      "invokePassiveEffectMountInDEV",
+      "invokeLayoutEffectUnmountInDEV",
+      "invokePassiveEffectUnmountInDEV"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberCompleteWork.js",
+    "exports": [
+      "completeWork"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberComponentStack.js",
+    "exports": [
+      "getStackByFiberInDevAndProd",
+      "getOwnerStackByFiberInDev"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberConcurrentUpdates.js",
+    "exports": [
+      "ConcurrentUpdate",
+      "finishQueueingConcurrentUpdates",
+      "getConcurrentlyUpdatedLanes",
+      "enqueueConcurrentHookUpdate",
+      "enqueueConcurrentHookUpdateAndEagerlyBailout",
+      "enqueueConcurrentClassUpdate",
+      "enqueueConcurrentRenderForLane",
+      "unsafe_markUpdateLaneFromFiberToRoot"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberConfigWithNoHydration.js",
+    "exports": [
+      "ActivityInstance",
+      "SuspenseInstance",
+      "supportsHydration",
+      "isSuspenseInstancePending",
+      "isSuspenseInstanceFallback",
+      "getSuspenseInstanceFallbackErrorDetails",
+      "registerSuspenseInstanceRetry",
+      "canHydrateFormStateMarker",
+      "isFormStateMarkerMatching",
+      "getNextHydratableSibling",
+      "getNextHydratableSiblingAfterSingleton",
+      "getFirstHydratableChild",
+      "getFirstHydratableChildWithinContainer",
+      "getFirstHydratableChildWithinActivityInstance",
+      "getFirstHydratableChildWithinSuspenseInstance",
+      "getFirstHydratableChildWithinSingleton",
+      "canHydrateInstance",
+      "canHydrateTextInstance",
+      "canHydrateActivityInstance",
+      "canHydrateSuspenseInstance",
+      "hydrateInstance",
+      "hydrateTextInstance",
+      "hydrateActivityInstance",
+      "hydrateSuspenseInstance",
+      "getNextHydratableInstanceAfterActivityInstance",
+      "getNextHydratableInstanceAfterSuspenseInstance",
+      "finalizeHydratedChildren",
+      "commitHydratedInstance",
+      "commitHydratedContainer",
+      "commitHydratedActivityInstance",
+      "commitHydratedSuspenseInstance",
+      "flushHydrationEvents",
+      "clearActivityBoundary",
+      "clearSuspenseBoundary",
+      "clearActivityBoundaryFromContainer",
+      "clearSuspenseBoundaryFromContainer",
+      "hideDehydratedBoundary",
+      "unhideDehydratedBoundary",
+      "shouldDeleteUnhydratedTailInstances",
+      "diffHydratedPropsForDevWarnings",
+      "diffHydratedTextForDevWarnings",
+      "describeHydratableInstanceForDevWarnings",
+      "validateHydratableInstance",
+      "validateHydratableTextInstance"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberConfigWithNoMicrotasks.js",
+    "exports": [
+      "supportsMicrotasks",
+      "scheduleMicrotask"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberConfigWithNoMutation.js",
+    "exports": [
+      "supportsMutation",
+      "cloneMutableInstance",
+      "cloneMutableTextInstance",
+      "appendChild",
+      "appendChildToContainer",
+      "commitTextUpdate",
+      "commitMount",
+      "commitUpdate",
+      "insertBefore",
+      "insertInContainerBefore",
+      "removeChild",
+      "removeChildFromContainer",
+      "resetTextContent",
+      "hideInstance",
+      "hideTextInstance",
+      "unhideInstance",
+      "unhideTextInstance",
+      "clearContainer",
+      "applyViewTransitionName",
+      "restoreViewTransitionName",
+      "cancelViewTransitionName",
+      "cancelRootViewTransitionName",
+      "restoreRootViewTransitionName",
+      "cloneRootViewTransitionContainer",
+      "removeRootViewTransitionClone",
+      "InstanceMeasurement",
+      "measureInstance",
+      "measureClonedInstance",
+      "wasInstanceInViewport",
+      "hasInstanceChanged",
+      "hasInstanceAffectedParent",
+      "startViewTransition",
+      "RunningViewTransition",
+      "startGestureTransition",
+      "stopViewTransition",
+      "ViewTransitionInstance",
+      "createViewTransitionInstance",
+      "GestureTimeline",
+      "getCurrentGestureOffset"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberConfigWithNoPersistence.js",
+    "exports": [
+      "supportsPersistence",
+      "cloneInstance",
+      "createContainerChildSet",
+      "appendChildToContainerChildSet",
+      "finalizeContainerChildren",
+      "replaceContainerChildren",
+      "cloneHiddenInstance",
+      "cloneHiddenTextInstance"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberConfigWithNoResources.js",
+    "exports": [
+      "HoistableRoot",
+      "Resource",
+      "supportsResources",
+      "isHostHoistableType",
+      "getHoistableRoot",
+      "getResource",
+      "acquireResource",
+      "releaseResource",
+      "hydrateHoistable",
+      "mountHoistable",
+      "unmountHoistable",
+      "createHoistableInstance",
+      "prepareToCommitHoistables",
+      "mayResourceSuspendCommit",
+      "preloadResource",
+      "suspendResource"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberConfigWithNoScopes.js",
+    "exports": [
+      "prepareScopeUpdate",
+      "getInstanceFromScope"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberConfigWithNoSingletons.js",
+    "exports": [
+      "supportsSingletons",
+      "resolveSingletonInstance",
+      "acquireSingletonInstance",
+      "releaseSingletonInstance",
+      "isHostSingletonType",
+      "isSingletonScope"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberConfigWithNoTestSelectors.js",
+    "exports": [
+      "supportsTestSelectors",
+      "findFiberRoot",
+      "getBoundingRect",
+      "getTextContent",
+      "isHiddenSubtree",
+      "matchAccessibilityRole",
+      "setFocusIfFocusable",
+      "setupIntersectionObserver"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberDuplicateViewTransitions.js",
+    "exports": [
+      "trackNamedViewTransition",
+      "untrackNamedViewTransition"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberErrorLogger.js",
+    "exports": [
+      "defaultOnUncaughtError",
+      "defaultOnCaughtError",
+      "defaultOnRecoverableError",
+      "logUncaughtError",
+      "logCaughtError"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberFlags.js",
+    "exports": [
+      "Flags",
+      "NoFlags",
+      "PerformedWork",
+      "Placement",
+      "DidCapture",
+      "Hydrating",
+      "Update",
+      "Cloned",
+      "ChildDeletion",
+      "ContentReset",
+      "Callback",
+      "ForceClientRender",
+      "Ref",
+      "Snapshot",
+      "Passive",
+      "Visibility",
+      "StoreConsistency",
+      "Hydrate",
+      "ScheduleRetry",
+      "ShouldSuspendCommit",
+      "ViewTransitionNamedMount",
+      "DidDefer",
+      "FormReset",
+      "AffectedParentLayout",
+      "LifecycleEffectMask",
+      "HostEffectMask",
+      "Incomplete",
+      "ShouldCapture",
+      "ForceUpdateForLegacySuspense",
+      "DidPropagateContext",
+      "NeedsPropagation",
+      "Forked",
+      "SnapshotStatic",
+      "LayoutStatic",
+      "RefStatic",
+      "PassiveStatic",
+      "MaySuspendCommit",
+      "ViewTransitionNamedStatic",
+      "ViewTransitionStatic",
+      "PlacementDEV",
+      "MountLayoutDev",
+      "MountPassiveDev",
+      "BeforeMutationMask",
+      "BeforeAndAfterMutationTransitionMask",
+      "MutationMask",
+      "LayoutMask",
+      "PassiveMask",
+      "PassiveTransitionMask",
+      "StaticMask"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberGestureScheduler.js",
+    "exports": [
+      "ScheduledGesture",
+      "scheduleGesture",
+      "startScheduledGesture",
+      "cancelScheduledGesture",
+      "deleteScheduledGesture",
+      "stopCompletedGestures"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberHiddenContext.js",
+    "exports": [
+      "currentTreeHiddenStackCursor",
+      "prevEntangledRenderLanesCursor",
+      "pushHiddenContext",
+      "reuseHiddenContextOnStack",
+      "popHiddenContext",
+      "isCurrentTreeHidden"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberHooks.js",
+    "exports": [
+      "Update",
+      "UpdateQueue",
+      "Hook",
+      "Effect",
+      "FunctionComponentUpdateQueue",
+      "renderWithHooks",
+      "replaySuspendedComponentWithHooks",
+      "renderTransitionAwareHostComponentWithHooks",
+      "TransitionAwareHostComponent",
+      "checkDidRenderIdHook",
+      "bailoutHooks",
+      "resetHooksAfterThrow",
+      "resetHooksOnUnwind",
+      "startHostTransition",
+      "requestFormReset",
+      "ContextOnlyDispatcher"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberHostContext.js",
+    "exports": [
+      "getHostTransitionProvider",
+      "getHostContext",
+      "getCurrentRootHostContainer",
+      "getRootHostContainer",
+      "popHostContainer",
+      "popHostContext",
+      "pushHostContainer",
+      "pushHostContext"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberHotReloading.js",
+    "exports": [
+      "Family",
+      "RefreshUpdate",
+      "SetRefreshHandler",
+      "ScheduleRefresh",
+      "ScheduleRoot",
+      "setRefreshHandler",
+      "resolveFunctionForHotReloading",
+      "resolveClassForHotReloading",
+      "resolveForwardRefForHotReloading",
+      "isCompatibleFamilyForHotReloading",
+      "markFailedErrorBoundaryForHotReloading",
+      "scheduleRefresh",
+      "scheduleRoot"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberHydrationContext.js",
+    "exports": [
+      "markDidThrowWhileHydratingDEV",
+      "HydrationMismatchException",
+      "tryToClaimNextHydratableFormMarkerInstance",
+      "upgradeHydrationErrorsToRecoverable",
+      "queueHydrationError",
+      "emitPendingHydrationWarnings",
+      "warnIfHydrating",
+      "enterHydrationState",
+      "getIsHydrating",
+      "reenterHydrationStateFromDehydratedActivityInstance",
+      "reenterHydrationStateFromDehydratedSuspenseInstance",
+      "resetHydrationState",
+      "claimHydratableSingleton",
+      "tryToClaimNextHydratableInstance",
+      "tryToClaimNextHydratableTextInstance",
+      "claimNextHydratableActivityInstance",
+      "claimNextHydratableSuspenseInstance",
+      "prepareToHydrateHostInstance",
+      "prepareToHydrateHostTextInstance",
+      "prepareToHydrateHostActivityInstance",
+      "prepareToHydrateHostSuspenseInstance",
+      "popHydrationState"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberHydrationDiffs.js",
+    "exports": [
+      "HydrationDiffNode",
+      "describeDiff"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberLane.js",
+    "exports": [
+      "Lanes",
+      "Lane",
+      "LaneMap",
+      "TotalLanes",
+      "NoLanes",
+      "NoLane",
+      "SyncHydrationLane",
+      "SyncLane",
+      "SyncLaneIndex",
+      "InputContinuousHydrationLane",
+      "InputContinuousLane",
+      "DefaultHydrationLane",
+      "DefaultLane",
+      "SyncUpdateLanes",
+      "GestureLane",
+      "SomeRetryLane",
+      "SelectiveHydrationLane",
+      "IdleHydrationLane",
+      "IdleLane",
+      "OffscreenLane",
+      "DeferredLane",
+      "UpdateLanes",
+      "HydrationLanes",
+      "getLabelForLane",
+      "NoTimestamp",
+      "getNextLanes",
+      "getNextLanesToFlushSync",
+      "checkIfRootIsPrerendering",
+      "getEntangledLanes",
+      "markStarvedLanesAsExpired",
+      "getHighestPriorityPendingLanes",
+      "getLanesToRetrySynchronouslyOnError",
+      "includesSyncLane",
+      "isSyncLane",
+      "includesNonIdleWork",
+      "includesOnlyRetries",
+      "includesOnlyNonUrgentLanes",
+      "includesOnlyTransitions",
+      "includesTransitionLane",
+      "includesOnlyHydrationLanes",
+      "includesOnlyOffscreenLanes",
+      "includesOnlyHydrationOrOffscreenLanes",
+      "includesOnlyViewTransitionEligibleLanes",
+      "includesOnlySuspenseyCommitEligibleLanes",
+      "includesLoadingIndicatorLanes",
+      "includesBlockingLane",
+      "includesExpiredLane",
+      "isBlockingLane",
+      "isTransitionLane",
+      "isGestureRender",
+      "claimNextTransitionLane",
+      "claimNextRetryLane",
+      "getHighestPriorityLane",
+      "pickArbitraryLane",
+      "includesSomeLane",
+      "isSubsetOfLanes",
+      "mergeLanes",
+      "removeLanes",
+      "intersectLanes",
+      "laneToLanes",
+      "higherPriorityLane",
+      "createLaneMap",
+      "markRootUpdated",
+      "markRootSuspended",
+      "markRootPinged",
+      "markRootFinished",
+      "markRootEntangled",
+      "upgradePendingLanesToSync",
+      "markHiddenUpdate",
+      "getBumpedLaneForHydration",
+      "getBumpedLaneForHydrationByLane",
+      "addFiberToLanesMap",
+      "movePendingFibersToMemoized",
+      "addTransitionToLanesMap",
+      "getTransitionsForLanes",
+      "clearTransitionsForLanes",
+      "getGroupNameOfHighestPriorityLane"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberLegacyContext.js",
+    "exports": [
+      "emptyContextObject",
+      "getUnmaskedContext",
+      "cacheContext",
+      "getMaskedContext",
+      "hasContextChanged",
+      "popContext",
+      "popTopLevelContextObject",
+      "pushTopLevelContextObject",
+      "processChildContext",
+      "isContextProvider",
+      "pushContextProvider",
+      "invalidateContextProvider",
+      "findCurrentUnmaskedContext"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberMutationTracking.js",
+    "exports": [
+      "rootMutationContext",
+      "viewTransitionMutationContext",
+      "pushRootMutationContext",
+      "pushMutationContext",
+      "popMutationContext",
+      "trackHostMutation"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberNewContext.js",
+    "exports": [
+      "resetContextDependencies",
+      "enterDisallowedContextReadInDEV",
+      "exitDisallowedContextReadInDEV",
+      "pushProvider",
+      "popProvider",
+      "scheduleContextWorkOnParentPath",
+      "propagateContextChange",
+      "lazilyPropagateParentContextChanges",
+      "propagateParentContextChangesToDeferredTree",
+      "checkIfContextChanged",
+      "prepareToReadContext",
+      "readContext",
+      "readContextDuringReconciliation"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberOffscreenComponent.js",
+    "exports": [
+      "LegacyHiddenProps",
+      "OffscreenProps",
+      "OffscreenState",
+      "OffscreenQueue",
+      "OffscreenVisible",
+      "OffscreenPassiveEffectsConnected",
+      "OffscreenInstance"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberPerformanceTrack.js",
+    "exports": [
+      "setCurrentTrackFromLanes",
+      "markAllLanesInOrder",
+      "logComponentMount",
+      "logComponentUnmount",
+      "logComponentReappeared",
+      "logComponentDisappeared",
+      "pushDeepEquality",
+      "popDeepEquality",
+      "logComponentRender",
+      "logComponentErrored",
+      "logComponentEffect",
+      "logYieldTime",
+      "logSuspendedYieldTime",
+      "logActionYieldTime",
+      "logBlockingStart",
+      "logTransitionStart",
+      "logRenderPhase",
+      "logInterruptedRenderPhase",
+      "logSuspendedRenderPhase",
+      "logSuspendedWithDelayPhase",
+      "logRecoveredRenderPhase",
+      "logErroredRenderPhase",
+      "logInconsistentRender",
+      "logSuspenseThrottlePhase",
+      "logSuspendedCommitPhase",
+      "logCommitErrored",
+      "logCommitPhase",
+      "logPaintYieldPhase",
+      "logPassiveCommitPhase"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberReconciler.js",
+    "exports": [
+      "createPortal",
+      "createComponentSelector",
+      "createHasPseudoClassSelector",
+      "createRoleSelector",
+      "createTestNameSelector",
+      "createTextSelector",
+      "getFindAllNodesFailureDescription",
+      "findAllNodes",
+      "findBoundingRects",
+      "focusWithin",
+      "observeVisibleRects",
+      "startHostTransition",
+      "defaultOnUncaughtError",
+      "defaultOnCaughtError",
+      "defaultOnRecoverableError",
+      "createContainer",
+      "createHydrationContainer",
+      "updateContainer",
+      "updateContainerSync",
+      "batchedUpdates",
+      "deferredUpdates",
+      "discreteUpdates",
+      "flushSyncFromReconciler",
+      "flushSyncWork",
+      "isAlreadyRendering",
+      "flushPassiveEffects",
+      "getPublicRootInstance",
+      "attemptSynchronousHydration",
+      "attemptContinuousHydration",
+      "attemptHydrationAtCurrentPriority",
+      "findHostInstance",
+      "findHostInstanceWithWarning",
+      "findHostInstanceWithNoPortals",
+      "shouldError",
+      "shouldSuspend",
+      "injectIntoDevTools"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberRoot.js",
+    "exports": [
+      "RootState",
+      "createFiberRoot"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberRootScheduler.js",
+    "exports": [
+      "firstScheduledRoot",
+      "ensureRootIsScheduled",
+      "ensureScheduleIsScheduled",
+      "flushSyncWorkOnAllRoots",
+      "flushSyncWorkOnLegacyRootsOnly",
+      "requestTransitionLane",
+      "didCurrentEventScheduleTransition",
+      "markIndicatorHandled"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberScope.js",
+    "exports": [
+      "createScopeInstance"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberShellHydration.js",
+    "exports": [
+      "isRootDehydrated"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberStack.js",
+    "exports": [
+      "StackCursor",
+      "createCursor",
+      "pop",
+      "push"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberSuspenseComponent.js",
+    "exports": [
+      "SuspenseState",
+      "SuspenseListRenderState",
+      "RetryQueue",
+      "findFirstSuspended"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberSuspenseContext.js",
+    "exports": [
+      "getShellBoundary",
+      "pushPrimaryTreeSuspenseHandler",
+      "pushFallbackTreeSuspenseHandler",
+      "pushDehydratedActivitySuspenseHandler",
+      "pushOffscreenSuspenseHandler",
+      "reuseSuspenseHandlerOnStack",
+      "getSuspenseHandler",
+      "popSuspenseHandler",
+      "SuspenseContext",
+      "SubtreeSuspenseContext",
+      "ShallowSuspenseContext",
+      "ForceSuspenseFallback",
+      "suspenseStackCursor",
+      "hasSuspenseListContext",
+      "setDefaultShallowSuspenseListContext",
+      "setShallowSuspenseListContext",
+      "pushSuspenseListContext",
+      "popSuspenseListContext"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberThenable.js",
+    "exports": [
+      "ThenableState",
+      "SuspenseException",
+      "SuspenseyCommitException",
+      "SuspenseActionException",
+      "noopSuspenseyCommitThenable",
+      "createThenableState",
+      "isThenableResolved",
+      "trackUsedThenable",
+      "suspendCommit",
+      "resolveLazy",
+      "getSuspendedThenable",
+      "checkIfUseWrappedInTryCatch",
+      "checkIfUseWrappedInAsyncCatch"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberThrow.js",
+    "exports": [
+      "throwException",
+      "createRootErrorUpdate",
+      "createClassErrorUpdate",
+      "initializeClassErrorUpdate"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberTracingMarkerComponent.js",
+    "exports": [
+      "SuspenseInfo",
+      "PendingTransitionCallbacks",
+      "TracingMarkerInstance",
+      "TransitionAbort",
+      "TransitionRoot",
+      "TransitionTracingMarker",
+      "TracingMarkerTag",
+      "PendingBoundaries",
+      "processTransitionCallbacks",
+      "pushRootMarkerInstance",
+      "popRootMarkerInstance",
+      "pushMarkerInstance",
+      "popMarkerInstance",
+      "getMarkerInstances"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberTransition.js",
+    "exports": [
+      "NoTransition",
+      "requestCurrentTransition",
+      "requestCacheFromPool",
+      "pushRootTransition",
+      "popRootTransition",
+      "pushTransition",
+      "popTransition",
+      "getPendingTransitions",
+      "getSuspendedCache",
+      "getOffscreenDeferredCache"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberTransitionTypes.js",
+    "exports": [
+      "queueTransitionTypes",
+      "entangledTransitionTypes",
+      "entangleAsyncTransitionTypes",
+      "clearEntangledAsyncTransitionTypes",
+      "claimQueuedTransitionTypes"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberTreeContext.js",
+    "exports": [
+      "TreeContext",
+      "isForkedChild",
+      "getForksAtLevel",
+      "getTreeId",
+      "pushTreeFork",
+      "pushTreeId",
+      "pushMaterializedTreeId",
+      "popTreeContext",
+      "getSuspendedTreeContext",
+      "restoreSuspendedTreeContext"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberTreeReflection.js",
+    "exports": [
+      "getNearestMountedFiber",
+      "getSuspenseInstanceFromFiber",
+      "getActivityInstanceFromFiber",
+      "getContainerFromFiber",
+      "findCurrentFiberUsingSlowPath",
+      "findCurrentHostFiber",
+      "findCurrentHostFiberWithNoPortals",
+      "isFiberSuspenseAndTimedOut",
+      "doesFiberContain",
+      "traverseFragmentInstance",
+      "traverseFragmentInstanceDeeply",
+      "getFragmentParentHostFiber",
+      "fiberIsPortaledIntoHost",
+      "getInstanceFromHostFiber",
+      "getNextSiblingHostFiber",
+      "isFiberContainedByFragment",
+      "isFragmentContainedByFiber",
+      "isFiberPreceding",
+      "isFiberFollowing",
+      "getLowestCommonAncestor"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberUnwindWork.js",
+    "exports": [
+      "unwindWork",
+      "unwindInterruptedWork"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberViewTransitionComponent.js",
+    "exports": [
+      "ViewTransitionState",
+      "getViewTransitionName",
+      "getViewTransitionClassName"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactFiberWorkLoop.js",
+    "exports": [
+      "NoContext",
+      "RenderContext",
+      "CommitContext",
+      "SuspendedReason",
+      "entangledRenderLanes",
+      "getWorkInProgressTransitions",
+      "addTransitionStartCallbackToPendingTransition",
+      "addMarkerProgressCallbackToPendingTransition",
+      "addMarkerIncompleteCallbackToPendingTransition",
+      "addMarkerCompleteCallbackToPendingTransition",
+      "addTransitionProgressCallbackToPendingTransition",
+      "addTransitionCompleteCallbackToPendingTransition",
+      "getRenderTargetTime",
+      "getWorkInProgressRoot",
+      "getCommittingRoot",
+      "getWorkInProgressRootRenderLanes",
+      "hasPendingCommitEffects",
+      "getRootWithPendingPassiveEffects",
+      "getPendingPassiveEffectsLanes",
+      "getPendingTransitionTypes",
+      "isWorkLoopSuspendedOnData",
+      "getCurrentTime",
+      "requestUpdateLane",
+      "requestDeferredLane",
+      "scheduleViewTransitionEvent",
+      "peekDeferredLane",
+      "scheduleUpdateOnFiber",
+      "scheduleInitialHydrationOnRoot",
+      "isUnsafeClassRenderPhaseUpdate",
+      "performWorkOnRoot",
+      "queueRecoverableErrors",
+      "flushRoot",
+      "getExecutionContext",
+      "deferredUpdates",
+      "batchedUpdates",
+      "discreteUpdates",
+      "flushSyncFromReconciler",
+      "flushSyncWork",
+      "isAlreadyRendering",
+      "isInvalidExecutionContextForEventFunction",
+      "setEntangledRenderLanes",
+      "getEntangledRenderLanes",
+      "shouldRemainOnPreviousScreen",
+      "markRenderDerivedCause",
+      "markCommitTimeOfFallback",
+      "markSkippedUpdateLanes",
+      "renderDidSuspend",
+      "renderDidSuspendDelayIfPossible",
+      "renderDidError",
+      "queueConcurrentError",
+      "renderHasNotSuspendedYet",
+      "markSpawnedRetryLane",
+      "flushPendingEffects",
+      "isAlreadyFailedLegacyErrorBoundary",
+      "markLegacyErrorBoundaryAsFailed",
+      "captureCommitPhaseError",
+      "attachPingListener",
+      "retryDehydratedSuspenseBoundary",
+      "resolveRetryWakeable",
+      "throwIfInfiniteUpdateLoopDetected",
+      "warnAboutUpdateOnNotYetMountedFiberInDEV",
+      "restorePendingUpdaters",
+      "setIsRunningInsertionEffect"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactHookEffectTags.js",
+    "exports": [
+      "HookFlags",
+      "NoFlags",
+      "HasEffect",
+      "Insertion",
+      "Layout",
+      "Passive"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactInternalTypes.js",
+    "exports": [
+      "HookType",
+      "ContextDependency",
+      "Dependencies",
+      "MemoCache",
+      "Fiber",
+      "SuspenseHydrationCallbacks",
+      "TransitionTracingCallbacks",
+      "FiberRoot",
+      "Dispatcher",
+      "AsyncDispatcher"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactPortal.js",
+    "exports": [
+      "createPortal"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactPostPaintCallback.js",
+    "exports": [
+      "schedulePostPaintCallback"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactProfilerTimer.js",
+    "exports": [
+      "REGULAR_UPDATE",
+      "SPAWNED_UPDATE",
+      "PINGED_UPDATE",
+      "UpdateType",
+      "renderStartTime",
+      "commitStartTime",
+      "commitEndTime",
+      "commitErrors",
+      "profilerStartTime",
+      "profilerEffectDuration",
+      "componentEffectDuration",
+      "componentEffectStartTime",
+      "componentEffectEndTime",
+      "componentEffectErrors",
+      "blockingClampTime",
+      "blockingUpdateTime",
+      "blockingUpdateTask",
+      "blockingUpdateType",
+      "blockingEventTime",
+      "blockingEventType",
+      "blockingEventIsRepeat",
+      "blockingSuspendedTime",
+      "transitionClampTime",
+      "transitionStartTime",
+      "transitionUpdateTime",
+      "transitionUpdateType",
+      "transitionUpdateTask",
+      "transitionEventTime",
+      "transitionEventType",
+      "transitionEventIsRepeat",
+      "transitionSuspendedTime",
+      "yieldReason",
+      "yieldStartTime",
+      "startYieldTimer",
+      "startUpdateTimerByLane",
+      "startHostActionTimer",
+      "startPingTimerByLanes",
+      "trackSuspendedTime",
+      "clearBlockingTimers",
+      "startAsyncTransitionTimer",
+      "hasScheduledTransitionWork",
+      "clearAsyncTransitionTimer",
+      "clearTransitionTimers",
+      "clampBlockingTimers",
+      "clampTransitionTimers",
+      "pushNestedEffectDurations",
+      "popNestedEffectDurations",
+      "bubbleNestedEffectDurations",
+      "resetComponentEffectTimers",
+      "pushComponentEffectStart",
+      "popComponentEffectStart",
+      "pushComponentEffectDuration",
+      "popComponentEffectDuration",
+      "pushComponentEffectErrors",
+      "popComponentEffectErrors",
+      "isCurrentUpdateNested",
+      "markNestedUpdateScheduled",
+      "resetNestedUpdateFlag",
+      "syncNestedUpdateFlag",
+      "recordRenderTime",
+      "recordCommitTime",
+      "recordCommitEndTime",
+      "startProfilerTimer",
+      "stopProfilerTimerIfRunning",
+      "stopProfilerTimerIfRunningAndRecordDuration",
+      "stopProfilerTimerIfRunningAndRecordIncompleteDuration",
+      "recordEffectDuration",
+      "recordEffectError",
+      "resetCommitErrors",
+      "startEffectTimer",
+      "transferActualDuration"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactReconcilerConstants.js",
+    "exports": [
+      "NoEventPriority",
+      "DiscreteEventPriority",
+      "ContinuousEventPriority",
+      "DefaultEventPriority",
+      "IdleEventPriority",
+      "ConcurrentRoot",
+      "LegacyRoot"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactRootTags.js",
+    "exports": [
+      "RootTag",
+      "LegacyRoot",
+      "ConcurrentRoot"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactStrictModeWarnings.js",
+    "exports": [
+      "ReactStrictModeWarnings"
+    ],
+    "hasDefaultExport": true,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactTestSelectors.js",
+    "exports": [
+      "createComponentSelector",
+      "createHasPseudoClassSelector",
+      "createRoleSelector",
+      "createTextSelector",
+      "createTestNameSelector",
+      "findAllNodes",
+      "getFindAllNodesFailureDescription",
+      "BoundingRect",
+      "findBoundingRects",
+      "focusWithin",
+      "onCommitRoot",
+      "IntersectionObserverOptions",
+      "ObserveVisibleRectsCallback",
+      "observeVisibleRects"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactTypeOfMode.js",
+    "exports": [
+      "TypeOfMode",
+      "NoMode",
+      "ConcurrentMode",
+      "ProfileMode",
+      "StrictLegacyMode",
+      "StrictEffectsMode",
+      "SuspenseyImagesMode"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/ReactWorkTags.js",
+    "exports": [
+      "WorkTag",
+      "FunctionComponent",
+      "ClassComponent",
+      "HostRoot",
+      "HostPortal",
+      "HostComponent",
+      "HostText",
+      "Fragment",
+      "Mode",
+      "ContextConsumer",
+      "ContextProvider",
+      "ForwardRef",
+      "Profiler",
+      "SuspenseComponent",
+      "MemoComponent",
+      "SimpleMemoComponent",
+      "LazyComponent",
+      "IncompleteClassComponent",
+      "DehydratedFragment",
+      "SuspenseListComponent",
+      "ScopeComponent",
+      "OffscreenComponent",
+      "LegacyHiddenComponent",
+      "CacheComponent",
+      "TracingMarkerComponent",
+      "HostHoistable",
+      "HostSingleton",
+      "IncompleteFunctionComponent",
+      "Throw",
+      "ViewTransitionComponent",
+      "ActivityComponent"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/Scheduler.js",
+    "exports": [
+      "scheduleCallback",
+      "cancelCallback",
+      "shouldYield",
+      "requestPaint",
+      "now",
+      "getCurrentPriorityLevel",
+      "ImmediatePriority",
+      "UserBlockingPriority",
+      "NormalPriority",
+      "LowPriority",
+      "IdlePriority",
+      "SchedulerCallback",
+      "log",
+      "unstable_setDisableYieldValue"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/clz32.js",
+    "exports": [
+      "clz32"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/react-reconciler/src/getComponentNameFromFiber.js",
+    "exports": [
+      "getComponentNameFromOwner",
+      "getComponentNameFromFiber"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/scheduler/src/SchedulerFeatureFlags.js",
+    "exports": [
+      "enableProfiling",
+      "frameYieldMs",
+      "userBlockingPriorityTimeout",
+      "normalPriorityTimeout",
+      "lowPriorityTimeout",
+      "enableRequestPaint",
+      "enableAlwaysYieldScheduler"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/scheduler/src/SchedulerMinHeap.js",
+    "exports": [
+      "push",
+      "peek",
+      "pop"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/scheduler/src/SchedulerPriorities.js",
+    "exports": [
+      "PriorityLevel",
+      "NoPriority",
+      "ImmediatePriority",
+      "UserBlockingPriority",
+      "NormalPriority",
+      "LowPriority",
+      "IdlePriority"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/scheduler/src/SchedulerProfiling.js",
+    "exports": [
+      "startLoggingProfilingEvents",
+      "stopLoggingProfilingEvents",
+      "markTaskStart",
+      "markTaskCompleted",
+      "markTaskCanceled",
+      "markTaskErrored",
+      "markTaskRun",
+      "markTaskYield",
+      "markSchedulerSuspended",
+      "markSchedulerUnsuspended"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/CheckStringCoercion.js",
+    "exports": [
+      "checkAttributeStringCoercion",
+      "checkKeyStringCoercion",
+      "checkPropStringCoercion",
+      "checkOptionStringCoercion",
+      "checkCSSPropertyStringCoercion",
+      "checkHtmlStringCoercion",
+      "checkFormFieldValueStringCoercion"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/ConsolePatchingDev.js",
+    "exports": [
+      "disableLogs",
+      "reenableLogs"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/DefaultPrepareStackTraceV8.js",
+    "exports": [
+      "prepareStackTrace"
+    ],
+    "hasDefaultExport": true,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/ExecutionEnvironment.js",
+    "exports": [
+      "canUseDOM"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/ReactComponentInfoStack.js",
+    "exports": [
+      "getOwnerStackByComponentInfoInDev"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/ReactComponentStackFrame.js",
+    "exports": [
+      "describeBuiltInComponentFrame",
+      "describeDebugInfoFrame",
+      "describeNativeComponentFrame",
+      "describeClassComponentFrame",
+      "describeFunctionComponentFrame"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/ReactDOMFragmentRefShared.js",
+    "exports": [
+      "compareDocumentPositionForEmptyFragment"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/ReactDOMSharedInternals.js",
+    "exports": [
+      "ReactDOMSharedInternals"
+    ],
+    "hasDefaultExport": true,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/ReactElementType.js",
+    "exports": [
+      "ReactElement"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/ReactFeatureFlags.js",
+    "exports": [
+      "enableHydrationLaneScheduling",
+      "disableSchedulerTimeoutInWorkLoop",
+      "enableSuspenseCallback",
+      "enableScopeAPI",
+      "enableCreateEventHandleAPI",
+      "enableLegacyFBSupport",
+      "enableYieldingBeforePassive",
+      "enableThrottledScheduling",
+      "enableLegacyCache",
+      "enableAsyncIterableChildren",
+      "enableTaint",
+      "enablePostpone",
+      "enableHalt",
+      "enableViewTransition",
+      "enableGestureTransition",
+      "enableScrollEndPolyfill",
+      "enableSuspenseyImages",
+      "enableFizzBlockingRender",
+      "enableSrcObject",
+      "enableHydrationChangeEvent",
+      "enableDefaultTransitionIndicator",
+      "enableObjectFiber",
+      "enableTransitionTracing",
+      "enableLegacyHidden",
+      "enableSuspenseAvoidThisFallback",
+      "enableCPUSuspense",
+      "enableNoCloningMemoCache",
+      "enableUseEffectEventHook",
+      "enableFizzExternalRuntime",
+      "alwaysThrottleRetries",
+      "passChildrenWhenCloningPersistedNodes",
+      "enablePersistedModeClonedFlag",
+      "enableEagerAlternateStateNodeCleanup",
+      "enableRetryLaneExpiration",
+      "retryLaneExpirationMs",
+      "syncLaneExpirationMs",
+      "transitionLaneExpirationMs",
+      "enableInfiniteRenderLoopDetection",
+      "enableFragmentRefs",
+      "renameElementSymbol",
+      "enableHiddenSubtreeInsertionEffectCleanup",
+      "disableLegacyContext",
+      "disableLegacyContextForFunctionComponents",
+      "enableMoveBefore",
+      "disableClientCache",
+      "enableReactTestRendererWarning",
+      "disableLegacyMode",
+      "disableCommentsAsDOMContainers",
+      "enableTrustedTypesIntegration",
+      "disableInputAttributeSyncing",
+      "disableTextareaChildren",
+      "enableProfilerTimer",
+      "enableComponentPerformanceTrack",
+      "enableSchedulingProfiler",
+      "enableProfilerCommitHooks",
+      "enableProfilerNestedUpdatePhase",
+      "enableAsyncDebugInfo",
+      "enableUpdaterTracking",
+      "ownerStackLimit"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/ReactFlightPropertyAccess.js",
+    "exports": [
+      "OMITTED_PROP_ERROR"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/ReactIODescription.js",
+    "exports": [
+      "getIODescription"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/ReactInstanceMap.js",
+    "exports": [
+      "get",
+      "set"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/ReactOwnerStackFrames.js",
+    "exports": [
+      "formatOwnerStack"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/ReactOwnerStackReset.js",
+    "exports": [
+      "resetOwnerStackLimit"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/ReactPerformanceTrackProperties.js",
+    "exports": [
+      "addObjectToProperties",
+      "addValueToProperties",
+      "addObjectDiffToProperties"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/ReactSerializationErrors.js",
+    "exports": [
+      "jsxPropsParents",
+      "jsxChildrenParents",
+      "isGetter",
+      "isSimpleObject",
+      "objectName",
+      "describeValueForErrorMessage",
+      "describeObjectForErrorMessage"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/ReactSharedInternals.js",
+    "exports": [
+      "ReactSharedInternals"
+    ],
+    "hasDefaultExport": true,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/ReactSymbols.js",
+    "exports": [
+      "REACT_LEGACY_ELEMENT_TYPE",
+      "REACT_ELEMENT_TYPE",
+      "REACT_PORTAL_TYPE",
+      "REACT_FRAGMENT_TYPE",
+      "REACT_STRICT_MODE_TYPE",
+      "REACT_PROFILER_TYPE",
+      "REACT_CONSUMER_TYPE",
+      "REACT_CONTEXT_TYPE",
+      "REACT_FORWARD_REF_TYPE",
+      "REACT_SUSPENSE_TYPE",
+      "REACT_SUSPENSE_LIST_TYPE",
+      "REACT_MEMO_TYPE",
+      "REACT_LAZY_TYPE",
+      "REACT_SCOPE_TYPE",
+      "REACT_ACTIVITY_TYPE",
+      "REACT_LEGACY_HIDDEN_TYPE",
+      "REACT_TRACING_MARKER_TYPE",
+      "REACT_MEMO_CACHE_SENTINEL",
+      "REACT_POSTPONE_TYPE",
+      "REACT_VIEW_TRANSITION_TYPE",
+      "getIteratorFn",
+      "ASYNC_ITERATOR"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/assign.js",
+    "exports": [
+      "assign"
+    ],
+    "hasDefaultExport": true,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/binaryToComparableString.js",
+    "exports": [
+      "binaryToComparableString"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/enqueueTask.js",
+    "exports": [
+      "enqueueTask"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/formatProdErrorMessage.js",
+    "exports": [
+      "formatProdErrorMessage"
+    ],
+    "hasDefaultExport": true,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/getComponentNameFromType.js",
+    "exports": [
+      "getComponentNameFromType"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/getPrototypeOf.js",
+    "exports": [
+      "getPrototypeOf"
+    ],
+    "hasDefaultExport": true,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/hasOwnProperty.js",
+    "exports": [
+      "hasOwnProperty"
+    ],
+    "hasDefaultExport": true,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/isArray.js",
+    "exports": [
+      "isArray"
+    ],
+    "hasDefaultExport": true,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/noop.js",
+    "exports": [
+      "noop"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/normalizeConsoleFormat.js",
+    "exports": [
+      "normalizeConsoleFormat"
+    ],
+    "hasDefaultExport": false,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/objectIs.js",
+    "exports": [
+      "objectIs"
+    ],
+    "hasDefaultExport": true,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/reportGlobalError.js",
+    "exports": [
+      "reportGlobalError"
+    ],
+    "hasDefaultExport": true,
+    "hasExportAll": false
+  },
+  {
+    "sourceFile": "reactjs/packages/shared/shallowEqual.js",
+    "exports": [
+      "shallowEqual"
+    ],
+    "hasDefaultExport": true,
+    "hasExportAll": false
+  }
+]

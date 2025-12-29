@@ -17,17 +17,17 @@
 
 namespace react::scheduler {
 
-// =============================================================================
+
 // PriorityLevel 类型定义
 // @source:10
-// =============================================================================
+
 
 using PriorityLevel = uint8_t;
 
-// =============================================================================
+
 // Priority 常量
 // @source:12-18
-// =============================================================================
+
 
 // @source:13 - NoPriority = 0
 constexpr PriorityLevel NoPriority = 0;
@@ -47,24 +47,14 @@ constexpr PriorityLevel LowPriority = 4;
 // @source:18 - IdlePriority = 5
 constexpr PriorityLevel IdlePriority = 5;
 
-// =============================================================================
+
 // 辅助函数
-// =============================================================================
+
 
 /**
  * 获取优先级的字符串名称（用于调试输出）
  */
-inline const char* getPriorityName(PriorityLevel priority) {
-    switch (priority) {
-        case NoPriority: return "NoPriority";
-        case ImmediatePriority: return "ImmediatePriority";
-        case UserBlockingPriority: return "UserBlockingPriority";
-        case NormalPriority: return "NormalPriority";
-        case LowPriority: return "LowPriority";
-        case IdlePriority: return "IdlePriority";
-        default: return "Unknown";
-    }
-}
+const char* getPriorityName(PriorityLevel priority);
 
 /**
  * 判断优先级是否有效

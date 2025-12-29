@@ -18,10 +18,10 @@
 
 namespace react::reconciler {
 
-// =============================================================================
+
 // CapturedValue 类型
 // @source:17-21 CapturedValue
-// =============================================================================
+
 
 /**
  * CapturedValue 表示捕获的错误或异常值
@@ -46,9 +46,9 @@ using CapturedValueRef = std::shared_ptr<CapturedValue<T>>;
 using AnyCapturedValue = CapturedValue<std::any>;
 using AnyCapturedValueRef = std::shared_ptr<AnyCapturedValue>;
 
-// =============================================================================
+
 // 错误类型的 CapturedValue
-// =============================================================================
+
 
 /**
  * ErrorCapturedValue 专门用于捕获错误/异常
@@ -63,53 +63,16 @@ struct ErrorCapturedValue {
 
 using ErrorCapturedValueRef = std::shared_ptr<ErrorCapturedValue>;
 
-// =============================================================================
+
 // 工具函数
 // @source:23-45 createCapturedValueAtFiber
-// =============================================================================
+
 
 /**
  * 获取 Fiber 的组件堆栈
  * @source ReactFiberComponentStack.js getStackByFiberInDevAndProd
  */
-inline std::string getStackByFiber(FiberRef fiber) {
-  std::string stack;
-  FiberRef current = fiber;
-  
-  while (current) {
-    // 简化实现：只记录组件类型
-    std::string componentName;
-    switch (current->tag) {
-      case FunctionComponent:
-        componentName = "FunctionComponent";
-        break;
-      case ClassComponent:
-        componentName = "ClassComponent";
-        break;
-      case HostRoot:
-        componentName = "HostRoot";
-        break;
-      case HostComponent:
-        componentName = "HostComponent";
-        break;
-      case SuspenseComponent:
-        componentName = "SuspenseComponent";
-        break;
-      default:
-        componentName = "UnknownComponent";
-        break;
-    }
-    
-    if (!stack.empty()) {
-      stack += "\n";
-    }
-    stack += "    at " + componentName;
-    
-    current = current->return_.lock();
-  }
-  
-  return stack;
-}
+std::string getStackByFiber(FiberRef fiber);
 
 /**
  * 在 Fiber 位置创建 CapturedValue
@@ -128,39 +91,18 @@ inline CapturedValueRef<T> createCapturedValueAtFiber(T value, FiberRef source) 
  * 从错误创建 CapturedValue
  * @source:47-58 createCapturedValueFromError
  */
-inline ErrorCapturedValueRef createCapturedValueFromError(
+ErrorCapturedValueRef createCapturedValueFromError(
   std::exception_ptr error,
   const std::optional<std::string>& stack = std::nullopt
-) {
-  auto captured = std::make_shared<ErrorCapturedValue>();
-  captured->error = error;
-  captured->stack = stack;
-  
-  // 尝试获取错误消息
-  if (error) {
-    try {
-      std::rethrow_exception(error);
-    } catch (const std::exception& e) {
-      captured->message = e.what();
-    } catch (...) {
-      captured->message = "Unknown error";
-    }
-  }
-  
-  return captured;
-}
+);
 
 /**
  * 创建带有 digest 的 CapturedValue
  */
-inline ErrorCapturedValueRef createCapturedValueWithDigest(
+ErrorCapturedValueRef createCapturedValueWithDigest(
   std::exception_ptr error,
   const std::string& digest,
   const std::optional<std::string>& stack = std::nullopt
-) {
-  auto captured = createCapturedValueFromError(error, stack);
-  captured->digest = digest;
-  return captured;
-}
+);
 
 } // namespace react::reconciler

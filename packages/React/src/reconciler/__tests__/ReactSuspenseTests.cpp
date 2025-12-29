@@ -24,9 +24,9 @@ inline FiberRef makeTestFiber(WorkTag tag, TypeOfMode mode = NoMode) {
   return std::make_shared<Fiber>(tag, mode);
 }
 
-// =============================================================================
+
 // SuspenseState 测试
-// =============================================================================
+
 
 class SuspenseStateTest : public ::testing::Test {
 protected:
@@ -68,9 +68,9 @@ TEST_F(SuspenseStateTest, StateWithHydrationErrors) {
   EXPECT_EQ(state.hydrationErrors.size(), 2);
 }
 
-// =============================================================================
+
 // SuspenseListRenderState 测试
-// =============================================================================
+
 
 class SuspenseListRenderStateTest : public ::testing::Test {};
 
@@ -94,9 +94,9 @@ TEST_F(SuspenseListRenderStateTest, BackwardsState) {
   EXPECT_EQ(state.renderingStartTime, 1234567890);
 }
 
-// =============================================================================
+
 // Wakeable 测试
-// =============================================================================
+
 
 class WakeableTest : public ::testing::Test {};
 
@@ -122,9 +122,9 @@ TEST_F(WakeableTest, ThenFunction) {
   EXPECT_TRUE(resolved);
 }
 
-// =============================================================================
+
 // RetryQueue 测试
-// =============================================================================
+
 
 class RetryQueueTest : public ::testing::Test {};
 
@@ -142,9 +142,9 @@ TEST_F(RetryQueueTest, AddWakeables) {
   EXPECT_TRUE(queue.count(wakeable2) == 1);
 }
 
-// =============================================================================
+
 // Thenable 测试
-// =============================================================================
+
 
 class ThenableTest : public ::testing::Test {};
 
@@ -210,9 +210,9 @@ TEST_F(ThenableTest, IsThenableResolved) {
   EXPECT_TRUE(isThenableResolved(rejected));
 }
 
-// =============================================================================
+
 // ThenableState 测试
-// =============================================================================
+
 
 class ThenableStateTest : public ::testing::Test {};
 
@@ -235,9 +235,9 @@ TEST_F(ThenableStateTest, AddThenables) {
   EXPECT_EQ(state->thenables.size(), 2);
 }
 
-// =============================================================================
+
 // SuspenseException 测试
-// =============================================================================
+
 
 class SuspenseExceptionTest : public ::testing::Test {};
 
@@ -263,9 +263,9 @@ TEST_F(SuspenseExceptionTest, SuspenseActionException) {
   EXPECT_STREQ(exception.what(), "Suspense Action Exception: Action suspended");
 }
 
-// =============================================================================
+
 // SuspenseContext 测试
-// =============================================================================
+
 
 class SuspenseContextTest : public ::testing::Test {};
 
@@ -311,9 +311,9 @@ TEST_F(SuspenseContextTest, SetDefaultShallowSuspenseListContext) {
   EXPECT_TRUE(hasSuspenseListContext(result, SubtreeSuspenseContextMask));
 }
 
-// =============================================================================
+
 // StackCursor 测试
-// =============================================================================
+
 
 class StackCursorTest : public ::testing::Test {
 protected:
@@ -374,9 +374,9 @@ TEST_F(StackCursorTest, MultiplePushPop) {
   EXPECT_EQ(cursor.current, "base");
 }
 
-// =============================================================================
+
 // SuspenseHandler 测试
-// =============================================================================
+
 
 class SuspenseHandlerTest : public ::testing::Test {
 protected:
@@ -434,9 +434,9 @@ TEST_F(SuspenseHandlerTest, ReuseSuspenseHandlerOnStack) {
   popSuspenseHandler(fiber);
 }
 
-// =============================================================================
+
 // ConcurrentUpdate 测试
-// =============================================================================
+
 
 class ConcurrentUpdateTest : public ::testing::Test {
 protected:
@@ -545,9 +545,9 @@ TEST_F(ConcurrentUpdateTest, MarkUpdateLaneFromFiberToRoot) {
   EXPECT_EQ(result, fiberRoot);
 }
 
-// =============================================================================
+
 // findFirstSuspended 测试
-// =============================================================================
+
 
 class FindFirstSuspendedTest : public ::testing::Test {};
 
@@ -593,9 +593,9 @@ TEST_F(FindFirstSuspendedTest, FindSuspendedInRow) {
   EXPECT_NE(result, nullptr);
 }
 
-// =============================================================================
+
 // 综合场景测试
-// =============================================================================
+
 
 class SuspenseIntegrationTest : public ::testing::Test {
 protected:

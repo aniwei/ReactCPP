@@ -1,14 +1,17 @@
 {
-  "name": "react-lua",
+  "name": "react-cpp",
   "version": "0.1.0",
   "private": true,
-  "description": "Tooling and scripts for the React C++ translation pipeline.",
+  "description": "ReactJS to JSI C++ translation pipeline - 1:1 source transpilation toolkit.",
   "license": "MIT",
   "scripts": {
     "translate-react": "node scripts/translate-react.js",
     "check-parity": "node scripts/check-parity.js",
-    "generate-mapping": "node scripts/translate-react.js --out docs/reactcpp/generated",
-    "check-line-parity": "node scripts/check-line-parity.js"
+    "generate-mapping": "node scripts/generate-react-mapping.js",
+    "generate-mapping:verbose": "node scripts/generate-react-mapping.js --verbose",
+    "generate-mapping:stats": "node scripts/generate-react-mapping.js --stats",
+    "check-line-parity": "node scripts/check-line-parity.js",
+    "generate-transpiled-strings": "node scripts/generate-transpiled-strings.js"
   },
   "devDependencies": {
     "@babel/parser": "^7.25.0",

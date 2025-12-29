@@ -1,0 +1,14 @@
+/Users/aniwei/Desktop/ReactCPP/build-check/CMakeFiles/ReactCPP.dir
+/Users/aniwei/Desktop/ReactCPP/build-check/CMakeFiles/edit_cache.dir
+/Users/aniwei/Desktop/ReactCPP/build-check/CMakeFiles/rebuild_cache.dir
+/Users/aniwei/Desktop/ReactCPP/build-check/CMakeFiles/list_install_components.dir
+/Users/aniwei/Desktop/ReactCPP/build-check/CMakeFiles/install.dir
+/Users/aniwei/Desktop/ReactCPP/build-check/CMakeFiles/install/local.dir
+/Users/aniwei/Desktop/ReactCPP/build-check/CMakeFiles/install/strip.dir
+/Users/aniwei/Desktop/ReactCPP/build-check/jsi/CMakeFiles/jsi.dir
+/Users/aniwei/Desktop/ReactCPP/build-check/jsi/CMakeFiles/edit_cache.dir
+/Users/aniwei/Desktop/ReactCPP/build-check/jsi/CMakeFiles/rebuild_cache.dir
+/Users/aniwei/Desktop/ReactCPP/build-check/jsi/CMakeFiles/list_install_components.dir
+/Users/aniwei/Desktop/ReactCPP/build-check/jsi/CMakeFiles/install.dir
+/Users/aniwei/Desktop/ReactCPP/build-check/jsi/CMakeFiles/install/local.dir
+/Users/aniwei/Desktop/ReactCPP/build-check/jsi/CMakeFiles/install/strip.dir

@@ -23,9 +23,9 @@ inline FiberRef makeTestFiber(WorkTag tag, TypeOfMode mode = NoMode) {
   return std::make_shared<Fiber>(tag, mode);
 }
 
-// =============================================================================
+
 // BeginWorkContext 测试 (扩展版)
-// =============================================================================
+
 
 class BeginWorkContextExtendedTest : public ::testing::Test {};
 
@@ -42,9 +42,9 @@ TEST_F(BeginWorkContextExtendedTest, SetUpdate) {
   EXPECT_TRUE(context.didReceiveUpdate);
 }
 
-// =============================================================================
+
 // ChildReconciler 测试
-// =============================================================================
+
 
 class ChildReconcilerStructTest : public ::testing::Test {};
 
@@ -56,9 +56,9 @@ TEST_F(ChildReconcilerStructTest, StructureExists) {
   EXPECT_NE(&reconciler, nullptr);
 }
 
-// =============================================================================
+
 // Fiber Clone 测试
-// =============================================================================
+
 
 class FiberCloneTest : public ::testing::Test {};
 
@@ -71,9 +71,9 @@ TEST_F(FiberCloneTest, CreateWorkInProgress) {
   EXPECT_EQ(current->tag, FunctionComponent);
 }
 
-// =============================================================================
+
 // UpdateFunctions 测试
-// =============================================================================
+
 
 class UpdateFunctionsTest : public ::testing::Test {};
 
@@ -125,9 +125,9 @@ TEST_F(UpdateFunctionsTest, FragmentUpdate) {
   EXPECT_EQ(fiber->tag, Fragment);
 }
 
-// =============================================================================
+
 // 手动 BubbleProperties 逻辑测试
-// =============================================================================
+
 
 class BubblePropertiesLogicTest : public ::testing::Test {};
 
@@ -215,9 +215,9 @@ TEST_F(BubblePropertiesLogicTest, MergesAllSiblingsManually) {
   EXPECT_TRUE(includesSomeLane(parent->childLanes, DefaultLane));
 }
 
-// =============================================================================
+
 // Fiber 类型完成测试
-// =============================================================================
+
 
 class FiberTypeCompleteTest : public ::testing::Test {};
 
@@ -256,9 +256,9 @@ TEST_F(FiberTypeCompleteTest, CompleteHostText) {
   EXPECT_EQ(fiber->tag, HostText);
 }
 
-// =============================================================================
+
 // Bailout 测试
-// =============================================================================
+
 
 class BailoutTest : public ::testing::Test {};
 
@@ -293,9 +293,9 @@ TEST_F(BailoutTest, BailoutWithChildWork) {
   EXPECT_TRUE(includesSomeLane(workInProgress->childLanes, SyncLane));
 }
 
-// =============================================================================
+
 // 综合工作流测试
-// =============================================================================
+
 
 class WorkflowTest : public ::testing::Test {};
 

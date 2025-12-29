@@ -17,10 +17,10 @@
 
 namespace react::reconciler::tests {
 
-// =============================================================================
+
 // ReactEventPriorities 测试
 // @source reactjs/packages/react-reconciler/src/ReactEventPriorities.js
-// =============================================================================
+
 
 TEST(ReactEventPrioritiesTest, EventPriorityConstants) {
   // @source:23-27
@@ -108,10 +108,10 @@ TEST(ReactEventPrioritiesTest, LanesToEventPriority) {
   );
 }
 
-// =============================================================================
+
 // ReactHookEffectTags 测试
 // @source reactjs/packages/react-reconciler/src/ReactHookEffectTags.js
-// =============================================================================
+
 
 TEST(ReactHookEffectTagsTest, HookFlagsConstants) {
   // @source:12-20
@@ -160,10 +160,10 @@ TEST(ReactHookEffectTagsTest, GetHookEffectName) {
   EXPECT_STREQ(getHookEffectName(HookNoFlags), "unknown");
 }
 
-// =============================================================================
+
 // Effect 结构测试
 // @source reactjs/packages/react-reconciler/src/ReactFiberHooks.js
-// =============================================================================
+
 
 TEST(EffectTest, EffectStructure) {
   auto effect = std::make_shared<Effect>();
@@ -196,10 +196,10 @@ TEST(EffectTest, EffectListCircular) {
   EXPECT_EQ(count, 3);
 }
 
-// =============================================================================
+
 // CommitHookEffectListMount/Unmount 测试
 // @source reactjs/packages/react-reconciler/src/ReactFiberCommitEffects.js
-// =============================================================================
+
 
 TEST(CommitEffectsTest, CommitHookEffectListMount) {
   // 创建 Fiber
@@ -278,10 +278,10 @@ TEST(CommitEffectsTest, CommitHookEffectListFlagsFiltering) {
   EXPECT_TRUE(passiveEffectCreated);
 }
 
-// =============================================================================
+
 // CommitPhase 枚举测试
 // @source reactjs/packages/react-reconciler/src/ReactFiberCommitWork.js
-// =============================================================================
+
 
 TEST(CommitWorkTest, CommitPhaseEnum) {
   EXPECT_EQ(static_cast<uint8_t>(CommitPhase::BeforeMutation), 0);
@@ -290,9 +290,9 @@ TEST(CommitWorkTest, CommitPhaseEnum) {
   EXPECT_EQ(static_cast<uint8_t>(CommitPhase::PassivePhase), 3);
 }
 
-// =============================================================================
+
 // EffectInstance 测试
-// =============================================================================
+
 
 TEST(EffectInstanceTest, DefaultValues) {
   EffectInstance inst;
@@ -312,16 +312,16 @@ TEST(EffectInstanceTest, DestroyFunction) {
   EXPECT_TRUE(called);
 }
 
-// =============================================================================
+
 // SafelyCallDestroy 测试
-// =============================================================================
+
 
 TEST(SafelyCallDestroyTest, NormalDestroy) {
   bool destroyCalled = false;
   
   auto fiber = std::make_shared<Fiber>(FunctionComponent, NoMode);
   
-  safelyCallDestroy(fiber, nullptr, [&destroyCalled]() {
+  safelyCallDestroy(nullptr, fiber, nullptr, [&destroyCalled]() {
     destroyCalled = true;
   });
   
@@ -332,33 +332,30 @@ TEST(SafelyCallDestroyTest, NullDestroy) {
   auto fiber = std::make_shared<Fiber>(FunctionComponent, NoMode);
   
   // 不应该抛出异常
-  safelyCallDestroy(fiber, nullptr, nullptr);
+  safelyCallDestroy(nullptr, fiber, nullptr, nullptr);
 }
 
 TEST(SafelyCallDestroyTest, DestroyWithException) {
   auto fiber = std::make_shared<Fiber>(FunctionComponent, NoMode);
   
   bool errorCaptured = false;
-  captureCommitPhaseError = [&errorCaptured](
+  CaptureCommitPhaseErrorFn captureCommitPhaseError = [&errorCaptured](
     FiberRef, FiberRef, std::exception_ptr
   ) {
     errorCaptured = true;
   };
   
   // 抛出异常的销毁函数
-  safelyCallDestroy(fiber, nullptr, []() {
+  safelyCallDestroy(&captureCommitPhaseError, fiber, nullptr, []() {
     throw std::runtime_error("test error");
   });
   
   EXPECT_TRUE(errorCaptured);
-  
-  // 清理
-  captureCommitPhaseError = nullptr;
 }
 
-// =============================================================================
+
 // FunctionComponentUpdateQueue 测试
-// =============================================================================
+
 
 TEST(FunctionComponentUpdateQueueTest, DefaultValues) {
   FunctionComponentUpdateQueue queue;

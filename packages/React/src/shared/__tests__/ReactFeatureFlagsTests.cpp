@@ -11,9 +11,9 @@
 
 namespace react::shared::tests {
 
-// =============================================================================
+
 // Feature Flag 常量值验证
-// =============================================================================
+
 
 TEST(ReactFeatureFlagsTest, KillswitchFlags) {
     // @source:24
@@ -113,9 +113,9 @@ TEST(ReactFeatureFlagsTest, DebuggingFlags) {
     EXPECT_EQ(ownerStackLimit, 10000);
 }
 
-// =============================================================================
+
 // 编译期配置验证
-// =============================================================================
+
 
 TEST(ReactFeatureFlagsTest, BuildModeConstants) {
     // 确保构建模式宏正确定义

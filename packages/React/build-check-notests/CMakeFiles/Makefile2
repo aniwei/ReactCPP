@@ -63,10 +63,12 @@ CMAKE_BINARY_DIR = /Users/aniwei/Desktop/ReactCPP/packages/React/build-check-not
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
+all: CMakeFiles/ReactCPP.dir/all
 all: jsi/all
 .PHONY : all
 
 # The main recursive "codegen" target.
+codegen: CMakeFiles/ReactCPP.dir/codegen
 codegen: jsi/codegen
 .PHONY : codegen
 
@@ -75,6 +77,7 @@ preinstall: jsi/preinstall
 .PHONY : preinstall
 
 # The main recursive "clean" target.
+clean: CMakeFiles/ReactCPP.dir/clean
 clean: jsi/clean
 .PHONY : clean
 
@@ -98,13 +101,45 @@ jsi/clean: jsi/CMakeFiles/jsi.dir/clean
 .PHONY : jsi/clean
 
 #=============================================================================
+# Target rules for target CMakeFiles/ReactCPP.dir
+
+# All Build rule for target.
+CMakeFiles/ReactCPP.dir/all: jsi/CMakeFiles/jsi.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/CMakeFiles --progress-num=1,2,3 "Built target ReactCPP"
+.PHONY : CMakeFiles/ReactCPP.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/ReactCPP.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/CMakeFiles 5
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/ReactCPP.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/CMakeFiles 0
+.PHONY : CMakeFiles/ReactCPP.dir/rule
+
+# Convenience name for target.
+ReactCPP: CMakeFiles/ReactCPP.dir/rule
+.PHONY : ReactCPP
+
+# codegen rule for target.
+CMakeFiles/ReactCPP.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/CMakeFiles --progress-num=1,2,3 "Finished codegen for target ReactCPP"
+.PHONY : CMakeFiles/ReactCPP.dir/codegen
+
+# clean rule for target.
+CMakeFiles/ReactCPP.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ReactCPP.dir/build.make CMakeFiles/ReactCPP.dir/clean
+.PHONY : CMakeFiles/ReactCPP.dir/clean
+
+#=============================================================================
 # Target rules for target jsi/CMakeFiles/jsi.dir
 
 # All Build rule for target.
 jsi/CMakeFiles/jsi.dir/all:
 	$(MAKE) $(MAKESILENT) -f jsi/CMakeFiles/jsi.dir/build.make jsi/CMakeFiles/jsi.dir/depend
 	$(MAKE) $(MAKESILENT) -f jsi/CMakeFiles/jsi.dir/build.make jsi/CMakeFiles/jsi.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/CMakeFiles --progress-num=1,2 "Built target jsi"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/CMakeFiles --progress-num=4,5 "Built target jsi"
 .PHONY : jsi/CMakeFiles/jsi.dir/all
 
 # Build rule for subdir invocation for target.
@@ -121,7 +156,7 @@ jsi: jsi/CMakeFiles/jsi.dir/rule
 # codegen rule for target.
 jsi/CMakeFiles/jsi.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f jsi/CMakeFiles/jsi.dir/build.make jsi/CMakeFiles/jsi.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/CMakeFiles --progress-num=1,2 "Finished codegen for target jsi"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/aniwei/Desktop/ReactCPP/packages/React/build-check-notests/CMakeFiles --progress-num=4,5 "Finished codegen for target jsi"
 .PHONY : jsi/CMakeFiles/jsi.dir/codegen
 
 # clean rule for target.

@@ -2,10 +2,7 @@
 	"InstallScripts" : 
 	[
 		"/Users/aniwei/Desktop/ReactCPP/packages/React/build-check/cmake_install.cmake",
-		"/Users/aniwei/Desktop/ReactCPP/packages/React/build-check/jsi/cmake_install.cmake",
-		"/Users/aniwei/Desktop/ReactCPP/packages/React/build-check/_deps/googletest-build/cmake_install.cmake",
-		"/Users/aniwei/Desktop/ReactCPP/packages/React/build-check/_deps/googletest-build/googlemock/cmake_install.cmake",
-		"/Users/aniwei/Desktop/ReactCPP/packages/React/build-check/_deps/googletest-build/googletest/cmake_install.cmake"
+		"/Users/aniwei/Desktop/ReactCPP/packages/React/build-check/jsi/cmake_install.cmake"
 	],
 	"Parallel" : false
 }

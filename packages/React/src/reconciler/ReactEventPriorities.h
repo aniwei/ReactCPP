@@ -3,7 +3,6 @@
  * 
  * 事件优先级系统，将用户交互事件映射到对应的 Lane 优先级
  * 
- * @source reactjs/packages/react-reconciler/src/ReactEventPriorities.js
  */
 
 #pragma once
@@ -12,37 +11,20 @@
 
 namespace react::reconciler {
 
-// =============================================================================
-// Event Priority 类型定义
-// @source ReactEventPriorities.js:21
-// =============================================================================
 
+// Event Priority 类型定义
 using EventPriority = Lane;
 
-// =============================================================================
 // Event Priority 常量
-// @source ReactEventPriorities.js:23-27
-// =============================================================================
-
-// @source:23
 constexpr EventPriority NoEventPriority = NoLane;
-
-// @source:24 - 离散事件优先级 (如点击、按键)
 constexpr EventPriority DiscreteEventPriority = SyncLane;
-
-// @source:25 - 连续事件优先级 (如滚动、拖拽)
 constexpr EventPriority ContinuousEventPriority = InputContinuousLane;
-
-// @source:26 - 默认事件优先级
 constexpr EventPriority DefaultEventPriority = DefaultLane;
-
-// @source:27 - 空闲事件优先级
 constexpr EventPriority IdleEventPriority = IdleLane;
 
-// =============================================================================
 // Event Priority 工具函数
-// @source ReactEventPriorities.js:29-61
-// =============================================================================
+
+
 
 /**
  * 返回更高的事件优先级
@@ -90,19 +72,6 @@ inline constexpr Lane eventPriorityToLane(EventPriority updatePriority) {
  * 将 Lanes 转换为事件优先级
  * @source:48-59 lanesToEventPriority
  */
-inline EventPriority lanesToEventPriority(Lanes lanes) {
-  Lane lane = getHighestPriorityLane(lanes);
-  
-  if (!isHigherEventPriority(DiscreteEventPriority, lane)) {
-    return DiscreteEventPriority;
-  }
-  if (!isHigherEventPriority(ContinuousEventPriority, lane)) {
-    return ContinuousEventPriority;
-  }
-  if (includesNonIdleWork(lane)) {
-    return DefaultEventPriority;
-  }
-  return IdleEventPriority;
-}
+EventPriority lanesToEventPriority(Lanes lanes);
 
 } // namespace react::reconciler

@@ -24,9 +24,9 @@
 
 using namespace react::reconciler;
 
-// =============================================================================
+
 // 测试辅助函数
-// =============================================================================
+
 
 /**
  * 创建测试用的 Fiber 节点
@@ -54,9 +54,9 @@ FiberRootRef createTestClassRoot() {
     return root;
 }
 
-// =============================================================================
+
 // UpdateTag 测试
-// =============================================================================
+
 
 class ClassUpdateTagTest : public ::testing::Test {};
 
@@ -76,9 +76,9 @@ TEST_F(ClassUpdateTagTest, ConstantCompatibility) {
     EXPECT_EQ(CaptureUpdateTag, static_cast<uint8_t>(UpdateTag::CaptureUpdate));
 }
 
-// =============================================================================
+
 // ClassUpdate 结构测试
-// =============================================================================
+
 
 class ClassUpdateStructTest : public ::testing::Test {};
 
@@ -87,7 +87,7 @@ TEST_F(ClassUpdateStructTest, DefaultConstruction) {
     
     EXPECT_EQ(update.lane, NoLane);
     EXPECT_EQ(update.tag, UpdateTag::UpdateState);
-    EXPECT_FALSE(update.payload.has_value());
+    EXPECT_EQ(update.payload, nullptr);
     EXPECT_EQ(update.callback, nullptr);
     EXPECT_EQ(update.next, nullptr);
 }
@@ -108,10 +108,9 @@ TEST_F(ClassUpdateStructTest, LaneAndTagConstruction) {
 
 TEST_F(ClassUpdateStructTest, PayloadStorage) {
     ClassUpdate<std::any> update;
-    update.payload = std::make_any<int>(42);
-    
-    EXPECT_TRUE(update.payload.has_value());
-    EXPECT_EQ(std::any_cast<int>(update.payload), 42);
+    update.payload = std::make_shared<jsi::Value>(jsi::Value(42));
+    EXPECT_NE(update.payload, nullptr);
+    EXPECT_EQ(update.payload->asNumber(), 42);
 }
 
 TEST_F(ClassUpdateStructTest, CallbackStorage) {
@@ -137,9 +136,9 @@ TEST_F(ClassUpdateStructTest, LinkedListChaining) {
     EXPECT_EQ(update3->next, nullptr);
 }
 
-// =============================================================================
+
 // ClassSharedQueue 测试
-// =============================================================================
+
 
 class ClassSharedQueueTest : public ::testing::Test {};
 
@@ -188,9 +187,9 @@ TEST_F(ClassSharedQueueTest, HiddenCallbacks) {
     EXPECT_TRUE(cb2Called);
 }
 
-// =============================================================================
+
 // ClassUpdateQueue 测试
-// =============================================================================
+
 
 class ClassUpdateQueueTest : public ::testing::Test {};
 
@@ -242,39 +241,24 @@ TEST_F(ClassUpdateQueueTest, CallbacksStorage) {
     EXPECT_EQ(callCount, 3);
 }
 
-// =============================================================================
+
 // ClassUpdateQueueGlobals 测试
-// =============================================================================
+
 
 class ClassUpdateQueueGlobalsTest : public ::testing::Test {
 protected:
-    void SetUp() override {
-        ClassUpdateQueueGlobals::instance().reset();
-    }
-    
-    void TearDown() override {
-        ClassUpdateQueueGlobals::instance().reset();
-    }
+    ClassUpdateQueueGlobals globals;
+    void SetUp() override { globals.reset(); }
+    void TearDown() override { globals.reset(); }
 };
 
-TEST_F(ClassUpdateQueueGlobalsTest, SingletonInstance) {
-    auto& instance1 = ClassUpdateQueueGlobals::instance();
-    auto& instance2 = ClassUpdateQueueGlobals::instance();
-    
-    EXPECT_EQ(&instance1, &instance2);
-}
-
 TEST_F(ClassUpdateQueueGlobalsTest, InitialState) {
-    auto& globals = ClassUpdateQueueGlobals::instance();
-    
     EXPECT_FALSE(globals.hasForceUpdate);
     EXPECT_FALSE(globals.didReadFromEntangledAsyncAction);
     EXPECT_EQ(globals.currentlyProcessingQueue, nullptr);
 }
 
 TEST_F(ClassUpdateQueueGlobalsTest, ForceUpdateFlag) {
-    auto& globals = ClassUpdateQueueGlobals::instance();
-    
     globals.hasForceUpdate = true;
     EXPECT_TRUE(globals.hasForceUpdate);
     
@@ -283,8 +267,6 @@ TEST_F(ClassUpdateQueueGlobalsTest, ForceUpdateFlag) {
 }
 
 TEST_F(ClassUpdateQueueGlobalsTest, ResetCurrentlyProcessingQueue) {
-    auto& globals = ClassUpdateQueueGlobals::instance();
-    
     globals.currentlyProcessingQueue = std::make_shared<AnyClassSharedQueue>();
     EXPECT_NE(globals.currentlyProcessingQueue, nullptr);
     
@@ -292,9 +274,9 @@ TEST_F(ClassUpdateQueueGlobalsTest, ResetCurrentlyProcessingQueue) {
     EXPECT_EQ(globals.currentlyProcessingQueue, nullptr);
 }
 
-// =============================================================================
+
 // initializeClassUpdateQueue 测试
-// =============================================================================
+
 
 class InitializeClassUpdateQueueTest : public ::testing::Test {};
 
@@ -331,9 +313,9 @@ TEST_F(InitializeClassUpdateQueueTest, SharedQueueInitialized) {
     EXPECT_EQ(queue->shared->lanes, NoLanes);
 }
 
-// =============================================================================
+
 // createClassUpdate 测试
-// =============================================================================
+
 
 class CreateClassUpdateTest : public ::testing::Test {};
 
@@ -368,9 +350,9 @@ TEST_F(CreateClassUpdateTest, CallbackIsNull) {
     EXPECT_EQ(update->callback, nullptr);
 }
 
-// =============================================================================
+
 // cloneClassUpdateQueue 测试
-// =============================================================================
+
 
 class CloneClassUpdateQueueTest : public ::testing::Test {};
 
@@ -406,9 +388,9 @@ TEST_F(CloneClassUpdateQueueTest, SharedQueueStaysShared) {
     EXPECT_EQ(wipQueue->shared, originalShared);
 }
 
-// =============================================================================
+
 // enqueueClassUpdate 测试
-// =============================================================================
+
 
 class EnqueueClassUpdateTest : public ::testing::Test {};
 
@@ -429,7 +411,7 @@ TEST_F(EnqueueClassUpdateTest, EnqueueToInitializedFiber) {
     initializeClassUpdateQueue(fiber);
     
     auto update = createClassUpdate(SyncLane);
-    update->payload = std::make_any<int>(42);
+    update->payload = std::make_shared<jsi::Value>(jsi::Value(42));
     
     // 入队操作
     auto root = enqueueClassUpdate(fiber, update, SyncLane);
@@ -458,9 +440,9 @@ TEST_F(EnqueueClassUpdateTest, EnqueueMultipleUpdates) {
     EXPECT_TRUE(includesSomeLane(queue->shared->lanes, DefaultLane));
 }
 
-// =============================================================================
+
 // getStateFromClassUpdate 测试
-// =============================================================================
+
 
 class GetStateFromClassUpdateTest : public ::testing::Test {};
 
@@ -470,7 +452,7 @@ TEST_F(GetStateFromClassUpdateTest, UpdateStateWithPayload) {
     auto update = std::make_shared<AnyClassUpdate>(SyncLane);
     
     update->tag = UpdateTag::UpdateState;
-    update->payload = std::make_any<int>(100);
+    update->payload = std::make_shared<jsi::Value>(jsi::Value(100));
     
     std::any prevState = std::make_any<int>(50);
     std::any nextProps;
@@ -518,7 +500,7 @@ TEST_F(GetStateFromClassUpdateTest, ReplaceStateWithPayload) {
     auto update = std::make_shared<AnyClassUpdate>(SyncLane);
     
     update->tag = UpdateTag::ReplaceState;
-    update->payload = std::make_any<std::string>("new state");
+    update->payload = std::make_shared<jsi::Value>(jsi::Value(123));
     
     std::any prevState = std::make_any<std::string>("old state");
     std::any nextProps;
@@ -532,9 +514,9 @@ TEST_F(GetStateFromClassUpdateTest, ReplaceStateWithPayload) {
     EXPECT_EQ(std::any_cast<std::string>(newState), "new state");
 }
 
-// =============================================================================
+
 // ForceUpdate 相关函数测试
-// =============================================================================
+
 
 class ClassForceUpdateTest : public ::testing::Test {
 protected:
@@ -563,9 +545,9 @@ TEST_F(ClassForceUpdateTest, CheckHasForceUpdate) {
     EXPECT_TRUE(checkHasForceUpdateAfterProcessing());
 }
 
-// =============================================================================
+
 // 回调函数测试
-// =============================================================================
+
 
 class ClassCallbackTest : public ::testing::Test {};
 
@@ -637,9 +619,9 @@ TEST_F(ClassCallbackTest, CommitCallbacks) {
     EXPECT_TRUE(queue->callbacks.empty());
 }
 
-// =============================================================================
+
 // 便捷函数测试
-// =============================================================================
+
 
 class ClassHelperFunctionsTest : public ::testing::Test {};
 
@@ -683,9 +665,9 @@ TEST_F(ClassHelperFunctionsTest, HasClassPendingUpdatesWithBaseUpdate) {
     EXPECT_TRUE(hasClassPendingUpdates(fiber));
 }
 
-// =============================================================================
+
 // enqueueClassCapturedUpdate 测试
-// =============================================================================
+
 
 class EnqueueClassCapturedUpdateTest : public ::testing::Test {};
 
@@ -695,7 +677,7 @@ TEST_F(EnqueueClassCapturedUpdateTest, EnqueueToEmptyQueue) {
     
     auto capturedUpdate = std::make_shared<AnyClassUpdate>(SyncLane);
     capturedUpdate->tag = UpdateTag::CaptureUpdate;
-    capturedUpdate->payload = std::make_any<std::string>("error");
+    capturedUpdate->payload = std::make_shared<jsi::Value>(jsi::Value(999));
     
     enqueueClassCapturedUpdate(fiber, capturedUpdate);
     
@@ -726,9 +708,9 @@ TEST_F(EnqueueClassCapturedUpdateTest, EnqueueToExistingQueue) {
     EXPECT_EQ(existingUpdate->next, capturedUpdate);
 }
 
-// =============================================================================
+
 // 类型别名测试
-// =============================================================================
+
 
 class ClassTypeAliasTest : public ::testing::Test {};
 
@@ -747,9 +729,9 @@ TEST_F(ClassTypeAliasTest, AnyClassUpdateQueueIsCorrectType) {
     EXPECT_NE(queue.shared, nullptr);
 }
 
-// =============================================================================
+
 // 边界情况测试
-// =============================================================================
+
 
 class ClassEdgeCaseTest : public ::testing::Test {};
 
@@ -792,9 +774,9 @@ TEST_F(ClassEdgeCaseTest, MultipleQueuesIndependent) {
     EXPECT_NE(queue1->shared, queue2->shared);
 }
 
-// =============================================================================
+
 // 调度更新便捷函数测试
-// =============================================================================
+
 
 class ClassScheduleUpdateTest : public ::testing::Test {};
 

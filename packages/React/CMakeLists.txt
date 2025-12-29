@@ -58,21 +58,38 @@ set(REACT_INCLUDE_DIRS
 )
 
 # 收集源文件
-file(GLOB_RECURSE REACT_HEADERS
+file(GLOB_RECURSE REACT_HEADERS CONFIGURE_DEPENDS
     "src/shared/*.h"
+    "src/react/*.h"
     "src/reconciler/*.h"
     "src/scheduler/*.h"
     "src/runtime/*.h"
 )
 
-# 创建接口库 (header-only)
-add_library(ReactCPP INTERFACE)
+# 收集实现文件（逐步从 header-only 迁移到 .cpp）
+file(GLOB_RECURSE REACT_SOURCES CONFIGURE_DEPENDS
+    "src/shared/*.cpp"
+    "src/react/*.cpp"
+    "src/reconciler/*.cpp"
+    "src/scheduler/*.cpp"
+    "src/runtime/*.cpp"
+)
 
-target_include_directories(ReactCPP INTERFACE
+# 不把单测源码编进库（单测只应在 ReactCPP_tests 里编译）
+list(FILTER REACT_SOURCES EXCLUDE REGEX ".*/__tests__/.*\\.cpp$")
+
+# 创建静态库（允许把实现放到 .cpp）
+add_library(ReactCPP STATIC ${REACT_SOURCES} ${REACT_HEADERS})
+
+target_include_directories(ReactCPP PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
     $<BUILD_INTERFACE:${JSI_DIR}>
     $<INSTALL_INTERFACE:include>
 )
+
+if(TARGET jsi)
+    target_link_libraries(ReactCPP PRIVATE jsi)
+endif()
 
 # =============================================================================
 # 单元测试
@@ -97,7 +114,7 @@ if(REACT_BUILD_TESTS)
     enable_testing()
     
     # 收集测试源文件
-    file(GLOB_RECURSE TEST_SOURCES
+    file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS
         "src/shared/__tests__/*.cpp"
         "src/reconciler/__tests__/*.cpp"
         "src/scheduler/__tests__/*.cpp"
@@ -146,6 +163,13 @@ install(TARGETS ReactCPP
     EXPORT ReactCPPTargets
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
+
+if(TARGET jsi)
+    install(TARGETS jsi
+        EXPORT ReactCPPTargets
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    )
+endif()
 
 install(DIRECTORY src/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/react

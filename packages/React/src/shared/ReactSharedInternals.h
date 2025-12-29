@@ -17,6 +17,7 @@
 #include <vector>
 #include <string>
 #include <optional>
+#include <stdexcept>
 
 namespace facebook::jsi {
 class Runtime;
@@ -27,17 +28,18 @@ class Function;
 
 namespace react {
 
+class ReactHostRuntime;
+
 using namespace facebook;
 
 // 前向声明
 namespace reconciler {
 struct Fiber;
-struct ReactContext;
 } // namespace reconciler
 
-// =============================================================================
+
 // 类型定义
-// =============================================================================
+
 
 /**
  * Transition 类型
@@ -61,10 +63,10 @@ using BasicStateAction = std::function<S(S)>;
 template<typename A>
 using Dispatch = std::function<void(A)>;
 
-// =============================================================================
+
 // Dispatcher 接口
 // @source reactjs/packages/react-reconciler/src/ReactInternalTypes.js:397-459
-// =============================================================================
+
 
 /**
  * Hooks Dispatcher 接口
@@ -210,10 +212,10 @@ public:
     ) = 0;
 };
 
-// =============================================================================
+
 // AsyncDispatcher 接口
 // @source reactjs/packages/react-reconciler/src/ReactInternalTypes.js:460-465
-// =============================================================================
+
 
 /**
  * 异步 Dispatcher，用于 Cache 和 Server Components
@@ -232,10 +234,10 @@ public:
     virtual jsi::Value getOwner(jsi::Runtime& runtime) = 0;
 };
 
-// =============================================================================
+
 // SharedStateClient
 // @source reactjs/packages/react/src/ReactSharedInternalsClient.js:24-50
-// =============================================================================
+
 
 /**
  * Client 端共享状态
@@ -285,10 +287,10 @@ struct SharedStateClient {
 #endif
 };
 
-// =============================================================================
+
 // SharedStateServer
 // @source reactjs/packages/react/src/ReactSharedInternalsServer.js:24-43
-// =============================================================================
+
 
 /**
  * Server 端共享状态
@@ -320,9 +322,9 @@ struct SharedStateServer {
 #endif
 };
 
-// =============================================================================
+
 // ReactSharedInternals 单例
-// =============================================================================
+
 
 /**
  * ReactSharedInternals 全局单例
@@ -332,11 +334,7 @@ struct SharedStateServer {
  */
 class ReactSharedInternals {
 public:
-    // 获取单例
-    static ReactSharedInternals& getInstance() {
-        static ReactSharedInternals instance;
-        return instance;
-    }
+    static std::unique_ptr<ReactSharedInternals> create();
     
     // 禁用拷贝
     ReactSharedInternals(const ReactSharedInternals&) = delete;
@@ -350,89 +348,51 @@ public:
      * 设置当前 Hook Dispatcher
      * 在渲染开始时由 Reconciler 调用
      */
-    void setDispatcher(Dispatcher* dispatcher) {
-        client_.H = dispatcher;
-    }
+    void setDispatcher(Dispatcher* dispatcher);
     
     /**
      * 获取当前 Hook Dispatcher
      * @return 当前 dispatcher，如果在渲染阶段外则为 nullptr
      */
-    Dispatcher* getDispatcher() const {
-        return client_.H;
-    }
+    Dispatcher* getDispatcher() const;
     
     /**
      * 解析 Dispatcher (带错误检查)
      * @source reactjs/packages/react/src/ReactHooks.js:24-40
      */
-    Dispatcher& resolveDispatcher() {
-        Dispatcher* dispatcher = client_.H;
-        
-#ifdef DEV
-        if (dispatcher == nullptr) {
-            // 在 DEV 模式下打印详细错误
-            throw std::runtime_error(
-                "Invalid hook call. Hooks can only be called inside of the body of a function component. "
-                "This could happen for one of the following reasons:\n"
-                "1. You might have mismatching versions of React and the renderer\n"
-                "2. You might be breaking the Rules of Hooks\n"
-                "3. You might have more than one copy of React in the same app"
-            );
-        }
-#endif
-        
-        // 非 DEV 模式下直接返回，可能导致空指针异常（与 JS 行为一致）
-        return *dispatcher;
-    }
+    Dispatcher& resolveDispatcher();
     
     // =========================================================================
     // AsyncDispatcher 管理
     // =========================================================================
     
-    void setAsyncDispatcher(AsyncDispatcher* dispatcher) {
-        client_.A = dispatcher;
-    }
+    void setAsyncDispatcher(AsyncDispatcher* dispatcher);
     
-    AsyncDispatcher* getAsyncDispatcher() const {
-        return client_.A;
-    }
+    AsyncDispatcher* getAsyncDispatcher() const;
     
     // =========================================================================
     // Transition 管理
     // =========================================================================
     
-    void setTransition(Transition* transition) {
-        client_.T = transition;
-    }
+    void setTransition(Transition* transition);
     
-    Transition* getTransition() const {
-        return client_.T;
-    }
+    Transition* getTransition() const;
     
     // =========================================================================
     // Client State 访问
     // =========================================================================
     
-    SharedStateClient& getClientState() {
-        return client_;
-    }
+    SharedStateClient& getClientState();
     
-    const SharedStateClient& getClientState() const {
-        return client_;
-    }
+    const SharedStateClient& getClientState() const;
     
     // =========================================================================
     // Server State 访问
     // =========================================================================
     
-    SharedStateServer& getServerState() {
-        return server_;
-    }
+    SharedStateServer& getServerState();
     
-    const SharedStateServer& getServerState() const {
-        return server_;
-    }
+    const SharedStateServer& getServerState() const;
 
 private:
     ReactSharedInternals() = default;
@@ -441,36 +401,12 @@ private:
     SharedStateServer server_;
 };
 
-// =============================================================================
-// 便捷访问宏/内联函数
-// =============================================================================
 
-/**
- * 获取当前 Dispatcher
- */
-inline Dispatcher* getCurrentDispatcher() {
-    return ReactSharedInternals::getInstance().getDispatcher();
-}
+// 便捷访问函数
 
-/**
- * 解析当前 Dispatcher (带错误检查)
- */
-inline Dispatcher& resolveDispatcher() {
-    return ReactSharedInternals::getInstance().resolveDispatcher();
-}
-
-/**
- * 获取当前 AsyncDispatcher
- */
-inline AsyncDispatcher* getCurrentAsyncDispatcher() {
-    return ReactSharedInternals::getInstance().getAsyncDispatcher();
-}
-
-/**
- * 获取当前 Transition
- */
-inline Transition* getCurrentTransition() {
-    return ReactSharedInternals::getInstance().getTransition();
-}
+Dispatcher* getCurrentDispatcher(ReactHostRuntime& hostRuntime);
+Dispatcher& resolveDispatcher(ReactHostRuntime& hostRuntime);
+AsyncDispatcher* getCurrentAsyncDispatcher(ReactHostRuntime& hostRuntime);
+Transition* getCurrentTransition(ReactHostRuntime& hostRuntime);
 
 } // namespace react

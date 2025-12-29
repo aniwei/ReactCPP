@@ -25,9 +25,9 @@ inline FiberRef makeTestFiber(WorkTag tag, TypeOfMode mode = NoMode) {
   return std::make_shared<Fiber>(tag, mode);
 }
 
-// =============================================================================
+
 // CapturedValue 测试
-// =============================================================================
+
 
 class CapturedValueTest : public ::testing::Test {};
 
@@ -86,9 +86,9 @@ TEST_F(CapturedValueTest, CreateCapturedValueWithDigest) {
   }
 }
 
-// =============================================================================
+
 // FiberUpdate 测试
-// =============================================================================
+
 
 class FiberUpdateTest : public ::testing::Test {};
 
@@ -128,9 +128,9 @@ TEST_F(FiberUpdateTest, CreateClassErrorUpdate) {
   EXPECT_EQ(update->lane, DefaultLane);
 }
 
-// =============================================================================
+
 // Suspense 边界标记测试
-// =============================================================================
+
 
 class SuspenseBoundaryTest : public ::testing::Test {};
 
@@ -182,9 +182,9 @@ TEST_F(SuspenseBoundaryTest, MarkDidCaptureInLegacyMode) {
   EXPECT_TRUE((sourceFiber->flags & ForceUpdateForLegacySuspense) != NoFlags);
 }
 
-// =============================================================================
+
 // ResetSuspendedComponent 测试
-// =============================================================================
+
 
 class ResetSuspendedComponentTest : public ::testing::Test {};
 
@@ -212,9 +212,9 @@ TEST_F(ResetSuspendedComponentTest, NoResetInConcurrentMode) {
   EXPECT_EQ(sourceFiber->lanes, SyncLane);
 }
 
-// =============================================================================
+
 // Legacy Error Boundary 测试
-// =============================================================================
+
 
 class LegacyErrorBoundaryTest : public ::testing::Test {
 protected:
@@ -252,9 +252,9 @@ TEST_F(LegacyErrorBoundaryTest, ClearBoundaries) {
   EXPECT_FALSE(isAlreadyFailedLegacyErrorBoundary(fiber2));
 }
 
-// =============================================================================
+
 // UnwindWork 测试
-// =============================================================================
+
 
 class UnwindWorkTest : public ::testing::Test {};
 
@@ -318,9 +318,9 @@ TEST_F(UnwindWorkTest, UnwindSuspenseList) {
   EXPECT_EQ(result, nullptr);
 }
 
-// =============================================================================
+
 // UnwindInterruptedWork 测试
-// =============================================================================
+
 
 class UnwindInterruptedWorkTest : public ::testing::Test {};
 
@@ -340,9 +340,9 @@ TEST_F(UnwindInterruptedWorkTest, UnwindSuspenseComponent) {
   EXPECT_NO_THROW(unwindInterruptedWork(nullptr, interruptedWork, DefaultLane));
 }
 
-// =============================================================================
+
 // CompleteUnitOfUnwind 测试
-// =============================================================================
+
 
 class CompleteUnitOfUnwindTest : public ::testing::Test {};
 
@@ -368,9 +368,9 @@ TEST_F(CompleteUnitOfUnwindTest, MarksParentIncomplete) {
   EXPECT_TRUE((parent->flags & Incomplete) != NoFlags);
 }
 
-// =============================================================================
+
 // ThrownException 测试
-// =============================================================================
+
 
 class ThrownExceptionTest : public ::testing::Test {};
 
@@ -398,9 +398,9 @@ TEST_F(ThrownExceptionTest, SuspenseType) {
   EXPECT_EQ(exception.type, ThrownExceptionType::Suspense);
 }
 
-// =============================================================================
+
 // isThenable 测试
-// =============================================================================
+
 
 class IsThenableTest : public ::testing::Test {};
 
@@ -421,9 +421,9 @@ TEST_F(IsThenableTest, ThenableIsThenable) {
   EXPECT_TRUE(isThenable(value));
 }
 
-// =============================================================================
+
 // 综合场景测试
-// =============================================================================
+
 
 class ErrorHandlingIntegrationTest : public ::testing::Test {
 protected:

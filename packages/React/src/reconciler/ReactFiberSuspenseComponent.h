@@ -22,9 +22,9 @@
 
 namespace react::reconciler {
 
-// =============================================================================
+
 // 前向声明
-// =============================================================================
+
 
 struct TreeContext;
 
@@ -37,10 +37,10 @@ struct HydrationError {
 
 using HydrationErrorRef = std::shared_ptr<HydrationError>;
 
-// =============================================================================
+
 // Wakeable 类型
 // @source shared/ReactTypes.js
-// =============================================================================
+
 
 /**
  * Wakeable 是一个类似 Promise 的对象，可以被唤醒
@@ -52,17 +52,17 @@ struct Wakeable {
 
 using WakeableRef = std::shared_ptr<Wakeable>;
 
-// =============================================================================
+
 // SuspenseInstance 类型
 // @source ReactFiberConfig.js
-// =============================================================================
+
 
 using SuspenseInstance = std::any;
 
-// =============================================================================
+
 // SuspenseState 类型
 // @source:24-42 SuspenseState
-// =============================================================================
+
 
 /**
  * SuspenseState 表示 Suspense 边界的状态
@@ -88,10 +88,10 @@ struct SuspenseState {
 
 using SuspenseStateRef = std::shared_ptr<SuspenseState>;
 
-// =============================================================================
+
 // SuspenseListTailMode 类型
 // @source shared/ReactTypes.js
-// =============================================================================
+
 
 enum class SuspenseListTailMode {
   Visible,
@@ -99,10 +99,10 @@ enum class SuspenseListTailMode {
   Collapsed
 };
 
-// =============================================================================
+
 // SuspenseListRenderState 类型
 // @source:44-57 SuspenseListRenderState
-// =============================================================================
+
 
 /**
  * SuspenseList 的渲染状态
@@ -132,106 +132,33 @@ struct SuspenseListRenderState {
 
 using SuspenseListRenderStateRef = std::shared_ptr<SuspenseListRenderState>;
 
-// =============================================================================
+
 // RetryQueue 类型
 // @source:59
-// =============================================================================
+
 
 using RetryQueue = std::set<WakeableRef>;
 
-// =============================================================================
+
 // 工具函数
-// =============================================================================
+
 
 /**
  * 检查 SuspenseInstance 是否处于 pending 状态
  * @source ReactFiberConfig.js
  */
-inline bool isSuspenseInstancePending(const SuspenseInstance& instance) {
-  // 简化实现 - 实际需要根据 host config 实现
-  return false;
-}
+bool isSuspenseInstancePending(const SuspenseInstance& instance);
 
 /**
  * 检查 SuspenseInstance 是否显示 fallback
  * @source ReactFiberConfig.js
  */
-inline bool isSuspenseInstanceFallback(const SuspenseInstance& instance) {
-  // 简化实现
-  return false;
-}
+bool isSuspenseInstanceFallback(const SuspenseInstance& instance);
 
 /**
  * 查找第一个 suspended 的 Fiber
  * @source:61-98 findFirstSuspended
  */
-inline FiberRef findFirstSuspended(FiberRef row) {
-  FiberRef node = row;
-  
-  while (node != nullptr) {
-    bool foundSuspended = false;
-    
-    if (node->tag == SuspenseComponent) {
-      // 尝试获取 SuspenseState (可能是直接的或 shared_ptr)
-      SuspenseState* statePtr = nullptr;
-      
-      // 首先尝试 shared_ptr
-      auto* sharedState = std::any_cast<std::shared_ptr<SuspenseState>>(&node->memoizedState);
-      if (sharedState && *sharedState) {
-        statePtr = sharedState->get();
-      } else {
-        // 尝试直接的 SuspenseState
-        statePtr = std::any_cast<SuspenseState>(&node->memoizedState);
-      }
-      
-      if (statePtr != nullptr) {
-        auto& dehydrated = statePtr->dehydrated;
-        if (!dehydrated.has_value() ||
-            isSuspenseInstancePending(dehydrated) ||
-            isSuspenseInstanceFallback(dehydrated)) {
-          return node;
-        }
-      }
-    } else if (node->tag == SuspenseListComponent) {
-      // 检查是否有 revealOrder 属性
-      // 简化实现：检查 DidCapture 标志
-      bool didSuspend = (node->flags & DidCapture) != NoFlags;
-      if (didSuspend) {
-        return node;
-      }
-    } else if (node->child != nullptr) {
-      node->child->return_ = node;
-      node = node->child;
-      continue;
-    }
-    
-    if (node == row) {
-      // 检查完当前节点，继续到 sibling
-      node = node->sibling;
-      continue;
-    }
-    
-    // 没有找到，继续到 sibling
-    if (node->sibling != nullptr) {
-      node->sibling->return_ = node->return_;
-      node = node->sibling;
-      continue;
-    }
-    
-    // 没有 sibling，向上回溯
-    while (node->sibling == nullptr) {
-      auto parent = node->return_.lock();
-      if (!parent || parent == row) {
-        return nullptr;
-      }
-      node = parent;
-    }
-    
-    node->sibling->return_ = node->return_;
-    node = node->sibling;
-  }
-  
-  return nullptr;
-}
+FiberRef findFirstSuspended(FiberRef row);
 
 } // namespace react::reconciler

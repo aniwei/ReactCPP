@@ -22,9 +22,9 @@
 using namespace react::shared;
 using namespace react::reconciler;
 
-// =============================================================================
+
 // Object.is Tests
-// =============================================================================
+
 
 class ObjectIsTest : public ::testing::Test {
 protected:
@@ -82,9 +82,9 @@ TEST_F(ObjectIsTest, SharedPointerComparison) {
     EXPECT_FALSE(objectIs(any1, any3));
 }
 
-// =============================================================================
+
 // Hook Types Tests
-// =============================================================================
+
 
 class HookTypesTest : public ::testing::Test {
 protected:
@@ -124,9 +124,9 @@ TEST_F(HookTypesTest, HookLinkedList) {
     EXPECT_EQ(hook1->next->next->next, nullptr);
 }
 
-// =============================================================================
+
 // Effect Advanced Tests
-// =============================================================================
+
 
 class EffectAdvancedTest : public ::testing::Test {
 protected:
@@ -195,9 +195,9 @@ TEST_F(EffectAdvancedTest, EffectCircularList) {
     EXPECT_EQ(count, 3);
 }
 
-// =============================================================================
+
 // Update Queue Tests
-// =============================================================================
+
 
 class UpdateQueueTest : public ::testing::Test {
 protected:
@@ -256,9 +256,9 @@ TEST_F(UpdateQueueTest, CircularUpdateQueue) {
     EXPECT_EQ(first->next->next->next, first);
 }
 
-// =============================================================================
+
 // Dispatcher Advanced Tests
-// =============================================================================
+
 
 class DispatcherAdvancedTest : public ::testing::Test {
 protected:
@@ -328,9 +328,9 @@ TEST_F(DispatcherAdvancedTest, UseReducerDispatcher) {
     EXPECT_EQ(std::any_cast<int>(state), 0);
 }
 
-// =============================================================================
+
 // HooksContext Tests
-// =============================================================================
+
 
 class HooksContextTest : public ::testing::Test {
 protected:
@@ -365,9 +365,9 @@ TEST_F(HooksContextTest, Reset) {
     EXPECT_EQ(context.renderPhaseUpdateCount, 0);
 }
 
-// =============================================================================
+
 // Context Tests
-// =============================================================================
+
 
 class ContextTest : public ::testing::Test {
 protected:
@@ -410,9 +410,9 @@ TEST_F(ContextTest, ContextDependencyChain) {
     EXPECT_EQ(std::any_cast<int>(dep1->next->next->memoizedValue), 3);
 }
 
-// =============================================================================
+
 // FunctionComponentUpdateQueue Advanced Tests
-// =============================================================================
+
 
 class FunctionComponentUpdateQueueAdvancedTest : public ::testing::Test {
 protected:
@@ -451,9 +451,9 @@ TEST_F(FunctionComponentUpdateQueueAdvancedTest, AddEffects) {
     EXPECT_EQ(queue->lastEffect->next->next, queue->lastEffect);
 }
 
-// =============================================================================
+
 // Basic State Reducer Tests
-// =============================================================================
+
 
 class BasicStateReducerTest : public ::testing::Test {
 protected:
@@ -485,9 +485,9 @@ TEST_F(BasicStateReducerTest, MultipleFunctionCalls) {
     EXPECT_EQ(state, 8);
 }
 
-// =============================================================================
+
 // Hook Flags Advanced Tests
-// =============================================================================
+
 
 class HookFlagsAdvancedTest : public ::testing::Test {
 protected:
@@ -523,9 +523,9 @@ TEST_F(HookFlagsAdvancedTest, EffectTagging) {
     EXPECT_FALSE(layoutEffect->tag & HookPassive);
 }
 
-// =============================================================================
+
 // Integration Tests - Simulated Hook Flow
-// =============================================================================
+
 
 class HookFlowTest : public ::testing::Test {
 protected:
@@ -615,9 +615,9 @@ TEST_F(HookFlowTest, SimulatedEffectChain) {
     EXPECT_EQ(queue->lastEffect->tag, static_cast<HookFlags>(HookHasEffect | HookLayout));
 }
 
-// =============================================================================
+
 // Dependencies Comparison Tests
-// =============================================================================
+
 
 class DepsComparisonTest : public ::testing::Test {
 protected:

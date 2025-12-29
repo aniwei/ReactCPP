@@ -29,9 +29,9 @@ namespace react::reconciler {
 // 前向声明
 class ReactFiberWorkLoop;
 
-// =============================================================================
+
 // BeginWork 结果类型
-// =============================================================================
+
 
 /**
  * beginWork 返回值
@@ -39,20 +39,20 @@ class ReactFiberWorkLoop;
  */
 using BeginWorkResult = FiberRef;
 
-// =============================================================================
+
 // 更新状态标记
 // @source:120-125 ReactFiberBeginWork.js
-// =============================================================================
+
 
 struct BeginWorkContext {
     // 是否收到更新
     bool didReceiveUpdate = false;
 };
 
-// =============================================================================
+
 // 子节点协调器接口
 // @source reactjs/packages/react-reconciler/src/ReactChildFiber.js
-// =============================================================================
+
 
 struct ChildReconciler {
     /**
@@ -83,10 +83,10 @@ struct ChildReconciler {
     std::function<void(FiberRef current, FiberRef workInProgress)> cloneChildFibers;
 };
 
-// =============================================================================
+
 // HostConfig 接口 (由 ReactHostRuntime 提供)
 // @source reactjs/packages/react-reconciler/src/ReactFiberConfig.js
-// =============================================================================
+
 
 struct HostConfigInterface {
     // 是否支持 Hydration
@@ -109,10 +109,10 @@ struct HostConfigInterface {
     std::function<bool()> getIsHydrating;
 };
 
-// =============================================================================
+
 // ReactFiberBeginWork 类
 // @source reactjs/packages/react-reconciler/src/ReactFiberBeginWork.js
-// =============================================================================
+
 
 class ReactFiberBeginWork {
 public:
@@ -388,37 +388,27 @@ public:
     /**
      * 设置 didReceiveUpdate 标记
      */
-    void markWorkInProgressReceivedUpdate() {
-        context_.didReceiveUpdate = true;
-    }
+    void markWorkInProgressReceivedUpdate();
     
     /**
      * 获取 didReceiveUpdate 状态
      */
-    bool didReceiveUpdate() const {
-        return context_.didReceiveUpdate;
-    }
+    bool didReceiveUpdate() const;
     
     /**
      * 重置 context
      */
-    void resetContext() {
-        context_.didReceiveUpdate = false;
-    }
+    void resetContext();
     
     /**
      * 设置子节点协调器
      */
-    void setReconciler(ChildReconciler reconciler) {
-        reconciler_ = std::move(reconciler);
-    }
+    void setReconciler(ChildReconciler reconciler);
     
     /**
      * 设置 HostConfig
      */
-    void setHostConfig(HostConfigInterface config) {
-        hostConfig_ = std::move(config);
-    }
+    void setHostConfig(HostConfigInterface config);
 
 private:
     // 上下文状态
@@ -480,10 +470,10 @@ private:
     );
 };
 
-// =============================================================================
+
 // 创建默认的 ChildReconciler
 // @source reactjs/packages/react-reconciler/src/ReactChildFiber.js
-// =============================================================================
+
 
 /**
  * 创建子节点协调器
@@ -491,9 +481,9 @@ private:
  */
 ChildReconciler createChildReconciler(bool shouldTrackSideEffects);
 
-// =============================================================================
+
 // 辅助函数
-// =============================================================================
+
 
 /**
  * 从类型和属性创建 Fiber

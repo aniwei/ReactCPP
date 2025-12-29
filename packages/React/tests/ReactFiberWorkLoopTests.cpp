@@ -19,9 +19,9 @@
 
 using namespace react::reconciler;
 
-// =============================================================================
+
 // ExecutionContext 测试
-// =============================================================================
+
 
 TEST(ExecutionContextTest, BitwiseOperations) {
     // 测试无上下文
@@ -50,9 +50,9 @@ TEST(ExecutionContextTest, ContextFlags) {
     EXPECT_EQ(static_cast<uint8_t>(ExecutionContext::CommitContext), 0b100);
 }
 
-// =============================================================================
+
 // RootExitStatus 测试
-// =============================================================================
+
 
 TEST(RootExitStatusTest, Values) {
     EXPECT_EQ(static_cast<uint8_t>(RootExitStatus::InProgress), 0);
@@ -64,9 +64,9 @@ TEST(RootExitStatusTest, Values) {
     EXPECT_EQ(static_cast<uint8_t>(RootExitStatus::SuspendedAtTheShell), 6);
 }
 
-// =============================================================================
+
 // SuspendedReason 测试
-// =============================================================================
+
 
 TEST(SuspendedReasonTest, Values) {
     EXPECT_EQ(static_cast<uint8_t>(SuspendedReason::NotSuspended), 0);
@@ -81,9 +81,9 @@ TEST(SuspendedReasonTest, Values) {
     EXPECT_EQ(static_cast<uint8_t>(SuspendedReason::SuspendedOnAction), 9);
 }
 
-// =============================================================================
+
 // WorkLoopState 测试
-// =============================================================================
+
 
 TEST(WorkLoopStateTest, DefaultValues) {
     WorkLoopState state;
@@ -127,9 +127,9 @@ TEST(WorkLoopStateTest, Constants) {
     EXPECT_EQ(WorkLoopState::RENDER_TIMEOUT_MS, 500.0);
 }
 
-// =============================================================================
+
 // CapturedValue 测试（简单版）
-// =============================================================================
+
 
 TEST(SimpleCapturedValueTest, Creation) {
     // 使用简单结构体来测试基本捕获值
@@ -147,9 +147,9 @@ TEST(SimpleCapturedValueTest, Creation) {
     EXPECT_EQ(cv.stack.value(), "at Component (file.js:10)");
 }
 
-// =============================================================================
+
 // SchedulerInterface 测试
-// =============================================================================
+
 
 TEST(SchedulerInterfaceTest, DefaultValues) {
     SchedulerInterface scheduler;
@@ -181,9 +181,9 @@ TEST(SchedulerInterfaceTest, WithCallbacks) {
     EXPECT_EQ(scheduler.now(), 100.0);
 }
 
-// =============================================================================
+
 // HookFlags 测试
-// =============================================================================
+
 
 TEST(HookFlagsTest, Values) {
     EXPECT_EQ(HookNoFlags, 0b0000000);
@@ -206,9 +206,9 @@ TEST(HookFlagsTest, Combinations) {
     EXPECT_FALSE((layoutWithEffect & HookPassive) != 0);
 }
 
-// =============================================================================
+
 // CommitPhase 测试
-// =============================================================================
+
 
 TEST(CommitPhaseTest, Values) {
   EXPECT_EQ(static_cast<uint8_t>(CommitPhase::BeforeMutation), 0);
@@ -217,9 +217,9 @@ TEST(CommitPhaseTest, Values) {
   EXPECT_EQ(static_cast<uint8_t>(CommitPhase::PassivePhase), 3);
 }
 
-// =============================================================================
+
 // Effect 结构测试
-// =============================================================================
+
 
 TEST(EffectTest, Creation) {
     Effect effect;
@@ -255,9 +255,9 @@ TEST(EffectTest, LinkedList) {
     EXPECT_EQ(count, 3);
 }
 
-// =============================================================================
+
 // Hook 结构测试
-// =============================================================================
+
 
 TEST(HookTest, Creation) {
     Hook hook;
@@ -296,18 +296,18 @@ TEST(HookTest, LinkedList) {
     EXPECT_EQ(states[2], "state3");
 }
 
-// =============================================================================
+
 // BeginWorkContext 测试
-// =============================================================================
+
 
 TEST(BeginWorkContextTest, DefaultValues) {
     BeginWorkContext context;
     EXPECT_FALSE(context.didReceiveUpdate);
 }
 
-// =============================================================================
+
 // HostContext 测试
-// =============================================================================
+
 
 TEST(HostContextTest, DefaultValues) {
     HostContext context;
@@ -316,9 +316,9 @@ TEST(HostContextTest, DefaultValues) {
     EXPECT_FALSE(context.namespace_.has_value());
 }
 
-// =============================================================================
+
 // ChildReconciler 接口测试
-// =============================================================================
+
 
 TEST(ChildReconcilerTest, DefaultValues) {
     ChildReconciler reconciler;
@@ -327,9 +327,9 @@ TEST(ChildReconcilerTest, DefaultValues) {
     EXPECT_EQ(reconciler.cloneChildFibers, nullptr);
 }
 
-// =============================================================================
+
 // ReactChildFiberReconciler 测试
-// =============================================================================
+
 
 TEST(ReactChildFiberReconcilerTest, ShouldTrackSideEffects) {
     ReactChildFiberReconciler mountReconciler(false);
@@ -339,9 +339,9 @@ TEST(ReactChildFiberReconcilerTest, ShouldTrackSideEffects) {
     EXPECT_TRUE(updateReconciler.shouldTrackSideEffects());
 }
 
-// =============================================================================
+
 // Dispatcher 接口测试
-// =============================================================================
+
 
 TEST(DispatcherTest, DefaultValues) {
     Dispatcher dispatcher;
@@ -359,9 +359,9 @@ TEST(DispatcherTest, DefaultValues) {
     EXPECT_EQ(dispatcher.useId, nullptr);
 }
 
-// =============================================================================
+
 // HookType 枚举测试
-// =============================================================================
+
 
 TEST(HookTypeTest, Values) {
     EXPECT_EQ(static_cast<int>(HookType::UseState), 0);
@@ -375,9 +375,9 @@ TEST(HookTypeTest, Values) {
     EXPECT_EQ(static_cast<int>(HookType::UseContext), 8);
 }
 
-// =============================================================================
+
 // FunctionComponentUpdateQueue 测试
-// =============================================================================
+
 
 TEST(FunctionComponentUpdateQueueTest, DefaultValues) {
     FunctionComponentUpdateQueue queue;
@@ -388,9 +388,9 @@ TEST(FunctionComponentUpdateQueueTest, DefaultValues) {
     EXPECT_FALSE(queue.memoCache.has_value());
 }
 
-// =============================================================================
+
 // placeSingleChild 测试
-// =============================================================================
+
 
 TEST(PlaceSingleChildTest, WithoutTracking) {
     auto fiber = std::make_shared<Fiber>(FunctionComponent, NoMode);
@@ -426,9 +426,9 @@ TEST(PlaceSingleChildTest, WithAlternate) {
     EXPECT_EQ(fiber->flags & Placement, 0);
 }
 
-// =============================================================================
+
 // 主函数
-// =============================================================================
+
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);

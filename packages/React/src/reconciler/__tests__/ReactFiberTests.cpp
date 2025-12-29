@@ -15,9 +15,9 @@
 
 namespace react::reconciler::tests {
 
-// =============================================================================
+
 // ReactFiberLane 测试
-// =============================================================================
+
 
 TEST(ReactFiberLaneTest, LaneConstants) {
     // @source:41-42
@@ -121,9 +121,9 @@ TEST(ReactFiberLaneTest, GetLabelForLane) {
     EXPECT_STREQ(getLabelForLane(IdleLane), "Idle");
 }
 
-// =============================================================================
+
 // ReactTypeOfMode 测试
-// =============================================================================
+
 
 TEST(ReactTypeOfModeTest, ModeConstants) {
     // @source:13
@@ -148,9 +148,9 @@ TEST(ReactTypeOfModeTest, ModeCombinations) {
     EXPECT_FALSE(isProfileMode(mode));
 }
 
-// =============================================================================
+
 // ReactRootTags 测试
-// =============================================================================
+
 
 TEST(ReactRootTagsTest, RootTagConstants) {
     // @source:13
@@ -166,9 +166,9 @@ TEST(ReactRootTagsTest, RootTagChecks) {
     EXPECT_FALSE(isLegacyRoot(ConcurrentRoot));
 }
 
-// =============================================================================
+
 // ReactFiber 测试
-// =============================================================================
+
 
 TEST(ReactFiberTest, CreateFiberBasic) {
     // 使用默认构造函数测试基本 Fiber 结构
@@ -242,9 +242,9 @@ TEST(ReactFiberTest, FiberDeletions) {
     EXPECT_EQ(parent->deletions.size(), 0);
 }
 
-// =============================================================================
+
 // ReactFiberRoot 测试
-// =============================================================================
+
 
 TEST(ReactFiberRootTest, CreateFiberRoot) {
     auto root = createFiberRoot(

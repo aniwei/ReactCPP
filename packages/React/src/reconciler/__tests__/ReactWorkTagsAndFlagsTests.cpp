@@ -13,9 +13,9 @@
 
 namespace react::reconciler::tests {
 
-// =============================================================================
+
 // ReactWorkTags 测试
-// =============================================================================
+
 
 TEST(ReactWorkTagsTest, BasicWorkTags) {
     // @source:45
@@ -96,9 +96,9 @@ TEST(ReactWorkTagsTest, GetWorkTagName) {
     EXPECT_STREQ(getWorkTagName(255), "Unknown");
 }
 
-// =============================================================================
+
 // ReactFiberFlags 测试
-// =============================================================================
+
 
 TEST(ReactFiberFlagsTest, CoreFlags) {
     // @source:18 - 这些值不能改变，DevTools 依赖它们
